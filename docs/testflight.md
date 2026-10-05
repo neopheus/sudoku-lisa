@@ -47,3 +47,12 @@ La seconde commande Xcode **envoie le build à Apple**. Créer auparavant la fic
 - Archive signée **Apple Development**, équipe S2UPJPPKKG, réussie : `/tmp/sudoku-lisa-testflight-signed-1.xcarchive`. Vérification locale codesign réussie. Cette signature de développement ne suffit pas pour TestFlight.
 - Export App Store Connect essayé, refusé : `Team "XAVIER VALENTIN" does not have permission to create "iOS App Store" provisioning profiles.` Journaux : `/tmp/lisa-testflight-local-export.log`.
 - Aucun nouvel envoi ni lien TestFlight. À la réactivation effective, créer la fiche et réutiliser cette archive pour l’export de distribution ; ne pas refaire le paiement.
+
+## Envoi du 6 octobre 2026
+
+- 28 tests Swift réussis, archive Release signée et vérification codesign réussies.
+- Fiche Lisa Sudoku créée dans App Store Connect : identifiant Apple `6819455460`, bundle `com.xavier.sudokulisa`.
+- Correction de la cible LisaStickers en `com.apple.product-type.app-extension.messages` dans le générateur et le projet : les icônes iMessage requises sont maintenant exportées dans le bundle.
+- Archive envoyée : `/tmp/sudoku-lisa-testflight-20261006-fixed.xcarchive`.
+- Envoi accepté à 00 h 43 (Europe/Paris) : `Upload succeeded` et `EXPORT SUCCEEDED`. Journal local : `/tmp/sudoku-lisa-20261006-fixed-upload.log`. Le traitement Apple a commencé ; cet accusé ne prouve pas encore la disponibilité pour les testeurs.
+- Groupe interne « Lisa — Interne » créé sans distribution automatique ni testeur invité.
