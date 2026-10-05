@@ -8,10 +8,11 @@ struct RootView: View {
     var body: some View {
         TabView(selection: $tab) {
             NavigationStack { HomeView(onRoute: { tab = $0 }, mascotAnimationEnabled: tab == 0 && !store.showGame && !settings && !store.isGenerating && store.saveError == nil).toolbar { ToolbarItem(placement: .topBarTrailing) { Button { settings = true } label: { Image(systemName: "slider.horizontal.3").foregroundStyle(LisaTheme.ink) }.accessibilityLabel("Réglages") } } }
+                .environment(\.lisaMotionAllowed, motionAllowed(tab: 0))
                 .tabItem { Label("Jouer", systemImage: "square.grid.3x3.fill") }.tag(0)
-            NavigationStack { DailyView(motionEnabled: tab == 1 && !store.showGame && !settings && !store.isGenerating && store.saveError == nil) }.tabItem { Label("Chaque jour", systemImage: "sun.max.fill") }.tag(1)
-            NavigationStack { JourneyView(motionEnabled: tab == 2 && !store.showGame && !settings && !store.isGenerating && store.saveError == nil) }.tabItem { Label("Voyage", systemImage: "sparkles") }.tag(2)
-            NavigationStack { ProgressViewLisa() }.tabItem { Label("Mes progrès", systemImage: "chart.bar.fill") }.tag(3)
+            NavigationStack { DailyView(motionEnabled: tab == 1 && !store.showGame && !settings && !store.isGenerating && store.saveError == nil) }.environment(\.lisaMotionAllowed, motionAllowed(tab: 1)).tabItem { Label("Chaque jour", systemImage: "sun.max.fill") }.tag(1)
+            NavigationStack { JourneyView(motionEnabled: tab == 2 && !store.showGame && !settings && !store.isGenerating && store.saveError == nil) }.environment(\.lisaMotionAllowed, motionAllowed(tab: 2)).tabItem { Label("Voyage", systemImage: "sparkles") }.tag(2)
+            NavigationStack { ProgressViewLisa() }.environment(\.lisaMotionAllowed, motionAllowed(tab: 3)).tabItem { Label("Mes progrès", systemImage: "chart.bar.fill") }.tag(3)
         }
         .tint(LisaTheme.actionInk)
         .toolbarBackground(LisaTheme.paper, for: .tabBar)
@@ -25,6 +26,9 @@ struct RootView: View {
             }
         }
         .alert("Sauvegarde", isPresented: Binding(get: { store.saveError != nil }, set: { if !$0 { store.saveError = nil } })) { Button("D’accord") { store.saveError = nil } } message: { Text(store.saveError ?? "") }
+    }
+    private func motionAllowed(tab index: Int) -> Bool {
+        tab == index && !store.showGame && !settings && !store.isGenerating && store.saveError == nil
     }
 }
 
@@ -59,7 +63,7 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            LisaBackground()
+            LisaBackground(motionEnabled: mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
             ScrollView {
                 VStack(spacing: 18) {
                     HStack {
@@ -68,9 +72,11 @@ struct HomeView: View {
                         LisaPill(title: "\(store.history.count) victoire\(store.history.count > 1 ? "s" : "")", icon: "crown.fill", tint: LisaTheme.mint)
                     }
                     HStack(spacing: 24) {
-                        LisaWordmark(size: 83).rotationEffect(.degrees(-5))
-                        LisaMascot(size: 124, mood: .happy, animationEnabled: mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
+                        LisaWordmark(size: 83).rotationEffect(.degrees(-5)).lisaFloat(amplitude: 5, tilt: 2, period: 4.5)
+                        LisaCompanion(size: 124, animationEnabled: mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
                             .rotationEffect(.degrees(6))
+                            .background { LisaMagicHalo().frame(width: 185, height: 185) }
+                            .lisaFloat(amplitude: 7, tilt: 2, period: 4, phase: 1.5)
                     }
                     .frame(maxWidth: .infinity).padding(.top, 4).padding(.bottom, 5)
                     .scaleEffect(appeared ? 1 : 0.85)
@@ -81,7 +87,7 @@ struct HomeView: View {
                     LisaCard {
                         VStack(spacing: 15) {
                             HStack(spacing: 18) {
-                                MiniGrid().frame(width: 106, height: 106).rotationEffect(.degrees(-5)).accessibilityHidden(true)
+                                MiniGrid().frame(width: 106, height: 106).rotationEffect(.degrees(-5)).lisaFloat(amplitude: 5, tilt: 4, period: 4.5).accessibilityHidden(true)
                                 VStack(alignment: .leading, spacing: 6) {
                                     if let session = store.session, !session.isComplete {
                                         Text("Votre aventure\ncontinue").font(LisaTheme.heading(22))
@@ -117,10 +123,11 @@ struct HomeView: View {
                 }.padding(.horizontal, 22).padding(.top, 5)
             }
         }
+        .environment(\.lisaMotionAllowed, mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
         .onAppear { withAnimation(reduceMotion ? nil : .spring(response: 0.6, dampingFraction: 0.7)) { appeared = true } }
         .toolbarBackground(.hidden, for: .navigationBar)
-        .sheet(isPresented: $difficultySheet) { DifficultyView() }
-        .sheet(isPresented: $learn) { LearnView() }
+        .sheet(isPresented: $difficultySheet) { DifficultyView().environment(\.lisaMotionAllowed, true) }
+        .sheet(isPresented: $learn) { LearnView().environment(\.lisaMotionAllowed, true) }
         .alert("Commencer une autre grille ?", isPresented: $replaceAlert) { Button("Garder ma partie", role: .cancel) {}; Button("Nouvelle partie", role: .destructive) { difficultySheet = true } } message: { Text("La partie en cours sera remplacée après le choix du niveau.") }
     }
 
@@ -132,6 +139,7 @@ struct HomeView: View {
                     .background(LinearGradient(colors: [color, color.opacity(0.7)], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 19))
                     .overlay(RoundedRectangle(cornerRadius: 19).stroke(.white.opacity(0.9), lineWidth: 2))
                     .shadow(color: color.opacity(0.5), radius: 0, y: 4)
+                    .lisaFloat(amplitude: 5, tilt: 6, period: 3.5, phase: icon == "sun.max.fill" ? 0 : 2)
                 Text(title).font(LisaTheme.heading(14)).foregroundStyle(LisaTheme.ink).lineLimit(1).minimumScaleFactor(0.8)
                 Text(subtitle).font(LisaTheme.body(10)).foregroundStyle(LisaTheme.muted).lineLimit(1).minimumScaleFactor(0.8)
             }.frame(maxWidth: .infinity).padding(.vertical, 17)

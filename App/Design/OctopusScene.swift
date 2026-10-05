@@ -5,18 +5,40 @@ struct OctopusSceneView: UIViewRepresentable {
     let mood: LisaMascotMood
     let reactionToken: Int
     let animated: Bool
+    @ObservedObject private var budget = LisaRenderBudget.shared
 
-    func sizeThatFits(_ proposal: ProposedViewSize, uiView: OctopusRenderView, context: Context) -> CGSize {
+    func sizeThatFits(_ proposal: ProposedViewSize, uiView: OctopusHostView, context: Context) -> CGSize {
         CGSize(width: proposal.width ?? 115, height: proposal.height ?? 110)
     }
 
-    func makeUIView(context: Context) -> OctopusRenderView { OctopusRenderView() }
-    func updateUIView(_ view: OctopusRenderView, context: Context) {
-        view.configure(mood: mood, reaction: reactionToken, animated: animated)
+    func makeUIView(context: Context) -> OctopusHostView { OctopusHostView() }
+    func updateUIView(_ view: OctopusHostView, context: Context) {
+        view.renderer.setQuality(level: budget.level, frames: budget.frameRate)
+        view.renderer.configure(mood: mood, reaction: reactionToken, animated: animated)
     }
-    static func dismantleUIView(_ view: OctopusRenderView, coordinator: ()) {
-        view.wantsAnimation = false
-        view.synchronizePlayback()
+    static func dismantleUIView(_ view: OctopusHostView, coordinator: ()) {
+        view.renderer.wantsAnimation = false
+        view.renderer.synchronizePlayback()
+    }
+}
+
+/// Keep the Metal-backed view in a normal UIKit child hierarchy. SwiftUI owns
+/// only this plain host, including when it is measured inside a ScrollView.
+final class OctopusHostView: UIView {
+    let renderer = OctopusRenderView()
+    init() {
+        super.init(frame: CGRect(x: 0, y: 0, width: 115, height: 110))
+        backgroundColor = .clear
+        isOpaque = false
+        addSubview(renderer)
+        renderer.frame = bounds
+        renderer.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        renderer.frame = bounds
+        renderer.synchronizePlayback()
     }
 }
 
@@ -26,12 +48,13 @@ final class OctopusRenderView: SCNView {
     var wantsAnimation = false
     private var previousMood: LisaMascotMood?
     private var previousReaction: Int?
-    #if DEBUG
-    private let renderProbe = OctopusRenderProbe()
-    #endif
+    private var playbackRunning: Bool?
+    private var detailLevel = -1
+    private let budgetClient = UUID()
+    private lazy var frameProbe = OctopusFrameProbe(client: budgetClient)
 
     init() {
-        super.init(frame: .zero, options: nil)
+        super.init(frame: CGRect(x: 0, y: 0, width: 115, height: 110), options: [SCNView.Option.preferredRenderingAPI.rawValue: SCNRenderingAPI.metal.rawValue])
         scene = companion.scene
         pointOfView = companion.scene.rootNode.childNodes.first { $0.camera != nil }
         backgroundColor = .clear
@@ -42,41 +65,48 @@ final class OctopusRenderView: SCNView {
         allowsCameraControl = false
         rendersContinuously = false
         accessibilityElementsHidden = true
-        #if DEBUG
-        delegate = renderProbe
-        #endif
+        delegate = frameProbe
     }
     required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
     override func didMoveToWindow() { super.didMoveToWindow(); synchronizePlayback() }
 
-    override func layoutSubviews() {
-        super.layoutSubviews()
-        #if DEBUG
-        print("OCTOPUS_LAYOUT frame=\(frame) bounds=\(bounds) window=\(window != nil) alpha=\(alpha) hidden=\(isHidden) camera=\(pointOfView != nil) playing=\(isPlaying) paused=\(scene?.isPaused ?? true) wanted=\(wantsAnimation) nodes=\(scene?.rootNode.childNodes.count ?? 0) backend=\(renderingAPI.rawValue)")
-        #endif
-    }
-
     func synchronizePlayback() {
         let running = wantsAnimation && window != nil
-        isPlaying = running
+        guard playbackRunning != running else { return }
+        playbackRunning = running
+        frameProbe.configure(active: running, target: preferredFramesPerSecond)
+        LisaRenderBudget.shared.setActive(running, client: budgetClient)
         scene?.isPaused = !running
         rendersContinuously = running
+        if running { play(nil) } else { pause(nil) }
         setNeedsDisplay()
-        #if DEBUG
-        print("OCTOPUS_PLAY running=\(running) bounds=\(bounds) window=\(window != nil) wanted=\(wantsAnimation)")
-        #endif
+        layer.setNeedsDisplay()
+    }
+    func setQuality(level: Int, frames: Int) {
+        if preferredFramesPerSecond != frames {
+            preferredFramesPerSecond = frames
+            frameProbe.configure(active: playbackRunning == true, target: frames)
+        }
+        let aa: SCNAntialiasingMode = level == 0 ? .multisampling4X : level == 1 ? .multisampling2X : .none
+        if antialiasingMode != aa { antialiasingMode = aa }
+        let screenScale = window?.screen.scale ?? UIScreen.main.scale
+        let renderScale = level == 0 ? screenScale : min(screenScale, level == 1 ? 2 : 1.5)
+        if contentScaleFactor != renderScale { contentScaleFactor = renderScale }
+        if detailLevel != level { detailLevel = level; companion.setDetail(level) }
     }
     func configure(mood: LisaMascotMood, reaction: Int, animated: Bool) {
+        guard previousMood != mood || previousReaction != reaction || wantsAnimation != animated else { return }
         wantsAnimation = animated
-        if previousMood != mood {
+        companion.setMotionEnabled(animated)
+        let moodChanged = previousMood != mood
+        if moodChanged {
             companion.setMood(mood, animated: animated)
             previousMood = mood
         }
-        if let previousReaction, previousReaction != reaction, animated {
+        if animated && ((previousReaction != nil && previousReaction != reaction) || (moodChanged && (mood == .happy || mood == .celebrating))) {
             companion.react(mood)
         }
         self.previousReaction = reaction
-        companion.setMotionEnabled(animated)
         synchronizePlayback()
     }
 }
@@ -86,15 +116,18 @@ final class OctopusRenderView: SCNView {
 final class OctopusModel {
     let scene = SCNScene()
     private let body = SCNNode()
+    private let gesture = SCNNode()
     private let head = SCNNode()
     private var eyes: [SCNNode] = []
     private var pupils: [SCNNode] = []
     private var brows: [SCNNode] = []
     private var arms: [SCNNode] = []
     private let bubbles = SCNNode()
+    private var fineDetails: [SCNNode] = []
+    private var detailLevel = 0
     private var motionEnabled = true
     private var currentMood: LisaMascotMood = .idle
-    private let purple = OctopusModel.material(UIColor(red: 0.39, green: 0.25, blue: 0.82, alpha: 1), roughness: 0.30)
+    private let purple = OctopusModel.material(UIColor(red: 0.48, green: 0.32, blue: 0.88, alpha: 1), roughness: 0.30)
     private let cream = OctopusModel.material(UIColor(red: 1, green: 0.88, blue: 0.65, alpha: 1), roughness: 0.46)
 
     init() {
@@ -109,7 +142,8 @@ final class OctopusModel {
         light(.omni, color: UIColor(red: 1, green: 0.94, blue: 0.90, alpha: 1), intensity: 650, position: SCNVector3(-3, 5, 5))
         light(.omni, color: UIColor(red: 0.63, green: 0.80, blue: 1, alpha: 1), intensity: 250, position: SCNVector3(3, 2, -2))
         light(.ambient, color: UIColor(red: 0.78, green: 0.74, blue: 1, alpha: 1), intensity: 350, position: SCNVector3Zero)
-        scene.rootNode.addChildNode(body)
+        scene.rootNode.addChildNode(gesture)
+        gesture.addChildNode(body)
         body.addChildNode(head)
         let skull = sphere(radius: 0.79, scale: SCNVector3(1, 1.01, 0.88), material: purple)
         skull.position = SCNVector3(0, 0.50, 0)
@@ -150,15 +184,15 @@ final class OctopusModel {
     private static func material(_ color: UIColor, roughness: CGFloat = 0.4) -> SCNMaterial {
         let material = SCNMaterial()
         material.lightingModel = .blinn
-        material.specular.contents = UIColor(white: 0.22, alpha: 1)
-        material.shininess = 0.45
+        material.specular.contents = UIColor(white: 0.55, alpha: 1)
+        material.shininess = 0.65
         material.diffuse.contents = color
         material.roughness.contents = roughness
         material.metalness.contents = 0.0
         return material
     }
     private func sphere(radius: CGFloat, scale: SCNVector3, material: SCNMaterial) -> SCNNode {
-        let geometry = SCNSphere(radius: radius); geometry.segmentCount = 32
+        let geometry = SCNSphere(radius: radius); geometry.segmentCount = radius >= 0.2 ? 32 : radius >= 0.1 ? 20 : 12
         geometry.firstMaterial = material
         let node = SCNNode(geometry: geometry); node.scale = scale; return node
     }
@@ -180,24 +214,32 @@ final class OctopusModel {
         let tip = sphere(radius: 0.027, scale: SCNVector3(1, 1, 1), material: purple)
         tip.position = Self.curve(1, angle, 0)
         node.addChildNode(tip)
+        fineDetails.append(tip)
         var suckers: [SCNNode] = []
         for step in 0..<5 {
             let t = Float(step) * 0.13 + 0.35
             let sucker = sphere(radius: CGFloat(0.047 - t * 0.018), scale: SCNVector3(1, 0.48, 1), material: cream)
             let p = Self.curve(t, angle, 0)
             sucker.position = SCNVector3(p.x, p.y + 0.082 * (1-t) + 0.032, p.z + 0.048)
-            node.addChildNode(sucker); suckers.append(sucker)
+            node.addChildNode(sucker); suckers.append(sucker); fineDetails.append(sucker)
+        }
+        // The morph only changes Y linearly: cache the expensive curve evaluation.
+        let tipBase = Self.curve(1, angle, 0)
+        let suckerBases = suckers.map { $0.position }
+        let suckerOffsets = (0..<5).map { step -> Float in
+            let t = Float(step) * 0.13 + 0.35
+            return 0.13 * t * t
         }
         let duration = 4.3 + Double(index % 3) * 0.45
         let action = SCNAction.customAction(duration: duration) { node, elapsed in
             let wave = sin(Float(elapsed / duration) * 2 * .pi)
-            tip.position = Self.curve(1, angle, wave)
+            tip.position.y = tipBase.y + wave * 0.13
             node.morpher?.setWeight(CGFloat(max(wave, 0)), forTargetAt: 0)
             node.morpher?.setWeight(CGFloat(max(-wave, 0)), forTargetAt: 1)
-            for (step, sucker) in suckers.enumerated() {
-                let t = Float(step) * 0.13 + 0.35
-                let p = Self.curve(t, angle, wave)
-                sucker.position = SCNVector3(p.x, p.y + 0.082 * (1-t) + 0.032, p.z + 0.048)
+            if suckers.first?.isHidden == false {
+                for (step, sucker) in suckers.enumerated() {
+                    sucker.position.y = suckerBases[step].y + wave * suckerOffsets[step]
+                }
             }
         }
         node.runAction(.repeatForever(action), forKey: "ripple")
@@ -263,12 +305,21 @@ final class OctopusModel {
             bubble.runAction(.repeatForever(.sequence([.wait(duration: Double(index) * 0.8), rise, .moveBy(x: index % 2 == 0 ? 0.05 : -0.05, y: -1.9, z: 0, duration: 0)])))
         }
     }
+    func setDetail(_ level: Int) {
+        detailLevel = level
+        for node in fineDetails { node.isHidden = level >= 2 }
+        bubbles.isHidden = level >= 2 || !motionEnabled || currentMood == .sleepy
+    }
     func setMotionEnabled(_ enabled: Bool) {
         guard enabled != motionEnabled else { return }
         motionEnabled = enabled
-        bubbles.isHidden = !enabled || currentMood == .sleepy
+        bubbles.isHidden = detailLevel >= 2 || !enabled || currentMood == .sleepy
         if !enabled {
             // Neutral open eyes remain readable even if Reduce Motion changes mid-blink.
+            gesture.removeAllActions()
+            gesture.transform = SCNMatrix4Identity
+            body.position = SCNVector3Zero
+            body.eulerAngles = SCNVector3Zero
             body.scale = SCNVector3(1, 1, 1)
             head.eulerAngles = SCNVector3Zero
             for eye in eyes { eye.scale.y = currentMood == .sleepy ? 0.15 : 1.15 }
@@ -277,7 +328,7 @@ final class OctopusModel {
     func setMood(_ mood: LisaMascotMood, animated: Bool) {
         currentMood = mood
         SCNTransaction.begin(); SCNTransaction.animationDuration = animated ? 0.4 : 0
-        bubbles.isHidden = !animated || mood == .sleepy
+        bubbles.isHidden = detailLevel >= 2 || !animated || mood == .sleepy
         for (index, brow) in brows.enumerated() {
             let side: Float = index == 0 ? -1 : 1
             brow.eulerAngles.z = mood == .encouraging ? side * 0.30 : mood == .thinking ? side * 0.20 : side * -0.13
@@ -288,20 +339,100 @@ final class OctopusModel {
         }
         head.position.y = mood == .sleepy ? -0.08 : 0
         SCNTransaction.commit()
-        if animated && mood == .happy { react(mood) }
+
     }
     func react(_ mood: LisaMascotMood) {
-        guard motionEnabled, mood != .sleepy else { return }
-        let hop = SCNAction.smoothSequence([.moveBy(x: 0, y: 0.13, z: 0, duration: 0.22), .moveBy(x: 0, y: -0.13, z: 0, duration: 0.36)])
-        hop.actionsWithEaseInOut()
-        body.removeAction(forKey: "reaction")
-        body.position = SCNVector3Zero
-        body.runAction(hop, forKey: "reaction")
-        if let arm = arms.last {
-            let wave = SCNAction.smoothSequence([.rotateTo(x: 0, y: 0, z: 0.25, duration: 0.22), .rotateTo(x: 0, y: 0, z: -0.10, duration: 0.22), .rotateTo(x: 0, y: 0, z: 0.20, duration: 0.22), .rotateTo(x: 0, y: 0, z: 0, duration: 0.30)])
-            wave.actionsWithEaseInOut(); arm.runAction(wave, forKey: "wave")
-        }
+        guard motionEnabled, mood != .sleepy, mood != .idle else { return }
+        // Gesture transform is separate from breathing and tentacle ripples.
+        // Preserve the visible pose when another reaction interrupts this one.
+        let startPosition = gesture.presentation.position
+        let startRotation = gesture.presentation.eulerAngles
+        let startScale = gesture.presentation.scale
+        gesture.removeAllActions()
+        let playful: [LisaMascotMood] = [.chase, .moonwalk, .juggle, .cloudHide, .sneeze, .tumble, .balance, .dizzy, .superhero]
+        let duration = playful.contains(mood) ? 4.4 : 2.2
+        gesture.runAction(.customAction(duration: duration) { node, elapsed in
+            let t = min(1, Float(elapsed / duration))
+            let envelope = pow(sin(.pi * t), 2)
+            let phase = t * .pi * 2
+            let blend = max(0, 1 - t / 0.18)
+            let carry = blend * blend * (3 - 2 * blend)
+            var x: Float = 0, y: Float = 0, z: Float = 0
+            var pitch: Float = 0, yaw: Float = 0, roll: Float = 0
+            var sx: Float = 1, sy: Float = 1
+            switch mood {
+            case .chase:
+                yaw = sin(phase) * 0.45 * envelope
+                pitch = -0.16 * envelope
+            case .moonwalk:
+                yaw = -0.45 * envelope; roll = sin(phase * 4) * 0.10 * envelope
+                y = pow(sin(phase * 4), 2) * 0.06 * envelope
+            case .juggle:
+                roll = sin(phase * 3) * 0.13 * envelope
+                pitch = -0.2 * envelope
+            case .cloudHide:
+                sx = 1 - 0.25 * envelope; sy = sx; y = -0.1 * envelope
+            case .sneeze:
+                pitch = -0.25 * envelope + pow(sin(phase * 2), 8) * 0.5 * envelope
+                sx = 1 + sin(phase * 2) * 0.14 * envelope
+                sy = 1 - sin(phase * 2) * 0.14 * envelope
+            case .tumble:
+                roll = .pi * 2 * t * t * (3 - 2 * t)
+                sx = 1 - 0.45 * envelope; sy = sx
+            case .balance:
+                roll = sin(phase * 3) * 0.22 * envelope
+            case .dizzy:
+                roll = sin(phase * 2) * 0.18 * envelope
+                yaw = sin(phase * 3) * 0.25 * envelope
+            case .superhero:
+                roll = -0.4 * envelope; pitch = -0.2 * envelope
+                sx = 1 - 0.12 * envelope; sy = sx
+            case .pirouette:
+                yaw = .pi * 2 * t * t * (3 - 2 * t)
+                y = 0.12 * envelope
+            case .wobble:
+                roll = sin(phase * 2) * 0.30 * envelope
+                x = sin(phase * 2) * 0.08 * envelope
+            case .peek:
+                sx = 1 - 0.45 * envelope; sy = sx
+                y = -0.14 * envelope
+            case .jelly:
+                sx = 1 + sin(phase * 3) * 0.16 * envelope
+                sy = 1 - sin(phase * 3) * 0.16 * envelope
+            case .swim:
+                x = sin(phase) * 0.23 * envelope
+                y = sin(phase * 2) * 0.10 * envelope
+                roll = -sin(phase) * 0.22 * envelope
+            case .bow:
+                pitch = 0.65 * envelope; y = -0.09 * envelope
+            case .curious:
+                yaw = sin(phase) * 0.65 * envelope
+                roll = sin(phase * 2) * 0.10 * envelope
+            case .giggle:
+                y = pow(sin(phase * 3), 2) * 0.10 * envelope
+                roll = sin(phase * 3) * 0.12 * envelope
+                sx = 1 + 0.06 * envelope; sy = 1 - 0.06 * envelope
+            case .rocket:
+                y = 0.12 * envelope
+                roll = sin(phase * 3) * 0.07 * envelope
+                z = -0.08 * envelope
+            case .celebrating:
+                y = pow(sin(phase * 2), 2) * 0.12 * envelope
+                roll = sin(phase * 2) * 0.16 * envelope
+            case .thinking:
+                roll = -0.15 * envelope; yaw = 0.12 * envelope
+            case .encouraging:
+                pitch = sin(phase) * 0.16 * envelope
+            default:
+                y = 0.14 * envelope; roll = 0.08 * sin(phase) * envelope
+            }
+            node.position = SCNVector3(x + startPosition.x * carry, y + startPosition.y * carry, z + startPosition.z * carry)
+            node.eulerAngles = SCNVector3(pitch + startRotation.x * carry, yaw + startRotation.y * carry, roll + startRotation.z * carry)
+            node.scale = SCNVector3(sx + (startScale.x - 1) * carry, sy + (startScale.y - 1) * carry, 1 + (startScale.z - 1) * carry)
+            if t >= 1 { node.transform = SCNMatrix4Identity }
+        }, forKey: "gesture")
     }
+
 }
 
 private extension SCNAction {
@@ -320,16 +451,37 @@ private extension SCNAction {
     }
 }
 
-#if DEBUG
-private final class OctopusRenderProbe: NSObject, SCNSceneRendererDelegate, @unchecked Sendable {
+/// Aggregate renderer callbacks off the main thread; publish at most once per two seconds.
+private final class OctopusFrameProbe: NSObject, SCNSceneRendererDelegate, @unchecked Sendable {
+    private let client: UUID
     private let lock = NSLock()
-    private var remaining = 3
-    func renderer(_ renderer: any SCNSceneRenderer, didRenderScene scene: SCNScene, atTime time: TimeInterval) {
+    private var active = false
+    private var target = 60
+    private var previous: TimeInterval = 0
+    private var elapsed: Double = 0
+    private var count = 0
+    private var late = 0
+    init(client: UUID) { self.client = client }
+    func configure(active: Bool, target: Int) {
+        lock.lock(); defer { lock.unlock() }
+        guard self.active != active || self.target != target else { return }
+        self.active = active; self.target = target
+        previous = 0; elapsed = 0; count = 0; late = 0
+    }
+    func renderer(_ renderer: SCNSceneRenderer, didRenderScene scene: SCNScene, atTime time: TimeInterval) {
         lock.lock()
-        let shouldPrint = remaining > 0
-        remaining -= shouldPrint ? 1 : 0
+        guard active else { lock.unlock(); return }
+        let delta = time - previous
+        previous = time
+        guard delta > 0, delta < 0.25 else { elapsed = 0; count = 0; late = 0; lock.unlock(); return }
+        elapsed += delta; count += 1
+        if delta > 1.35 / Double(target) { late += 1 }
+        guard elapsed >= 2 else { lock.unlock(); return }
+        let fps = Double(count) / elapsed
+        let fraction = Double(late) / Double(count)
+        elapsed = 0; count = 0; late = 0
         lock.unlock()
-        if shouldPrint { print("OCTOPUS_RENDER time=\(time) viewport=\(renderer.currentViewport) camera=\(String(describing: renderer.pointOfView?.position))") }
+        let client = client
+        Task { @MainActor in LisaRenderBudget.shared.renderedWindow(client: client, fps: fps, lateFraction: fraction) }
     }
 }
-#endif

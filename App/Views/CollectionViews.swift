@@ -16,7 +16,7 @@ struct DailyView: View {
     private var leading: Int { (Calendar.current.component(.weekday, from: days[0]) + 5) % 7 }
     private var completed: Bool { store.completedDays.contains(LisaStore.dayKey(selected)) }
     var body: some View {
-        ZStack { LisaBackground(); ScrollView { VStack(alignment: .leading, spacing: 23) {
+        ZStack { LisaBackground(motionEnabled: motionEnabled && !replace); ScrollView { VStack(alignment: .leading, spacing: 23) {
             Text("Un jour.\nUn petit déclic.").font(LisaTheme.heading(34))
             Text("Un rendez-vous avec vous-même. Retrouvez aussi les défis des jours passés.").font(LisaTheme.body()).foregroundStyle(LisaTheme.muted)
             LisaCard {
@@ -44,8 +44,8 @@ struct DailyView: View {
                     Text(selected.formatted(date: .long, time: .omitted)).font(LisaTheme.body(13)).foregroundStyle(LisaTheme.muted)
                 }
             }
-            HStack { LisaMascot(size: 70, animationEnabled: motionEnabled && !replace); VStack(alignment: .leading, spacing: 6) { Text("\(store.streak) jour\(store.streak > 1 ? "s" : "") d’affilée").font(LisaTheme.heading(24)); Text("Chaque grille compte. Chaque pause aussi.").font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted) } }
-        }.padding(24) } }.navigationTitle("Chaque jour").navigationBarTitleDisplayMode(.inline)
+            HStack { LisaCompanion(size: 70, animationEnabled: motionEnabled && !replace); VStack(alignment: .leading, spacing: 6) { Text("\(store.streak) jour\(store.streak > 1 ? "s" : "") d’affilée").font(LisaTheme.heading(24)); Text("Chaque grille compte. Chaque pause aussi.").font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted) } }
+        }.padding(24) } }.environment(\.lisaMotionAllowed, motionEnabled && !replace).navigationTitle("Chaque jour").navigationBarTitleDisplayMode(.inline)
             .alert("Remplacer la partie en cours ?", isPresented: $replace) { Button("Annuler", role: .cancel) {}; Button("Jouer le défi", role: .destructive) { start() } } message: { Text("Votre progression dans la partie actuelle sera perdue.") }
     }
     private func start() { store.start(.medium, mode: "Quotidien", date: selected) }
@@ -63,7 +63,7 @@ struct JourneyView: View {
 
     var body: some View {
         ZStack {
-            LisaBackground()
+            LisaBackground(motionEnabled: motionEnabled && !replace && !seasonReplace, chapter: chapter)
             ScrollView {
                 VStack(spacing: 0) {
                     HStack(alignment: .center, spacing: 12) {
@@ -73,7 +73,7 @@ struct JourneyView: View {
                             Text("25 défis. Une étoile à la fois.").font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted)
                         }
                         Spacer(minLength: 0)
-                        LisaMascot(size: 84, celebrating: store.eventWins >= 25, animationEnabled: motionEnabled && !replace && !seasonReplace)
+                        LisaCompanion(size: 84, animationEnabled: motionEnabled && !replace && !seasonReplace)
                     }.padding(.horizontal, 24).padding(.top, 8).padding(.bottom, 22)
 
                     seasonPass.padding(.horizontal, 20).padding(.bottom, 24)
@@ -85,12 +85,12 @@ struct JourneyView: View {
                         Text("100 % hors ligne").font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
                     }.padding(.horizontal, 28).padding(.bottom, 22)
 
-                    ForEach(0..<5) { region in
+                    LazyVStack(spacing: 0) { ForEach(0..<5) { region in
                         JourneyRegionView(title: places[region], icon: icons[region], color: colors[region], region: region, completed: store.eventWins, onPlay: requestStart)
-                    }
+                    } }
                     if store.eventWins >= 25 {
                         VStack(spacing: 12) {
-                            Image(systemName: "crown.fill").font(.system(size: 48)).foregroundStyle(LisaTheme.yellow)
+                            Image(systemName: "crown.fill").font(.system(size: 48)).foregroundStyle(LisaTheme.yellow).lisaFloat(amplitude: 6, tilt: 7)
                             Text("Tout un monde de déclics !").font(LisaTheme.heading(27))
                             Text("Vos 25 étoiles brillent. Les défis du jour et les événements vous réservent encore des surprises.").font(LisaTheme.body()).multilineTextAlignment(.center).foregroundStyle(LisaTheme.muted)
                         }.padding(28)
@@ -98,6 +98,7 @@ struct JourneyView: View {
                 }.padding(.bottom, 25)
             }
         }
+        .environment(\.lisaMotionAllowed, motionEnabled && !replace && !seasonReplace)
         .navigationTitle("Voyage").navigationBarTitleDisplayMode(.inline)
         .alert("Remplacer la partie en cours ?", isPresented: $seasonReplace) {
             Button("Annuler", role: .cancel) {}
@@ -115,7 +116,7 @@ struct JourneyView: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 20).fill(LisaTheme.yellow.gradient).frame(width: 62, height: 66).rotationEffect(.degrees(-8))
                     Image(systemName: "medal.fill").font(.system(size: 34, weight: .bold)).foregroundStyle(Color(red: 0.63, green: 0.31, blue: 0.09))
-                }.accessibilityHidden(true)
+                }.lisaFloat(amplitude: 4, tilt: 5, period: 3.5).accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 4) {
                     Text("L’ÉVÉNEMENT DU MOIS").font(.system(size: 10, weight: .heavy, design: .rounded)).tracking(1.2).foregroundStyle(LisaTheme.muted)
                     Text(store.seasonTitle).font(LisaTheme.heading(22))
@@ -167,20 +168,17 @@ private struct JourneyRegionView: View {
             GeometryReader { geometry in
                 let width = max(1, geometry.size.width)
                 ZStack(alignment: .topLeading) {
-                    // All scenery is drawn natively; no artwork downloads or textures.
-                    Ellipse().fill(color.opacity(0.08)).frame(width: width * 1.1, height: 260).offset(x: -width * 0.28, y: 70)
-                    Ellipse().fill(color.opacity(0.10)).frame(width: width * 0.9, height: 230).offset(x: width * 0.52, y: 235)
-                    JourneyCandyTree(color: color).frame(width: 64, height: 110).position(x: width * 0.16, y: 207)
-                    JourneyCandyTree(color: LisaTheme.yellow).frame(width: 48, height: 87).position(x: width * 0.87, y: 387)
-                    Image(systemName: region == 4 ? "moon.stars.fill" : "cloud.fill").font(.system(size: 43)).foregroundStyle(color.opacity(0.18)).position(x: width * 0.83, y: 60)
-                    Image(systemName: "sparkle").font(.system(size: 25)).foregroundStyle(color.opacity(0.5)).position(x: width * 0.52, y: 290)
-                    Image(systemName: "sparkle").font(.system(size: 14)).foregroundStyle(color.opacity(0.5)).position(x: width * 0.12, y: 57)
+                    LisaJourneyScenery(region: region, color: color)
+                        .frame(width: width, height: 544)
                     JourneyWindingPath(positions: positions)
                         .stroke(color.opacity(0.13), style: StrokeStyle(lineWidth: 18, lineCap: .round))
                         .padding(.vertical, 80)
-                    JourneyWindingPath(positions: positions)
-                        .stroke(color.opacity(0.48), style: StrokeStyle(lineWidth: 5, lineCap: .round, dash: [1, 12]))
-                        .padding(.vertical, 80)
+                    LisaMotionClock { time in
+                        JourneyWindingPath(positions: positions)
+                            .stroke(color.opacity(0.65), style: StrokeStyle(lineWidth: 5, lineCap: .round, dash: [1, 12], dashPhase: -CGFloat(time.truncatingRemainder(dividingBy: 13) * 8)))
+                    }
+                    .padding(.vertical, 80)
+                    .allowsHitTesting(false).accessibilityHidden(true)
                     ForEach(0..<5) { step in
                         levelNode(region * 5 + step)
                             .position(x: width * positions[step], y: 80 + CGFloat(step) * 96)
@@ -200,7 +198,8 @@ private struct JourneyRegionView: View {
         return Button(action: onPlay) {
             ZStack {
                 if current {
-                    Circle().stroke(color.opacity(0.22), lineWidth: 8).frame(width: 94, height: 94)
+                    LisaMagicHalo(color: color, strong: true).frame(width: 128, height: 128)
+                    Circle().stroke(color.opacity(0.22), lineWidth: 6).frame(width: 94, height: 94)
                 }
                 Ellipse().fill(Color.black.opacity(0.10)).frame(width: 76, height: 18).offset(y: 41)
                 Circle().fill(tint.opacity(0.65)).frame(width: 76, height: 76).offset(y: 7)
@@ -208,16 +207,17 @@ private struct JourneyRegionView: View {
                 Circle().strokeBorder(.white.opacity(current || done ? 0.75 : 0.32), lineWidth: 3).frame(width: 66, height: 66)
                 Ellipse().fill(.white.opacity(0.25)).frame(width: 39, height: 13).offset(y: -22)
                 VStack(spacing: 1) {
-                    if done { Image(systemName: "star.fill").font(.system(size: 15, weight: .black)) }
+                    if done { Image(systemName: "star.fill").font(.system(size: 15, weight: .black)).lisaFloat(amplitude: 2, tilt: 14, period: 4) }
                     Text("\(index + 1)").font(.system(size: done ? 25 : 30, weight: .black, design: .rounded))
                     if !done && !current { Image(systemName: "lock.fill").font(.system(size: 10, weight: .bold)) }
                 }.foregroundStyle(current ? Color.white : done ? LisaTheme.accentInk : LisaTheme.muted)
                 if current {
                     Text("À VOUS !").font(.system(size: 10, weight: .heavy, design: .rounded)).tracking(0.8)
                         .foregroundStyle(.white).padding(.horizontal, 13).padding(.vertical, 6)
-                        .background(color, in: Capsule()).overlay(Capsule().strokeBorder(.white, lineWidth: 2)).offset(y: -50)
+                        .background(color, in: Capsule()).overlay(Capsule().strokeBorder(.white, lineWidth: 2)).lisaFloat(amplitude: 4, tilt: 4, period: 2.5).offset(y: -56)
                 }
             }.frame(width: 100, height: 110).contentShape(Rectangle())
+                .lisaFloat(amplitude: 3, tilt: 0, period: 3, enabled: current)
         }
         .buttonStyle(LisaPressStyle()).disabled(!current)
         .accessibilityLabel("Étape \(index + 1), \(done ? "terminée" : current ? "à jouer" : "verrouillée")")
@@ -238,20 +238,6 @@ private struct JourneyWindingPath: Shape {
             path.addCurve(to: next, control1: CGPoint(x: previous.x, y: previous.y + gap * 0.55), control2: CGPoint(x: next.x, y: next.y - gap * 0.55))
         }
         return path
-    }
-}
-
-private struct JourneyCandyTree: View {
-    let color: Color
-    var body: some View {
-        GeometryReader { geometry in
-            ZStack(alignment: .top) {
-                Capsule().fill(color.opacity(0.4)).frame(width: 9, height: geometry.size.height * 0.7).offset(y: geometry.size.height * 0.3)
-                Circle().fill(color.opacity(0.65).gradient).frame(width: geometry.size.width, height: geometry.size.width)
-                Circle().strokeBorder(.white.opacity(0.65), lineWidth: 5).frame(width: geometry.size.width * 0.67, height: geometry.size.width * 0.67).offset(y: geometry.size.width * 0.165)
-                Circle().fill(.white.opacity(0.55)).frame(width: geometry.size.width * 0.2, height: geometry.size.width * 0.2).offset(y: geometry.size.width * 0.4)
-            }.frame(maxWidth: .infinity)
-        }.accessibilityHidden(true)
     }
 }
 
@@ -294,8 +280,8 @@ struct ProgressViewLisa: View {
             }
         }.padding(24) } }.navigationTitle("Mes progrès").navigationBarTitleDisplayMode(.inline)
     }
-    private func stat(_ value: String, _ title: String, _ icon: String) -> some View { VStack(alignment: .leading, spacing: 10) { Image(systemName: icon).foregroundStyle(LisaTheme.coral); Text(value).font(LisaTheme.heading(29)); Text(title).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted) }.frame(maxWidth: .infinity, alignment: .leading).padding(20).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 23)) }
-    private func badge(_ title: String, subtitle: String, icon: String, earned: Bool) -> some View { HStack(spacing: 16) { Image(systemName: earned ? icon : "lock.fill").foregroundStyle(earned ? LisaTheme.accentInk : LisaTheme.ink).font(.system(size: 22)).frame(width: 50, height: 50).background(earned ? LisaTheme.yellow : LisaTheme.line.opacity(0.4), in: Circle()); VStack(alignment: .leading, spacing: 5) { Text(title).font(LisaTheme.heading(17)); Text(subtitle).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted) }; Spacer() }.padding(15).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 21)).opacity(earned ? 1 : 0.65) }
+    private func stat(_ value: String, _ title: String, _ icon: String) -> some View { VStack(alignment: .leading, spacing: 10) { Image(systemName: icon).foregroundStyle(LisaTheme.coral).lisaFloat(amplitude: 3, tilt: 8); Text(value).font(LisaTheme.heading(29)); Text(title).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted) }.frame(maxWidth: .infinity, alignment: .leading).padding(20).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 23)) }
+    private func badge(_ title: String, subtitle: String, icon: String, earned: Bool) -> some View { HStack(spacing: 16) { Image(systemName: earned ? icon : "lock.fill").foregroundStyle(earned ? LisaTheme.accentInk : LisaTheme.ink).font(.system(size: 22)).frame(width: 50, height: 50).background(earned ? LisaTheme.yellow : LisaTheme.line.opacity(0.4), in: Circle()).lisaFloat(amplitude: 3, tilt: 6, enabled: earned); VStack(alignment: .leading, spacing: 5) { Text(title).font(LisaTheme.heading(17)); Text(subtitle).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted) }; Spacer() }.padding(15).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 21)).opacity(earned ? 1 : 0.65) }
 }
 
 struct SettingsView: View {
@@ -310,6 +296,8 @@ struct SettingsView: View {
                     Text("Papier").tag(2)
                 }.accessibilityIdentifier("themePicker")
                 Toggle("Sons", isOn: $store.settings.sound)
+                Toggle("Musique douce", isOn: $store.settings.music).accessibilityIdentifier("musicToggle")
+                Toggle("Décor animé", isOn: $store.settings.animatedDecor).accessibilityIdentifier("decorToggle")
                 Toggle("Retours haptiques", isOn: $store.settings.haptics)
             }
             Section("Votre façon de jouer") {

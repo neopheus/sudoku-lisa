@@ -1,6 +1,8 @@
 #if DEBUG
 import SceneKit
 import UIKit
+import ImageIO
+import UniformTypeIdentifiers
 
 /// Development-only export: icons and stickers share the actual in-game model.
 @MainActor
@@ -39,7 +41,7 @@ enum OctopusAssetExporter {
                     context.cgContext.drawLinearGradient(gradient, start: .zero, end: CGPoint(x: width, y: height), options: [])
                     image.draw(in: CGRect(origin: .zero, size: size))
                 }
-                try result.pngData()!.write(to: directory.appendingPathComponent(name))
+                try writeOpaquePNG(result, width: width, height: height, to: directory.appendingPathComponent(name))
             }
             for (name, mood) in [("lisa-smile", LisaMascotMood.idle), ("lisa-bravo", .happy), ("lisa-zen", .sleepy), ("lisa-heart", .encouraging)] {
                 model.setMood(mood, animated: false)
@@ -48,6 +50,30 @@ enum OctopusAssetExporter {
             }
             print("OCTOPUS_ASSETS_EXPORTED \(directory.path)")
         } catch { print("OCTOPUS_ASSETS_EXPORT_FAILED \(error)") }
+    }
+
+    /// UIImage.pngData may retain an alpha channel even for an opaque renderer.
+    /// Encode an explicitly RGB bitmap so App Store icon validation sees no alpha.
+    private static func writeOpaquePNG(_ image: UIImage, width: Int, height: Int, to url: URL) throws {
+        guard let source = image.cgImage,
+              let bitmap = CGContext(data: nil, width: width, height: height,
+                                     bitsPerComponent: 8, bytesPerRow: width * 4,
+                                     space: CGColorSpaceCreateDeviceRGB(),
+                                     bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue) else {
+            throw NSError(domain: "OctopusAssetExporter", code: 1,
+                          userInfo: [NSLocalizedDescriptionKey: "Unable to create opaque icon bitmap"])
+        }
+        bitmap.draw(source, in: CGRect(x: 0, y: 0, width: width, height: height))
+        guard let rgbImage = bitmap.makeImage(),
+              let destination = CGImageDestinationCreateWithURL(url as CFURL, UTType.png.identifier as CFString, 1, nil) else {
+            throw NSError(domain: "OctopusAssetExporter", code: 2,
+                          userInfo: [NSLocalizedDescriptionKey: "Unable to create PNG destination"])
+        }
+        CGImageDestinationAddImage(destination, rgbImage, nil)
+        guard CGImageDestinationFinalize(destination) else {
+            throw NSError(domain: "OctopusAssetExporter", code: 3,
+                          userInfo: [NSLocalizedDescriptionKey: "Unable to encode opaque icon PNG"])
+        }
     }
 }
 #endif

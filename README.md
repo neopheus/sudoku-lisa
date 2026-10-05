@@ -1,6 +1,6 @@
 # Lisa Sudoku
 
-Application iPhone native en français, SwiftUI et Swift, iOS 17 minimum. Interface en portrait, mascotte vectorielle, animations et progression locale. Aucun SDK tiers ni serveur requis pour jouer.
+Application iPhone native en français, SwiftUI et Swift, iOS 17 minimum. Interface en portrait, mascotte poulpe 3D procédurale animée en temps réel avec SceneKit et progression locale. Aucun SDK tiers ni serveur requis pour jouer.
 
 ## Développement
 
@@ -39,6 +39,10 @@ Pour un véritable iPhone, choisir une équipe Apple dans **Signing & Capabiliti
 
 Les données sont stockées dans le conteneur de l’application : supprimer l’application supprime sa progression. Une seule partie active est conservée. Il n’y a pas de synchronisation entre appareils.
 
+## Ambiance et petites victoires
+
+Sons originaux, musique douce facultative, décors animés, coucou interactif de Lisa, réussites intermédiaires et récompenses mises en scène : voir [les comportements et contrôles](docs/ambiance.md). La musique est désactivée par défaut ; les nouveaux réglages sont accessibles dans « À votre goût ».
+
 ## Écarts et limites
 
 Les niveaux combinent densité initiale et sélection bornée parmi quatre grilles selon les techniques détectées (candidats uniques, positions uniques, candidats verrouillés, paires nues ou techniques avancées). Cela améliore la séparation des difficultés sans garantir six catégories strictement disjointes. Les indices avancés donnent une valeur vérifiée sans enseigner la technique complète. L’historique d’annulation enregistre uniquement les cases modifiées et migre les anciennes sauvegardes.
@@ -57,7 +61,7 @@ Références fonctionnelles : [fiche iPhone Sudoku.com](https://apps.apple.com/u
 
 ## Budget inférieur à 100 Mo
 
-La limite du projet est **100 000 000 octets**. SwiftUI, les ressources vectorielles et l’absence de dépendances tierces limitent le poids. Le contrôle local accepte le chemin d’un bundle construit :
+La limite du projet est **100 000 000 octets**. SwiftUI, la géométrie procédurale de la mascotte et l’absence de dépendances tierces limitent le poids. Le contrôle local accepte le chemin d’un bundle construit :
 
 ```sh
 sh scripts/check_size.sh /tmp/sudoku-lisa-derived/Build/Products/Debug-iphonesimulator/SudokuLisa.app
@@ -66,6 +70,8 @@ sh scripts/check_size.sh /tmp/sudoku-lisa-derived/Build/Products/Debug-iphonesim
 Ce contrôle constitue uniquement un garde-fou sur le bundle local. **Une app simulateur, les sources, une archive Xcode ou une IPA d’envoi ne prouvent pas le poids App Store.** Pour confirmer l’objectif commercial, créer une archive Release signée, l’exporter avec l’amincissement pour toutes les variantes compatibles et vérifier le fichier `App Thinning Size Report.txt`. Contrôler séparément taille compressée de téléchargement et taille décompressée d’installation, puis confirmer dans App Store Connect. Le seuil doit être respecté pour chaque variante iPhone. [Méthode officielle Apple](https://developer.apple.com/documentation/Xcode/reducing-your-app-s-size).
 
 ## Distribution TestFlight
+
+La mascotte utilise des mouvements 3D interpolés, sans animation image par image. Pour exporter les icônes et stickers à partir du même modèle, utiliser `python3 scripts/export_octopus_assets.py <QA_SIMULATOR_UDID>` après installation d’un Debug à jour. Voir [la mascotte et son workflow de ressources](docs/octopus-mascot.md). Les anciens générateurs de dessin sont verrouillés pour éviter d’écraser le poulpe.
 
 La signature est configurée pour l’équipe `S2UPJPPKKG`. Les icônes iMessage nécessaires à la distribution sont incluses. Voir [la procédure et les textes de bêta](docs/testflight.md). L’export utilise `scripts/TestFlightExportOptions.plist` et envoie le build à App Store Connect ; la connexion Xcode et la fiche Apple doivent être prêtes.
 
@@ -79,6 +85,6 @@ La signature est configurée pour l’équipe `S2UPJPPKKG`. Les icônes iMessage
 
 ## Résultat vérifié
 
-Le 5 octobre 2026 : **19 tests moteur et 4 exécutions de tests UI réussis**, sur simulateurs iPhone SE et iPhone 16. Compilation Release iPhone réussie, bundle local de **2,53 Mo**, stickers inclus. [Rapport et captures](docs/validation.md).
+Référence historique du 5 octobre 2026, avant la mascotte 3D : **19 tests moteur et 4 exécutions de tests UI réussis**, sur simulateurs iPhone SE et iPhone 16. Le bundle initial de **2,53 Mo** n’est pas une mesure de la version actuelle. [Rapport et captures historiques](docs/validation.md). Refaire les contrôles de taille et d’interface après toute régénération des ressources.
 
 Avec une équipe personnelle Apple non payante, il peut être nécessaire de retirer la capacité Game Center pour tester le jeu hors ligne sur son iPhone ; les tournois restent alors indisponibles. La configuration et la signature concernent aussi la cible LisaStickers.

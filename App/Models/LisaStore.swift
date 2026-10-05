@@ -4,6 +4,8 @@ import UIKit
 
 struct LisaSettings: Codable {
     var sound = true
+    var music = false
+    var animatedDecor = true
     var haptics = true
     var autoCheck = true
     var highlightPeers = true
@@ -14,10 +16,12 @@ struct LisaSettings: Codable {
     var showTimer = true
 
     init() {}
-    private enum CodingKeys: String, CodingKey { case sound, haptics, autoCheck, highlightPeers, highlightDuplicates, errorLimit, darkMode, paperMode, showTimer }
+    private enum CodingKeys: String, CodingKey { case sound, music, animatedDecor, haptics, autoCheck, highlightPeers, highlightDuplicates, errorLimit, darkMode, paperMode, showTimer }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         sound = try c.decodeIfPresent(Bool.self, forKey: .sound) ?? true
+        music = try c.decodeIfPresent(Bool.self, forKey: .music) ?? false
+        animatedDecor = try c.decodeIfPresent(Bool.self, forKey: .animatedDecor) ?? true
         haptics = try c.decodeIfPresent(Bool.self, forKey: .haptics) ?? true
         autoCheck = try c.decodeIfPresent(Bool.self, forKey: .autoCheck) ?? true
         highlightPeers = try c.decodeIfPresent(Bool.self, forKey: .highlightPeers) ?? true
@@ -55,7 +59,10 @@ private struct SaveData: Codable {
 @MainActor
 final class LisaStore: ObservableObject {
     @Published var session: GameSession?
-    @Published var settings = LisaSettings() { didSet { save() } }
+    @Published var settings = LisaSettings() { didSet {
+        LisaAudio.shared.configure(music: settings.music, effectsEnabled: settings.sound)
+        save()
+    } }
     @Published var history: [FinishedGame] = []
     @Published var completedDays: Set<String> = []
     @Published var eventWins = 0
@@ -68,6 +75,7 @@ final class LisaStore: ObservableObject {
     @Published var showGame = false
     @Published var showVictory = false
     @Published var saveError: String?
+    var milestones = GameMilestones()
     private var recorded = false
     private let saveURL: URL
 
@@ -94,6 +102,32 @@ final class LisaStore: ObservableObject {
                 recorded = session?.isComplete ?? false
             }
         } catch { saveError = "La sauvegarde n’a pas pu être chargée. Vos nouvelles parties pourront être enregistrées." }
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--uitest-reset"),
+           ProcessInfo.processInfo.arguments.contains("--uitest-reduce-motion") {
+            assert(UIAccessibility.isReduceMotionEnabled, "This test requires the simulator Reduce Motion setting")
+        }
+        // Deterministic, isolated UI fixture. Never touches a non-reset installation.
+        if ProcessInfo.processInfo.arguments.contains("--uitest-reset"),
+           ProcessInfo.processInfo.arguments.contains("--uitest-finale") {
+            let solution = (0..<81).map { ($0 / 9 * 3 + $0 / 27 + $0 % 9) % 9 + 1 }
+            var givens = solution
+            for index in [0, 40, 80] { givens[index] = 0 }
+            session = GameSession(puzzle: Puzzle(givens: givens, solution: solution, difficulty: .quick, seed: 1))
+            mode = "Voyage"
+            eventWins = 4
+            recorded = false
+            if ProcessInfo.processInfo.arguments.contains("--uitest-zen") {
+                settings.autoCheck = false
+                settings.highlightDuplicates = false
+            }
+            save()
+        }
+        #endif
+        if let session {
+            _ = milestones.record(before: Array(repeating: 0, count: 81), after: session.values,
+                                  solution: session.puzzle.solution, revealsCorrectness: false)
+        }
     }
 
     func save() {
@@ -137,6 +171,7 @@ final class LisaStore: ObservableObject {
         Task {
             let puzzle = await Task.detached(priority: .userInitiated) { SudokuGenerator.generate(difficulty: difficulty, seed: seed) }.value
             session = GameSession(puzzle: puzzle)
+            milestones = GameMilestones()
             recorded = false
             showVictory = false
             isGenerating = false
@@ -162,11 +197,18 @@ final class LisaStore: ObservableObject {
     }
 
     func feedback(success: Bool = false) {
+        feedback(success ? .victory : .select)
+    }
+
+    func feedback(_ sound: LisaSound) {
         if settings.haptics {
-            if success { UINotificationFeedbackGenerator().notificationOccurred(.success) }
-            else { UISelectionFeedbackGenerator().selectionChanged() }
+            if sound == .victory || sound == .milestone {
+                UINotificationFeedbackGenerator().notificationOccurred(.success)
+            } else if sound == .place || sound == .hello {
+                UIImpactFeedbackGenerator(style: .soft).impactOccurred(intensity: 0.6)
+            } else { UISelectionFeedbackGenerator().selectionChanged() }
         }
-        if settings.sound { AudioServicesPlaySystemSound(success ? 1025 : 1104) }
+        if settings.sound { LisaAudio.shared.play(sound) }
     }
 
     static func stableSeed(_ key: String) -> UInt64 {
@@ -233,5 +275,3 @@ final class LisaStore: ObservableObject {
     var totalMinutes: Int { history.reduce(0) { $0 + $1.seconds } / 60 }
     static func time(_ seconds: Int) -> String { String(format: "%02d:%02d", seconds / 60, seconds % 60) }
 }
-
-import AudioToolbox

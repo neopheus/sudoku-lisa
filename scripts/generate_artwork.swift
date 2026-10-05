@@ -4,6 +4,10 @@
 import AppKit
 import ImageIO
 import UniformTypeIdentifiers
+// LEGACY: use export_octopus_assets.py for the current 3D octopus.
+guard ProcessInfo.processInfo.environment["LISA_ALLOW_LEGACY_ARTWORK"] == "1" else {
+    fatalError("Legacy mascot generator disabled. Use python3 scripts/export_octopus_assets.py <QA_UDID>.")
+}
 let root = CommandLine.arguments.count > 1 ? CommandLine.arguments[1] : FileManager.default.currentDirectoryPath
 try FileManager.default.createDirectory(atPath: root + "/App/Assets.xcassets/AppIcon.appiconset", withIntermediateDirectories: true)
 try FileManager.default.createDirectory(atPath: root + "/Stickers/Resources", withIntermediateDirectories: true)

@@ -1,0 +1,126 @@
+{
+  "environment": "iPhone 16 simulator, iOS 18.5, Release, automated UI scenario; no concurrent build or screen recording",
+  "limitations": "Renderer callback cadence and main-thread display-link cadence, not physical display or GPU presentation timestamps. No before/after baseline; no physical 120 Hz measurement.",
+  "main_thread": {
+    "windows": 11,
+    "fps_min": 20.0,
+    "fps_median": 57.0,
+    "fps_max": 58.7,
+    "samples": [
+      [
+        "58.7",
+        "0.03",
+        "0",
+        "60"
+      ],
+      [
+        "40.4",
+        "0.15",
+        "0",
+        "60"
+      ],
+      [
+        "31.2",
+        "0.44",
+        "0",
+        "60"
+      ],
+      [
+        "20.0",
+        "0.68",
+        "1",
+        "60"
+      ],
+      [
+        "51.1",
+        "0.07",
+        "2",
+        "60"
+      ],
+      [
+        "57.0",
+        "0.04",
+        "2",
+        "60"
+      ],
+      [
+        "57.0",
+        "0.04",
+        "2",
+        "60"
+      ],
+      [
+        "57.0",
+        "0.04",
+        "2",
+        "60"
+      ],
+      [
+        "57.5",
+        "0.03",
+        "2",
+        "60"
+      ],
+      [
+        "57.0",
+        "0.04",
+        "2",
+        "60"
+      ],
+      [
+        "48.3",
+        "0.07",
+        "2",
+        "60"
+      ]
+    ]
+  },
+  "scenekit": {
+    "windows": 10,
+    "fps_min": 47.0,
+    "fps_median": 58.75,
+    "fps_max": 60.0,
+    "samples": [
+      [
+        "58.0",
+        "0.01"
+      ],
+      [
+        "60.0",
+        "0.00"
+      ],
+      [
+        "49.5",
+        "0.21"
+      ],
+      [
+        "47.0",
+        "0.27"
+      ],
+      [
+        "58.0",
+        "0.03"
+      ],
+      [
+        "59.0",
+        "0.02"
+      ],
+      [
+        "58.5",
+        "0.03"
+      ],
+      [
+        "59.0",
+        "0.02"
+      ],
+      [
+        "59.0",
+        "0.02"
+      ],
+      [
+        "59.0",
+        "0.02"
+      ]
+    ]
+  }
+}

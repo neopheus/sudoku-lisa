@@ -19,7 +19,7 @@ struct TournamentView: View {
                     Spacer(minLength: 0)
                     Image(systemName: "trophy.fill")
                         .font(.system(size: 42)).foregroundStyle(LisaTheme.coral)
-                        .padding(.top, 18).accessibilityHidden(true)
+                        .padding(.top, 18).lisaFloat(amplitude: 6, tilt: 8).accessibilityHidden(true)
                 }
                 LisaCard(tint: LisaTheme.yellow.opacity(0.35)) {
                     VStack(alignment: .leading, spacing: 16) {

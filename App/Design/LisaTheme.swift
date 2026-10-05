@@ -28,15 +28,18 @@ enum LisaTheme {
 }
 
 struct LisaBackground: View {
+    var motionEnabled = true
+    var quiet = false
+    var chapter: Int? = nil
+    @EnvironmentObject private var store: LisaStore
     @Environment(\.colorScheme) private var scheme
     var body: some View {
         GeometryReader { geometry in
             ZStack {
                 LinearGradient(colors: [LisaTheme.sky, LisaTheme.background, scheme == .dark ? Color(red: 0.23, green: 0.12, blue: 0.33) : Color(red: 0.94, green: 0.80, blue: 0.96)], startPoint: .top, endPoint: .bottom)
-                cloud(width: geometry.size.width * 0.6)
-                    .position(x: geometry.size.width * 0.1, y: geometry.size.height * 0.15)
-                cloud(width: geometry.size.width * 0.5)
-                    .position(x: geometry.size.width * 0.91, y: geometry.size.height * 0.38)
+                if let chapter {
+                    LisaJourneyAtmosphere.colors[min(max(chapter, 0), 4)].opacity(scheme == .dark ? 0.16 : 0.14)
+                }
                 Ellipse().fill(LisaTheme.lavender.opacity(scheme == .dark ? 0.12 : 0.5))
                     .frame(width: geometry.size.width * 1.2, height: geometry.size.height * 0.4)
                     .rotationEffect(.degrees(-20))
@@ -45,28 +48,16 @@ struct LisaBackground: View {
                     .frame(width: geometry.size.width * 1.3, height: geometry.size.height * 0.35)
                     .rotationEffect(.degrees(15))
                     .position(x: geometry.size.width * 0.92, y: geometry.size.height * 1.03)
-                ForEach(0..<12, id: \.self) { index in
-                    Image(systemName: index.isMultiple(of: 3) ? "sparkle" : "circle.fill")
-                        .font(.system(size: index.isMultiple(of: 3) ? 14 : 4, weight: .bold))
-                        .foregroundStyle(.white.opacity(scheme == .dark ? 0.22 : 0.8))
-                        .position(x: geometry.size.width * CGFloat((index * 37 + 9) % 100) / 100,
-                                  y: geometry.size.height * CGFloat((index * 29 + 5) % 100) / 100)
-                }
+
             }
+            .overlay { LisaAtmosphere(enabled: motionEnabled && store.settings.animatedDecor, quiet: quiet, chapter: chapter) }
             .clipped()
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
-    private func cloud(width: CGFloat) -> some View {
-        ZStack {
-            Capsule().frame(width: width, height: width * 0.20).offset(y: width * 0.08)
-            Circle().frame(width: width * 0.32).offset(x: -width * 0.16)
-            Circle().frame(width: width * 0.42).offset(x: width * 0.10, y: -width * 0.035)
-        }
-        .foregroundStyle(.white.opacity(scheme == .dark ? 0.035 : 0.52))
-    }
+
 }
 
 /// Reusable candy shell. Use in .background(CandySurface(tint: ..., cornerRadius: ...)).
@@ -110,7 +101,7 @@ struct LisaButton: View {
         Button(action: action) {
             HStack(spacing: 10) {
                 Text(title).font(LisaTheme.heading(19))
-                if let icon { Image(systemName: icon).font(.system(size: 18, weight: .heavy)) }
+                if let icon { Image(systemName: icon).font(.system(size: 18, weight: .heavy)).lisaFloat(amplitude: 2, tilt: 8, period: 2.8) }
             }
             .foregroundStyle(labelColor)
             .shadow(color: tint == LisaTheme.coral ? LisaTheme.candyShadow.opacity(0.5) : .clear, radius: 0, y: 1)
@@ -119,6 +110,7 @@ struct LisaButton: View {
             .overlay(alignment: .top) {
                 Capsule().fill(.white.opacity(0.3)).frame(height: 3).padding(.horizontal, 23).padding(.top, 7).allowsHitTesting(false)
             }
+            .overlay { LisaShimmer() }
             .contentShape(RoundedRectangle(cornerRadius: 23))
         }
         .buttonStyle(LisaPressStyle())
@@ -149,9 +141,9 @@ struct LisaPressStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .brightness(configuration.isPressed ? -0.04 : 0)
-            .offset(y: configuration.isPressed ? 3 : 0)
-            .scaleEffect(configuration.isPressed && !reduceMotion ? 0.97 : 1)
-            .animation(reduceMotion ? nil : .spring(response: 0.23, dampingFraction: 0.6), value: configuration.isPressed)
+            .offset(y: configuration.isPressed && !reduceMotion ? 4 : 0)
+            .scaleEffect(x: configuration.isPressed && !reduceMotion ? 0.96 : 1, y: configuration.isPressed && !reduceMotion ? 0.90 : 1)
+            .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.48), value: configuration.isPressed)
     }
 }
 
@@ -161,7 +153,7 @@ struct LisaPill: View {
     var tint: Color = LisaTheme.lavender
     var body: some View {
         HStack(spacing: 5) {
-            if let icon { Image(systemName: icon) }
+            if let icon { Image(systemName: icon).lisaFloat(amplitude: 1.5, tilt: 9, period: 3.2) }
             Text(title)
         }
         .font(.system(size: 12, weight: .heavy, design: .rounded))
