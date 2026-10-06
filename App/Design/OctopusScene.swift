@@ -124,7 +124,7 @@ final class OctopusRenderView: SCNView {
         }
         let aa: SCNAntialiasingMode = level == 0 ? .multisampling4X : .multisampling2X
         if antialiasingMode != aa { antialiasingMode = aa }
-        let screenScale = window?.screen.scale ?? UIScreen.main.scale
+        let screenScale = window?.windowScene?.screen.scale ?? traitCollection.displayScale
         // Preserve the sculpt silhouette at native density, including close passes.
         // The adaptive budget adjusts cadence and peripheral scenery first.
         let renderScale = screenScale

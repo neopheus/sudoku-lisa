@@ -25,10 +25,10 @@ def curve(i,t):
         anchors=[Vector((side*x,y,z)) for x,y,z in [(.36,-.20,.23),(.55,-.31,.48),(.77,-.27,.65),(.90,-.10,.72),(.84,.045,.73),(.71,.005,.73)]]
     elif i in (0,7):
         side=1 if i==0 else -1
-        anchors=[Vector((side*x,y,z)) for x,y,z in [(.14,-.02,.36),(.25,-.36,.43),(.30,-.72,.72),(.51,-.74,.80),(.65,-.72,.87),(.59,-.63,.94)]]
+        anchors=[Vector((side*x,y,z)) for x,y,z in [(.14,-.02,.36),(.25,-.36,.43),(.285,-.72,.72),(.51,-.74,.80),(.65,-.72,.87),(.59,-.63,.94)]]
     elif i in (2,5):
         side=1 if i==2 else -1
-        anchors=[Vector((side*x,y,z)) for x,y,z in [(.22,-.20,-.04),(.55,-.55,.08),(.84,-.69,.22),(1.00,-.63,.40),(1.06,-.62,.62),(.84,-.35,.30)]]
+        anchors=[Vector((side*x,y,z)) for x,y,z in [(.22,-.20,-.04),(.60,-.55,.00),(.94,-.72,.13),(1.08,-.61,.30),(1.08,-.46,.32),(.91,-.50,.32)]]
     else:
         side=1 if i==3 else -1
         # The rear pair peeks through the front web instead of spreading behind
@@ -57,10 +57,8 @@ def basis(i,t):
 
 def radius(t, i=None):
     if i in (0,7): return .18+.055*math.sin(math.pi*t)-.06*t
-    if i in (1,6): return .105*(1-t)+.085
-    if i in (2,5):
-        tip=max(0,min(1,(t-.60)/.40))
-        return .19*(1-t)+.100-.030*tip*tip*(3-2*tip)
+    if i in (1,6): return .105*(1-t)+.085-.020*math.sin(math.pi*t)
+    if i in (2,5): return .15*(1-t)+.090
     return .19*(1-t)+.100
 
 def mesh(name,vertices,faces):
@@ -90,6 +88,10 @@ bm=bmesh.new();bm.from_mesh(skin.data)
 bmesh.ops.holes_fill(bm,edges=[e for e in bm.edges if e.is_boundary],sides=0)
 bmesh.ops.recalc_face_normals(bm,faces=list(bm.faces))
 assert all(e.is_manifold for e in bm.edges), 'Non-manifold skin surface'
+# Reject extra limb connections before skin weights, AO and runtime export.
+# The detailed post-export validator also checks connected components/poses.
+euler=len(bm.verts)-len(bm.edges)+len(bm.faces)
+assert euler==2, ('Unexpected sculpt handle before export',euler)
 bm.to_mesh(skin.data);bm.free()
 bpy.ops.object.transform_apply(location=True,rotation=True,scale=True)
 for p in skin.data.polygons:p.use_smooth=True
@@ -164,7 +166,7 @@ def bind_surface(p):
  bary=barycentric_transform(near,Vector(vertices[a]),Vector(vertices[b]),Vector(vertices[c]),Vector((1,0,0)),Vector((0,1,0)),Vector((0,0,1)))
  return compact(weights[a]*bary.x+weights[b]*bary.y+weights[c]*bary.z)
 # Forty cups, one draw call, with the SAME skin binding as the supporting arm.
-cv=[];cn=[];ci=[];cb=[];cw=[]
+cv=[];cn=[];ci=[];cb=[];cw=[];cuv=[]
 cup_sides=24
 profile=[(.74,-.06),(.94,.10),(1,.34),(.90,.58),(.65,.66),(.30,.64)]
 cup_centre_height=.63
@@ -176,7 +178,7 @@ def cup_seat(i,t):
     assert hit is not None, ('No supporting skin under cup',i,t)
     return hit-normal*.004
 for i in range(8):
-    samples=np.linspace(.45 if i in (1,6) else .36,.79 if i in (1,6) else .885,128)
+    samples=np.linspace(.38 if i in (1,6) else .36,.73 if i in (1,6) else .70 if i in (2,5) else .885,128)
     points=np.array([cup_seat(i,float(t)) for t in samples])
     lengths=np.concatenate([[0],np.cumsum(np.linalg.norm(np.diff(points,axis=0),axis=1))])
     # Equal spacing along the actual underside surface, after projection.
@@ -190,6 +192,10 @@ for i in range(8):
         # Slim the exposed front-tip cushions across the arm while keeping
         # their length, supporting seat and skin binding unchanged.
         across_scale=1-.22*oval_blend
+        if i in (1,6):
+            # The low cushion is broader along the arm than across it.
+            base_blend=1-max(0,min(1,(t-.38)/.12))
+            across_scale*=1-.50*base_blend*base_blend*(3-2*base_blend)
         size=.082-t*.009;base=len(cv)//3
         ids,cupWeights=bind_surface(centre)
         for ring,(r,h) in enumerate(profile):
@@ -199,12 +205,14 @@ for i in range(8):
                 point=centre+size*(radial*r+normal*h);normal_radial=tan*(math.cos(a)/oval)+u*(math.sin(a)/across_scale)
                 norm=(normal_radial*(nxt[1]-prev[1])+normal*(prev[0]-nxt[0])).normalized()
                 cv.extend(point);cn.extend(norm);cb.extend(ids);cw.extend(cupWeights)
+                cuv.extend([.5+.5*r*math.cos(a),.5+.5*r*math.sin(a)])
                 if ring<len(profile)-1:
                     a=base+ring*cup_sides+k;b=base+ring*cup_sides+(k+1)%cup_sides;c=a+cup_sides;d=b+cup_sides;ci.extend([a,c,b,b,c,d])
         # A single axial pole closes the shallow recess without coincident
         # centre vertices or degenerate faces. Its normal cannot form a star.
         pole=len(cv)//3;point=centre+normal*(size*cup_centre_height)
         cv.extend(point);cn.extend(normal);cb.extend(ids);cw.extend(cupWeights)
+        cuv.extend([.5,.5])
         last=base+(len(profile)-1)*cup_sides
         for k in range(cup_sides):ci.extend([last+k,pole,last+(k+1)%cup_sides])
 # Bake broad crevice shading once, keeping runtime lighting free of SSAO passes.
@@ -221,7 +229,8 @@ for point,n in zip(vertices,normals):
   if hit is not None:occ+=1-distance/.32
  ao.append(round(1-.52*occ/16,5))
 skinPacked['occlusion']=ao
-asset={'version':1,'joints':joints,'skin':skinPacked,'cups':{'positions':cv,'normals':cn,'indices':ci,'bones':cb,'weights':cw,'occlusion':[1.]*(len(cv)//3)}}
+asset={'version':1,'joints':joints,'skin':skinPacked,'cups':{'textureCoordinates':cuv,'positions':cv,'normals':cn,'indices':ci,'bones':cb,'weights':cw,'occlusion':[1.]*(len(cv)//3)}}
+assert len(cuv)==len(cv)//3*2 and all(math.isfinite(v) and 0<=v<=1 for v in cuv)
 # Fail production if a binding could collapse a vertex or indexes are invalid.
 for group in ('skin','cups'):
     g=asset[group];count=len(g['positions'])//3

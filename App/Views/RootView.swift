@@ -125,7 +125,7 @@ struct HomeView: View {
                         }.padding(17).background(LisaTheme.paper.opacity(0.9), in: RoundedRectangle(cornerRadius: 24)).overlay(RoundedRectangle(cornerRadius: 24).stroke(.white.opacity(0.7), lineWidth: 2))
                     }.buttonStyle(LisaPressStyle())
                     Label(L10n.text("Sans pub. Tout le plaisir du jeu."), systemImage: "heart.fill").font(LisaTheme.body(11)).foregroundStyle(LisaTheme.muted).padding(.bottom, 12)
-                }.padding(.horizontal, 22).padding(.top, 5)
+                }.frame(maxWidth: 720).padding(.horizontal, 22).padding(.top, 5).frame(maxWidth: .infinity)
             }
         }
         .environment(\.lisaMotionAllowed, mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
@@ -181,7 +181,7 @@ struct DifficultyView: View {
                         HStack { VStack(alignment: .leading, spacing: 5) { Text(difficulty.label).font(LisaTheme.heading(20)); Text(descriptions[index]).font(LisaTheme.body(13)).foregroundStyle(LisaTheme.muted) }; Spacer(); HStack(spacing: 3) { ForEach(0..<6) { dot in Circle().fill(dot <= index ? LisaTheme.coral : LisaTheme.line).frame(width: 6, height: 6) } }; Image(systemName: "chevron.right").font(.caption).padding(.leading, 5) }.padding(19).background(CandySurface(tint: LisaTheme.paper, cornerRadius: 23, depth: 4)).contentShape(RoundedRectangle(cornerRadius: 23))
                     }.buttonStyle(LisaPressStyle())
                 }
-            }.padding(24) } }.navigationTitle(L10n.text("Nouvelle partie")).navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button(L10n.text("Fermer")) { dismiss() } } }
+            }.frame(maxWidth: 640).padding(24).frame(maxWidth: .infinity) } }.navigationTitle(L10n.text("Nouvelle partie")).navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button(L10n.text("Fermer")) { dismiss() } } }
         }
     }
 }

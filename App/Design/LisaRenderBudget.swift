@@ -20,6 +20,7 @@ final class LisaRenderBudget: ObservableObject {
     private var late = 0
     private var foreground = true
     private var rendererPressure: Double = 0
+    private var displayMaximumFrameRate = 60
     private let metricsEnabled = ProcessInfo.processInfo.environment["LISA_RENDER_METRICS"] == "1"
     private let logger = Logger(subsystem: "com.xavier.sudokulisa", category: "AnimationBudget")
 
@@ -47,6 +48,13 @@ final class LisaRenderBudget: ObservableObject {
     func setActive(_ active: Bool, client: UUID) {
         if active { clients.insert(client) } else { clients.remove(client) }
         updatePlayback()
+    }
+
+    func setDisplayMaximumFrameRate(_ maximum: Int) {
+        guard maximum > 0, maximum != displayMaximumFrameRate else { return }
+        displayMaximumFrameRate = maximum
+        resetWindow()
+        refresh()
     }
 
     private func updatePlayback() {
@@ -79,7 +87,7 @@ final class LisaRenderBudget: ObservableObject {
         let process = ProcessInfo.processInfo
         let hot = process.thermalState == .serious || process.thermalState == .critical
         let newLevel = AnimationBudget.effectiveLevel(measured: policy.level, lowPower: process.isLowPowerModeEnabled, hot: hot)
-        let newRate = AnimationBudget.frameRate(maximum: UIScreen.main.maximumFramesPerSecond, level: newLevel, lowPower: process.isLowPowerModeEnabled, hot: hot)
+        let newRate = AnimationBudget.frameRate(maximum: displayMaximumFrameRate, level: newLevel, lowPower: process.isLowPowerModeEnabled, hot: hot)
         if level != newLevel { level = newLevel }
         if frameRate != newRate { frameRate = newRate; resetWindow() }
         link?.preferredFrameRateRange = CAFrameRateRange(minimum: Float(min(30, newRate)), maximum: Float(newRate), preferred: Float(newRate))

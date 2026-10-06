@@ -5,9 +5,22 @@ public struct SudokuHint: Codable, Sendable, Equatable {
     public let value: Int
     public let title: String
     public let detail: String
-    public init(index: Int, value: Int, title: String, detail: String) {
+    public let focusCells: [Int]
+    public let eliminatedCandidates: [Int]
+    public let eliminationMarks: [CandidateElimination]
+    public let technique: String
+    public let explanation: String
+    public init(index: Int, value: Int, title: String, detail: String, focusCells: [Int] = [], eliminatedCandidates: [Int] = [], eliminationMarks: [CandidateElimination] = [], technique: String = "", explanation: String = "") {
         self.index = index; self.value = value; self.title = title; self.detail = detail
+        self.focusCells = focusCells; self.eliminatedCandidates = eliminatedCandidates; self.eliminationMarks = eliminationMarks
+        self.technique = technique; self.explanation = explanation
     }
+}
+
+public struct CandidateElimination: Codable, Sendable, Equatable, Hashable {
+    public let index: Int
+    public let value: Int
+    public init(index: Int, value: Int) { self.index = index; self.value = value }
 }
 
 public struct GameSession: Codable, Sendable, Equatable {
@@ -129,29 +142,12 @@ public struct GameSession: Codable, Sendable, Equatable {
     public func hint() -> SudokuHint? {
         guard !isComplete else { return nil }
         if let wrong = (0..<81).first(where: { isIncorrect(at: $0) }) {
-            return SudokuHint(index: wrong, value: puzzle.solution[wrong], title: L10n.text("Une case à revoir"), detail: L10n.text("La valeur en ligne %@, colonne %@ empêche de terminer la grille. La valeur correcte est %@.", String(describing: wrong / 9 + 1), String(describing: wrong % 9 + 1), String(describing: puzzle.solution[wrong])))
+            return SudokuHint(index: wrong, value: puzzle.solution[wrong], title: L10n.text("Une case à revoir"), detail: L10n.text("La valeur en ligne %@, colonne %@ empêche de terminer la grille. La valeur correcte est %@.", String(describing: wrong / 9 + 1), String(describing: wrong % 9 + 1), String(describing: puzzle.solution[wrong])), focusCells: [wrong], technique: L10n.text("Une case à revoir"), explanation: L10n.text("Cette case est en erreur. Remplace son chiffre pour débloquer la grille."))
         }
-        for index in 0..<81 where values[index] == 0 {
-            let candidates = SudokuSolver.candidates(in: values, at: index)
-            if candidates.count == 1, let digit = candidates.first {
-                return SudokuHint(index: index, value: digit, title: L10n.text("Une seule possibilité"), detail: L10n.text("En ligne %@, colonne %@, tous les chiffres sauf %@ sont déjà présents dans la ligne, la colonne ou le bloc.", String(describing: index / 9 + 1), String(describing: index % 9 + 1), String(describing: digit)))
-            }
-        }
-        for unit in 0..<27 {
-            let indices: [Int]
-            let name: String
-            if unit < 9 { indices = (0..<9).map { unit * 9 + $0 }; name = L10n.text("cette ligne") }
-            else if unit < 18 { indices = (0..<9).map { $0 * 9 + unit - 9 }; name = L10n.text("cette colonne") }
-            else { let box = unit - 18; indices = (0..<9).map { (box / 3 * 3 + $0 / 3) * 9 + box % 3 * 3 + $0 % 3 }; name = L10n.text("ce bloc") }
-            for digit in 1...9 {
-                let positions = indices.filter { values[$0] == 0 && SudokuSolver.candidates(in: values, at: $0).contains(digit) }
-                if positions.count == 1 {
-                    return SudokuHint(index: positions[0], value: digit, title: L10n.text("La seule place"), detail: L10n.text("Dans %@, le %@ ne peut aller que dans cette case : les autres emplacements sont exclus par leurs lignes, colonnes ou blocs.", String(describing: name), String(describing: digit)))
-                }
-            }
-        }
-        guard let index = (0..<81).filter({ values[$0] == 0 }).min(by: { SudokuSolver.candidates(in: values, at: $0).count < SudokuSolver.candidates(in: values, at: $1).count }) else { return nil }
-        return SudokuHint(index: index, value: puzzle.solution[index], title: L10n.text("Un petit coup de pouce"), detail: L10n.text("Cette étape demande une technique avancée. La solution vérifiée place un %@ en ligne %@, colonne %@.", String(describing: puzzle.solution[index]), String(describing: index / 9 + 1), String(describing: index % 9 + 1)))
+        guard let move = SudokuSolver.nextLogicalMove(in: values) else { return nil }
+        return SudokuHint(index: move.index, value: move.value, title: L10n.text("Regarde cette zone"),
+                          detail: move.observation, focusCells: move.focusCells, eliminatedCandidates: move.eliminatedCandidates, eliminationMarks: move.eliminationMarks,
+                          technique: move.technique, explanation: move.explanation)
     }
     /// Count help when it is displayed, even if the player enters it manually.
     public mutating func recordHintConsultation() {

@@ -21,6 +21,7 @@ struct LisaMotionClock<Content: View>: View {
     @Environment(\.lisaMotionAllowed) private var allowed
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.lisaVisibleBounds) private var visibleBounds
     @State private var visible = false
     @State private var onScreen = true
     @State private var budgetClient = UUID()
@@ -40,9 +41,8 @@ struct LisaMotionClock<Content: View>: View {
         }
         .background {
             GeometryReader { proxy in
-                Color.clear.onChange(of: proxy.frame(in: .global), initial: true) { _, frame in
-                    let intersects = frame.intersects(UIScreen.main.bounds)
-                    if intersects != onScreen { onScreen = intersects }
+                Color.clear.onChange(of: visibleBounds.map { proxy.frame(in: .global).intersects($0) } ?? true, initial: true) { _, intersects in
+                    onScreen = intersects
                 }
             }
         }

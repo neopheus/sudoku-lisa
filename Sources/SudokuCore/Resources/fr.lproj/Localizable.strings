@@ -333,3 +333,17 @@
 "Paires nues" = "Paires nues";
 "Techniques avancées" = "Techniques avancées";
 "Langue de l’iPhone" = "Langue de l’iPhone";
+
+"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Repère la zone colorée et cherche les possibilités encore ouvertes.";
+"Les chiffres présents sur la ligne, la colonne et le bloc éliminent toutes les possibilités sauf une." = "Les chiffres présents sur la ligne, la colonne et le bloc éliminent toutes les possibilités sauf une.";
+"Dans la zone colorée, ce chiffre ne peut aller que dans une case. Les autres emplacements sont bloqués par leur ligne, colonne ou bloc." = "Dans la zone colorée, ce chiffre ne peut aller que dans une case. Les autres emplacements sont bloqués par leur ligne, colonne ou bloc.";
+"Dans le bloc coloré, ce chiffre reste sur une seule ligne ou colonne : élimine-le des autres cases de cette ligne ou colonne." = "Dans le bloc coloré, ce chiffre reste sur une seule ligne ou colonne : élimine-le des autres cases de cette ligne ou colonne.";
+"Deux cases partagent les mêmes deux candidats. Ces chiffres sont réservés à cette paire ; retire-les des autres cases de la zone." = "Deux cases partagent les mêmes deux candidats. Ces chiffres sont réservés à cette paire ; retire-les des autres cases de la zone.";
+"Cette grille demande une technique que Lisa n’a pas encore apprise. Tu peux voir la solution vérifiée à la dernière étape." = "Cette grille demande une technique que Lisa n’a pas encore apprise. Tu peux voir la solution vérifiée à la dernière étape.";
+"Un indice pour comprendre" = "Un indice pour comprendre";
+"Étape %@ sur 3" = "Étape %@ sur 3";
+"Voir la suite" = "Voir la suite";
+"La valeur vérifiée est %@, en ligne %@, colonne %@." = "La valeur vérifiée est %@, en ligne %@, colonne %@.";
+"Regarde cette zone" = "Regarde cette zone";
+"Cette case est en erreur. Remplace son chiffre pour débloquer la grille." = "Cette case est en erreur. Remplace son chiffre pour débloquer la grille.";
+"Candidats à éliminer" = "Candidats à éliminer";

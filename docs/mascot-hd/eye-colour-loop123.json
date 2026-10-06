@@ -1,0 +1,1090 @@
+{
+  "method": "5x5 median RGB patches mapped with fixed comparison CSS (width 141%, left -20.5%, top -125%). Six historical near-rim locations plus six dome locations; approximate correspondence, not global likeness.",
+  "passes": {
+    "120": {
+      "captureSHA256": "4ddb5a0050bd7a6cf0bebb5777620e5160bfd82ea7d6063c5e017e9b8006ba31",
+      "patches": [
+        {
+          "name": "left top",
+          "referenceXY": [
+            440,
+            362
+          ],
+          "captureXY": [
+            465,
+            1287
+          ],
+          "referenceRGB": [
+            244.0,
+            235.0,
+            217.0
+          ],
+          "captureRGB": [
+            243.0,
+            237.0,
+            225.0
+          ],
+          "meanAbsoluteRGBError": 3.6666666666666665
+        },
+        {
+          "name": "left edge",
+          "referenceXY": [
+            348,
+            470
+          ],
+          "captureXY": [
+            403,
+            1359
+          ],
+          "referenceRGB": [
+            224.0,
+            209.0,
+            193.0
+          ],
+          "captureRGB": [
+            225.0,
+            214.0,
+            191.0
+          ],
+          "meanAbsoluteRGBError": 2.6666666666666665
+        },
+        {
+          "name": "left bottom",
+          "referenceXY": [
+            420,
+            573
+          ],
+          "captureXY": [
+            451,
+            1427
+          ],
+          "referenceRGB": [
+            202.0,
+            181.0,
+            170.0
+          ],
+          "captureRGB": [
+            202.0,
+            181.0,
+            169.0
+          ],
+          "meanAbsoluteRGBError": 0.3333333333333333
+        },
+        {
+          "name": "right top",
+          "referenceXY": [
+            805,
+            360
+          ],
+          "captureXY": [
+            708,
+            1285
+          ],
+          "referenceRGB": [
+            250.0,
+            242.0,
+            224.0
+          ],
+          "captureRGB": [
+            250.0,
+            238.0,
+            223.0
+          ],
+          "meanAbsoluteRGBError": 1.6666666666666667
+        },
+        {
+          "name": "right edge",
+          "referenceXY": [
+            901,
+            470
+          ],
+          "captureXY": [
+            772,
+            1359
+          ],
+          "referenceRGB": [
+            247.0,
+            237.0,
+            217.0
+          ],
+          "captureRGB": [
+            249.0,
+            244.0,
+            240.0
+          ],
+          "meanAbsoluteRGBError": 10.666666666666666
+        },
+        {
+          "name": "right bottom",
+          "referenceXY": [
+            828,
+            573
+          ],
+          "captureXY": [
+            724,
+            1427
+          ],
+          "referenceRGB": [
+            211.0,
+            190.0,
+            174.0
+          ],
+          "captureRGB": [
+            199.0,
+            178.0,
+            170.0
+          ],
+          "meanAbsoluteRGBError": 9.333333333333334
+        },
+        {
+          "name": "left dome middle",
+          "referenceXY": [
+            375,
+            480
+          ],
+          "captureXY": [
+            421,
+            1365
+          ],
+          "referenceRGB": [
+            234.0,
+            221.0,
+            203.0
+          ],
+          "captureRGB": [
+            231.0,
+            219.0,
+            195.0
+          ],
+          "meanAbsoluteRGBError": 4.333333333333333
+        },
+        {
+          "name": "left dome lower",
+          "referenceXY": [
+            400,
+            530
+          ],
+          "captureXY": [
+            438,
+            1399
+          ],
+          "referenceRGB": [
+            233.0,
+            219.0,
+            200.0
+          ],
+          "captureRGB": [
+            230.0,
+            214.0,
+            193.0
+          ],
+          "meanAbsoluteRGBError": 5.0
+        },
+        {
+          "name": "left dome base",
+          "referenceXY": [
+            420,
+            553
+          ],
+          "captureXY": [
+            451,
+            1414
+          ],
+          "referenceRGB": [
+            225.0,
+            209.0,
+            191.0
+          ],
+          "captureRGB": [
+            227.0,
+            209.0,
+            191.0
+          ],
+          "meanAbsoluteRGBError": 0.6666666666666666
+        },
+        {
+          "name": "right dome middle",
+          "referenceXY": [
+            860,
+            480
+          ],
+          "captureXY": [
+            745,
+            1365
+          ],
+          "referenceRGB": [
+            253.0,
+            246.0,
+            228.0
+          ],
+          "captureRGB": [
+            253.0,
+            243.0,
+            230.0
+          ],
+          "meanAbsoluteRGBError": 1.6666666666666667
+        },
+        {
+          "name": "right dome lower",
+          "referenceXY": [
+            850,
+            530
+          ],
+          "captureXY": [
+            738,
+            1399
+          ],
+          "referenceRGB": [
+            246.0,
+            234.0,
+            213.0
+          ],
+          "captureRGB": [
+            245.0,
+            230.0,
+            217.0
+          ],
+          "meanAbsoluteRGBError": 3.0
+        },
+        {
+          "name": "right dome base",
+          "referenceXY": [
+            830,
+            553
+          ],
+          "captureXY": [
+            725,
+            1414
+          ],
+          "referenceRGB": [
+            237.0,
+            223.0,
+            202.0
+          ],
+          "captureRGB": [
+            238.0,
+            219.0,
+            207.0
+          ],
+          "meanAbsoluteRGBError": 3.3333333333333335
+        }
+      ],
+      "meanAbsoluteRGBError": 3.8611111111111107,
+      "domeMeanAbsoluteRGBError": 2.9999999999999996
+    },
+    "121": {
+      "captureSHA256": "2d39a6d602490efbd09b1e2a7d3262eeb67e8f525b8e84d72525501edd251bd0",
+      "patches": [
+        {
+          "name": "left top",
+          "referenceXY": [
+            440,
+            362
+          ],
+          "captureXY": [
+            465,
+            1287
+          ],
+          "referenceRGB": [
+            244.0,
+            235.0,
+            217.0
+          ],
+          "captureRGB": [
+            243.0,
+            237.0,
+            225.0
+          ],
+          "meanAbsoluteRGBError": 3.6666666666666665
+        },
+        {
+          "name": "left edge",
+          "referenceXY": [
+            348,
+            470
+          ],
+          "captureXY": [
+            403,
+            1359
+          ],
+          "referenceRGB": [
+            224.0,
+            209.0,
+            193.0
+          ],
+          "captureRGB": [
+            225.0,
+            214.0,
+            191.0
+          ],
+          "meanAbsoluteRGBError": 2.6666666666666665
+        },
+        {
+          "name": "left bottom",
+          "referenceXY": [
+            420,
+            573
+          ],
+          "captureXY": [
+            451,
+            1427
+          ],
+          "referenceRGB": [
+            202.0,
+            181.0,
+            170.0
+          ],
+          "captureRGB": [
+            202.0,
+            182.0,
+            169.0
+          ],
+          "meanAbsoluteRGBError": 0.6666666666666666
+        },
+        {
+          "name": "right top",
+          "referenceXY": [
+            805,
+            360
+          ],
+          "captureXY": [
+            708,
+            1285
+          ],
+          "referenceRGB": [
+            250.0,
+            242.0,
+            224.0
+          ],
+          "captureRGB": [
+            250.0,
+            238.0,
+            223.0
+          ],
+          "meanAbsoluteRGBError": 1.6666666666666667
+        },
+        {
+          "name": "right edge",
+          "referenceXY": [
+            901,
+            470
+          ],
+          "captureXY": [
+            772,
+            1359
+          ],
+          "referenceRGB": [
+            247.0,
+            237.0,
+            217.0
+          ],
+          "captureRGB": [
+            250.0,
+            245.0,
+            240.0
+          ],
+          "meanAbsoluteRGBError": 11.333333333333334
+        },
+        {
+          "name": "right bottom",
+          "referenceXY": [
+            828,
+            573
+          ],
+          "captureXY": [
+            724,
+            1427
+          ],
+          "referenceRGB": [
+            211.0,
+            190.0,
+            174.0
+          ],
+          "captureRGB": [
+            200.0,
+            178.0,
+            170.0
+          ],
+          "meanAbsoluteRGBError": 9.0
+        },
+        {
+          "name": "left dome middle",
+          "referenceXY": [
+            375,
+            480
+          ],
+          "captureXY": [
+            421,
+            1365
+          ],
+          "referenceRGB": [
+            234.0,
+            221.0,
+            203.0
+          ],
+          "captureRGB": [
+            232.0,
+            220.0,
+            196.0
+          ],
+          "meanAbsoluteRGBError": 3.3333333333333335
+        },
+        {
+          "name": "left dome lower",
+          "referenceXY": [
+            400,
+            530
+          ],
+          "captureXY": [
+            438,
+            1399
+          ],
+          "referenceRGB": [
+            233.0,
+            219.0,
+            200.0
+          ],
+          "captureRGB": [
+            233.0,
+            218.0,
+            195.0
+          ],
+          "meanAbsoluteRGBError": 2.0
+        },
+        {
+          "name": "left dome base",
+          "referenceXY": [
+            420,
+            553
+          ],
+          "captureXY": [
+            451,
+            1414
+          ],
+          "referenceRGB": [
+            225.0,
+            209.0,
+            191.0
+          ],
+          "captureRGB": [
+            230.0,
+            211.0,
+            193.0
+          ],
+          "meanAbsoluteRGBError": 3.0
+        },
+        {
+          "name": "right dome middle",
+          "referenceXY": [
+            860,
+            480
+          ],
+          "captureXY": [
+            745,
+            1365
+          ],
+          "referenceRGB": [
+            253.0,
+            246.0,
+            228.0
+          ],
+          "captureRGB": [
+            255.0,
+            244.0,
+            231.0
+          ],
+          "meanAbsoluteRGBError": 2.3333333333333335
+        },
+        {
+          "name": "right dome lower",
+          "referenceXY": [
+            850,
+            530
+          ],
+          "captureXY": [
+            738,
+            1399
+          ],
+          "referenceRGB": [
+            246.0,
+            234.0,
+            213.0
+          ],
+          "captureRGB": [
+            249.0,
+            233.0,
+            219.0
+          ],
+          "meanAbsoluteRGBError": 3.3333333333333335
+        },
+        {
+          "name": "right dome base",
+          "referenceXY": [
+            830,
+            553
+          ],
+          "captureXY": [
+            725,
+            1414
+          ],
+          "referenceRGB": [
+            237.0,
+            223.0,
+            202.0
+          ],
+          "captureRGB": [
+            241.0,
+            221.0,
+            208.0
+          ],
+          "meanAbsoluteRGBError": 4.0
+        }
+      ],
+      "meanAbsoluteRGBError": 3.9166666666666674,
+      "domeMeanAbsoluteRGBError": 3.0
+    },
+    "122": {
+      "captureSHA256": "4653045ac86dff370928c752d0669b111429743a15e4f1cf8ab2cbe26de8c31c",
+      "patches": [
+        {
+          "name": "left top",
+          "referenceXY": [
+            440,
+            362
+          ],
+          "captureXY": [
+            465,
+            1287
+          ],
+          "referenceRGB": [
+            244.0,
+            235.0,
+            217.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 94.66666666666667
+        },
+        {
+          "name": "left edge",
+          "referenceXY": [
+            348,
+            470
+          ],
+          "captureXY": [
+            403,
+            1359
+          ],
+          "referenceRGB": [
+            224.0,
+            209.0,
+            193.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 100.66666666666667
+        },
+        {
+          "name": "left bottom",
+          "referenceXY": [
+            420,
+            573
+          ],
+          "captureXY": [
+            451,
+            1427
+          ],
+          "referenceRGB": [
+            202.0,
+            181.0,
+            170.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 106.33333333333333
+        },
+        {
+          "name": "right top",
+          "referenceXY": [
+            805,
+            360
+          ],
+          "captureXY": [
+            708,
+            1285
+          ],
+          "referenceRGB": [
+            250.0,
+            242.0,
+            224.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 92.66666666666667
+        },
+        {
+          "name": "right edge",
+          "referenceXY": [
+            901,
+            470
+          ],
+          "captureXY": [
+            772,
+            1359
+          ],
+          "referenceRGB": [
+            247.0,
+            237.0,
+            217.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 94.33333333333333
+        },
+        {
+          "name": "right bottom",
+          "referenceXY": [
+            828,
+            573
+          ],
+          "captureXY": [
+            724,
+            1427
+          ],
+          "referenceRGB": [
+            211.0,
+            190.0,
+            174.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 105.0
+        },
+        {
+          "name": "left dome middle",
+          "referenceXY": [
+            375,
+            480
+          ],
+          "captureXY": [
+            421,
+            1365
+          ],
+          "referenceRGB": [
+            234.0,
+            221.0,
+            203.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 98.0
+        },
+        {
+          "name": "left dome lower",
+          "referenceXY": [
+            400,
+            530
+          ],
+          "captureXY": [
+            438,
+            1399
+          ],
+          "referenceRGB": [
+            233.0,
+            219.0,
+            200.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 98.66666666666667
+        },
+        {
+          "name": "left dome base",
+          "referenceXY": [
+            420,
+            553
+          ],
+          "captureXY": [
+            451,
+            1414
+          ],
+          "referenceRGB": [
+            225.0,
+            209.0,
+            191.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 101.0
+        },
+        {
+          "name": "right dome middle",
+          "referenceXY": [
+            860,
+            480
+          ],
+          "captureXY": [
+            745,
+            1365
+          ],
+          "referenceRGB": [
+            253.0,
+            246.0,
+            228.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 91.66666666666667
+        },
+        {
+          "name": "right dome lower",
+          "referenceXY": [
+            850,
+            530
+          ],
+          "captureXY": [
+            738,
+            1399
+          ],
+          "referenceRGB": [
+            246.0,
+            234.0,
+            213.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 95.0
+        },
+        {
+          "name": "right dome base",
+          "referenceXY": [
+            830,
+            553
+          ],
+          "captureXY": [
+            725,
+            1414
+          ],
+          "referenceRGB": [
+            237.0,
+            223.0,
+            202.0
+          ],
+          "captureRGB": [
+            255.0,
+            0.0,
+            255.0
+          ],
+          "meanAbsoluteRGBError": 98.0
+        }
+      ],
+      "meanAbsoluteRGBError": 98.0,
+      "domeMeanAbsoluteRGBError": 97.05555555555556,
+      "rejectedReason": "Runtime Metal shader compilation failure: missing #pragma arguments; magenta fallback, not a valid colour comparison."
+    },
+    "123": {
+      "captureSHA256": "3a72c2b44f1d605afbaf3d8e206328431efdce9e4fb0c05bc5ea3aab28b18103",
+      "patches": [
+        {
+          "name": "left top",
+          "referenceXY": [
+            440,
+            362
+          ],
+          "captureXY": [
+            465,
+            1287
+          ],
+          "referenceRGB": [
+            244.0,
+            235.0,
+            217.0
+          ],
+          "captureRGB": [
+            243.0,
+            237.0,
+            225.0
+          ],
+          "meanAbsoluteRGBError": 3.6666666666666665
+        },
+        {
+          "name": "left edge",
+          "referenceXY": [
+            348,
+            470
+          ],
+          "captureXY": [
+            403,
+            1359
+          ],
+          "referenceRGB": [
+            224.0,
+            209.0,
+            193.0
+          ],
+          "captureRGB": [
+            225.0,
+            214.0,
+            191.0
+          ],
+          "meanAbsoluteRGBError": 2.6666666666666665
+        },
+        {
+          "name": "left bottom",
+          "referenceXY": [
+            420,
+            573
+          ],
+          "captureXY": [
+            451,
+            1427
+          ],
+          "referenceRGB": [
+            202.0,
+            181.0,
+            170.0
+          ],
+          "captureRGB": [
+            202.0,
+            182.0,
+            169.0
+          ],
+          "meanAbsoluteRGBError": 0.6666666666666666
+        },
+        {
+          "name": "right top",
+          "referenceXY": [
+            805,
+            360
+          ],
+          "captureXY": [
+            708,
+            1285
+          ],
+          "referenceRGB": [
+            250.0,
+            242.0,
+            224.0
+          ],
+          "captureRGB": [
+            250.0,
+            238.0,
+            223.0
+          ],
+          "meanAbsoluteRGBError": 1.6666666666666667
+        },
+        {
+          "name": "right edge",
+          "referenceXY": [
+            901,
+            470
+          ],
+          "captureXY": [
+            772,
+            1359
+          ],
+          "referenceRGB": [
+            247.0,
+            237.0,
+            217.0
+          ],
+          "captureRGB": [
+            249.0,
+            245.0,
+            240.0
+          ],
+          "meanAbsoluteRGBError": 11.0
+        },
+        {
+          "name": "right bottom",
+          "referenceXY": [
+            828,
+            573
+          ],
+          "captureXY": [
+            724,
+            1427
+          ],
+          "referenceRGB": [
+            211.0,
+            190.0,
+            174.0
+          ],
+          "captureRGB": [
+            199.0,
+            178.0,
+            169.0
+          ],
+          "meanAbsoluteRGBError": 9.666666666666666
+        },
+        {
+          "name": "left dome middle",
+          "referenceXY": [
+            375,
+            480
+          ],
+          "captureXY": [
+            421,
+            1365
+          ],
+          "referenceRGB": [
+            234.0,
+            221.0,
+            203.0
+          ],
+          "captureRGB": [
+            231.0,
+            220.0,
+            197.0
+          ],
+          "meanAbsoluteRGBError": 3.3333333333333335
+        },
+        {
+          "name": "left dome lower",
+          "referenceXY": [
+            400,
+            530
+          ],
+          "captureXY": [
+            438,
+            1399
+          ],
+          "referenceRGB": [
+            233.0,
+            219.0,
+            200.0
+          ],
+          "captureRGB": [
+            230.0,
+            218.0,
+            197.0
+          ],
+          "meanAbsoluteRGBError": 2.3333333333333335
+        },
+        {
+          "name": "left dome base",
+          "referenceXY": [
+            420,
+            553
+          ],
+          "captureXY": [
+            451,
+            1414
+          ],
+          "referenceRGB": [
+            225.0,
+            209.0,
+            191.0
+          ],
+          "captureRGB": [
+            227.0,
+            211.0,
+            194.0
+          ],
+          "meanAbsoluteRGBError": 2.3333333333333335
+        },
+        {
+          "name": "right dome middle",
+          "referenceXY": [
+            860,
+            480
+          ],
+          "captureXY": [
+            745,
+            1365
+          ],
+          "referenceRGB": [
+            253.0,
+            246.0,
+            228.0
+          ],
+          "captureRGB": [
+            253.0,
+            244.0,
+            229.0
+          ],
+          "meanAbsoluteRGBError": 1.0
+        },
+        {
+          "name": "right dome lower",
+          "referenceXY": [
+            850,
+            530
+          ],
+          "captureXY": [
+            738,
+            1399
+          ],
+          "referenceRGB": [
+            246.0,
+            234.0,
+            213.0
+          ],
+          "captureRGB": [
+            245.0,
+            233.0,
+            214.0
+          ],
+          "meanAbsoluteRGBError": 1.0
+        },
+        {
+          "name": "right dome base",
+          "referenceXY": [
+            830,
+            553
+          ],
+          "captureXY": [
+            725,
+            1414
+          ],
+          "referenceRGB": [
+            237.0,
+            223.0,
+            202.0
+          ],
+          "captureRGB": [
+            238.0,
+            221.0,
+            204.0
+          ],
+          "meanAbsoluteRGBError": 1.6666666666666667
+        }
+      ],
+      "meanAbsoluteRGBError": 3.4166666666666665,
+      "domeMeanAbsoluteRGBError": 1.9444444444444444
+    }
+  }
+}

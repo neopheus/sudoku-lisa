@@ -12,6 +12,7 @@ struct GameView: View {
     @State private var paused = false
     @State private var hint: SudokuHint?
     @State private var hintPresented = false
+    @State private var hintStage = 0
     @State private var settings = false
     @State private var errorPresented = false
     @State private var mascotMood: LisaMascotMood = .idle
@@ -41,69 +42,33 @@ struct GameView: View {
                 .opacity(!paused && mascotUncovered ? 1 : 0)
             if let game = store.session {
                 GeometryReader { geometry in
+                    let wide = geometry.size.width >= 600
                     let compact = geometry.size.height < 820
+                    let contentWidth = max(0, min(wide ? 1040 : 500, geometry.size.width - 32))
+                    let controlsWidth = wide ? min(300, max(220, contentWidth * 0.32)) : contentWidth
+                    let boardWidth = wide
+                        ? min(680, max(252, geometry.size.height - 94), max(9, contentWidth - controlsWidth - 24))
+                        : min(contentWidth, compact ? max(270, geometry.size.height - 330) : 480)
+                    let layout = wide
+                        ? AnyLayout(HStackLayout(alignment: .center, spacing: 24))
+                        : AnyLayout(VStackLayout(spacing: compact ? 8 : 16))
                     ScrollView {
                         VStack(spacing: compact ? 8 : 16) {
-                            HStack {
-                                LisaIconButton(icon: "chevron.left", label: L10n.text("Sauvegarder et revenir à l’accueil")) { store.save(); store.showGame = false }
-                                Spacer()
-                                VStack(spacing: 0) {
-                                    Button { companionRequest += 1 } label: {
-                                        Label("Lisa !", systemImage: "face.smiling")
-                                            .font(LisaTheme.heading(23)).foregroundStyle(LisaTheme.ink)
-                                            .frame(minHeight: 48)
-                                    }
-                                    .buttonStyle(LisaPressStyle()).accessibilityLabel(L10n.text("Faire rire Lisa"))
-                                    .accessibilityValue(companionMessage)
-                                    .disabled(paused || !mascotUncovered || reduceMotion || !store.settings.animatedDecor)
-                                    Text("Lisa · " + game.puzzle.difficulty.label)
-                                        .font(.system(size: 10, weight: .heavy, design: .rounded))
-                                        .foregroundStyle(LisaTheme.ink).padding(.top, 4)
+                            gameHeader(game, wide: wide)
+                            layout {
+                                VStack(spacing: compact ? 8 : 16) {
+                                    if !wide { gameStatus(game, wide: false) }
+                                    board(game, width: boardWidth)
                                 }
-                                Spacer()
-                                LisaIconButton(icon: "gearshape", label: L10n.text("Réglages")) { settings = true }.accessibilityIdentifier("gameSettingsButton")
+                                .frame(width: wide ? boardWidth : contentWidth)
+                                gameControls(game, compact: compact, wide: wide)
+                                    .frame(width: controlsWidth)
                             }
-                            HStack {
-                                Label(celebrationMessage.isEmpty ? L10n.text(store.mode) : celebrationMessage,
-                                      systemImage: celebrationMessage.isEmpty ? (store.mode == "Libre" ? "sparkles" : "sun.max") : "sparkles")
-                                    .font(.system(size: 11, weight: .bold, design: .rounded))
-                                    .lineLimit(1).minimumScaleFactor(0.8)
-                                    .foregroundStyle(LisaTheme.ink).padding(.horizontal, 10).padding(.vertical, 6)
-                                    .background(LisaTheme.paper.opacity(0.8), in: Capsule())
-                                Spacer()
-                                Text(store.settings.autoCheck || store.settings.errorLimit ? L10n.text("Erreurs %@%@", String(describing: game.mistakes), String(describing: store.settings.errorLimit ? "/3" : "")) : L10n.text("Mode zen")).font(LisaTheme.body(13)).foregroundStyle(game.mistakes > 0 ? LisaTheme.coral : LisaTheme.muted)
-                                if store.settings.showTimer { Text(LisaStore.time(game.elapsedSeconds)).font(.system(size: 14, weight: .medium, design: .monospaced)).foregroundStyle(LisaTheme.muted) }
-                                Button { paused = true } label: { Image(systemName: "pause.fill").frame(width: 36, height: 40) }.accessibilityLabel(L10n.text("Mettre en pause"))
-                            }
-                            board(game, width: max(9, min(geometry.size.width - 32, compact ? geometry.size.height - 318 : 480)))
-                            HStack(spacing: 8) {
-                                tool(L10n.text("Annuler"), icon: "arrow.uturn.backward", enabled: game.canUndo) { store.session?.undo(); store.feedback(.erase); store.changed() }
-                                tool(L10n.text("Gommer"), icon: "eraser", enabled: selected.map { game.isEditable($0) } ?? false) { if let selected { store.session?.erase(at: selected); store.feedback(.erase); store.changed() } }
-                                tool(notesMode ? L10n.text("Notes oui") : L10n.text("Notes"), icon: "pencil.tip", active: notesMode) { notesMode.toggle(); store.feedback(.note) }
-                                tool(L10n.text("Indice"), icon: "lightbulb") { hint = store.session?.hint(); if hint != nil { store.session?.recordHintConsultation(); store.save(); store.feedback(.hint); react(.thinking) }; hintPresented = true }
-                            }
-                            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: compact ? 5 : 3), spacing: 9) {
-                                ForEach(1...9, id: \.self) { value in
-                                    let remaining = max(0, 9 - game.values.filter { $0 == value }.count)
-                                    Button { enter(value) } label: {
-                                        HStack(alignment: .firstTextBaseline, spacing: 7) {
-                                            Text("\(value)").font(.system(size: compact ? 27 : 30, weight: .black, design: .rounded))
-                                                .shadow(color: .black.opacity(0.12), radius: 0, y: 1)
-                                            Text("\(remaining)").font(.system(size: 10, weight: .bold, design: .rounded))
-                                        }
-                                        .foregroundStyle(value == 5 || value == 8 ? Color(red: 0.27, green: 0.12, blue: 0.32) : .white)
-                                        .frame(maxWidth: .infinity).frame(height: 47)
-                                        .background(CandySurface(tint: candyColor(value), cornerRadius: notesMode ? 10 : 16))
-                                        .contentShape(RoundedRectangle(cornerRadius: 16))
-                                        .overlay(alignment: .topLeading) {
-                                            if notesMode { Image(systemName: "pencil.tip").font(.system(size: 8, weight: .bold)).foregroundStyle(.white).padding(5) }
-                                        }
-                                    }
-                                    .buttonStyle(LisaPressStyle()).accessibilityLabel("\(value), " + L10n.count("remaining", remaining)).disabled(paused || game.isComplete)
-                                }
-                            }
-                            if !compact { Text(!celebrationMessage.isEmpty ? celebrationMessage : notesMode ? L10n.text("Mode notes · Touchez une case puis un chiffre.") : L10n.text("Une case, un chiffre, un petit déclic.")).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted) }
-                        }.frame(maxWidth: 500).padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 15).frame(maxWidth: .infinity)
+                            .frame(minHeight: wide ? max(0, geometry.size.height - (compact ? 94 : 102)) : nil)
+                        }
+                        .frame(maxWidth: wide ? 1040 : 500)
+                        .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 15)
+                        .frame(maxWidth: .infinity, minHeight: geometry.size.height, alignment: .top)
                     }
                 }
             }
@@ -116,6 +81,14 @@ struct GameView: View {
         }
         .animation(reduceMotion || !store.settings.animatedDecor ? nil : .easeInOut(duration: 0.25), value: paused)
         .coordinateSpace(name: "game-space")
+        .overlay(alignment: .bottom) {
+            if hintPresented, let hint {
+                ZStack(alignment: .bottom) {
+                    Color.black.opacity(0.16).ignoresSafeArea()
+                    hintCoach(hint)
+                }
+            }
+        }
         .onPreferenceChange(LisaBoardFrameKey.self) { boardFrame = $0 }
         .preferredColorScheme(store.settings.darkMode ? .dark : .light)
         .saturation(store.settings.paperMode ? 0 : 1)
@@ -173,14 +146,154 @@ struct GameView: View {
         }
         .sheet(isPresented: $settings) { SettingsView() }
         .sheet(isPresented: $victoryPresented) { VictoryView().environment(\.lisaMotionAllowed, true).interactiveDismissDisabled() }
-        .alert(L10n.text("Un petit coup de pouce"), isPresented: $hintPresented) {
-            if let hint { Button(L10n.text("Placer le %@", String(describing: hint.value))) { selected = hint.index; store.session?.applyHint(countAsUsed: false); store.feedback(.place); store.changed(); react(.happy) } }
-            Button(L10n.text("Je continue seul"), role: .cancel) {}
-        } message: { Text(hint.map { "\($0.title)\n\($0.detail)" } ?? L10n.text("La grille est terminée.")) }
         .alert(L10n.text("On respire, puis on reprend ?"), isPresented: $errorPresented) {
             Button(L10n.text("Continuer sans limite")) { store.settings.errorLimit = false }
             Button(L10n.text("Retour à l’accueil")) { store.showGame = false }
         } message: { Text(L10n.text("Trois erreurs, ce n’est pas la fin du monde. Continuez à votre rythme ou faites une pause.")) }
+    }
+
+    private func hintCoach(_ hint: SudokuHint) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                LisaMascot(size: 48, mood: .thinking, reactionToken: hintStage)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(L10n.text("Un indice pour comprendre")).font(LisaTheme.heading(17))
+                    Text(L10n.text("Étape %@ sur 3", String(describing: hintStage + 1)))
+                        .font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
+                }
+                Spacer()
+                Button { hintPresented = false } label: {
+                    Image(systemName: "xmark.circle.fill").font(.title2).foregroundStyle(LisaTheme.muted)
+                }.accessibilityLabel(L10n.text("Fermer"))
+            }
+            HStack(spacing: 7) {
+                ForEach(0..<3, id: \.self) { step in
+                    Capsule().fill(step <= hintStage ? LisaTheme.coral : LisaTheme.line).frame(height: 5)
+                }
+            }
+            Text(hintStage == 0 ? hint.detail : hintStage == 1 ? "\(hint.technique). \(hint.explanation)" : L10n.text("La valeur vérifiée est %@, en ligne %@, colonne %@.", String(describing: hint.value), String(describing: hint.index / 9 + 1), String(describing: hint.index % 9 + 1)))
+                .font(LisaTheme.body(15)).fixedSize(horizontal: false, vertical: true).foregroundStyle(LisaTheme.ink)
+            if hintStage == 1, !hint.eliminatedCandidates.isEmpty {
+                HStack(spacing: 8) {
+                    Text(L10n.text("Candidats à éliminer")).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
+                    ForEach(hint.eliminatedCandidates, id: \.self) { digit in
+                        Text("\(digit)").font(LisaTheme.heading(15)).strikethrough()
+                            .foregroundStyle(LisaTheme.coral).padding(7)
+                            .background(LisaTheme.coral.opacity(0.12), in: Circle())
+                    }
+                }
+            }
+            HStack {
+                Spacer()
+                if hintStage < 2 {
+                    LisaButton(title: L10n.text("Voir la suite"), icon: "arrow.right") { hintStage += 1 }
+                } else {
+                    Button { hintPresented = false } label: {
+                        Text(L10n.text("Je continue seul")).font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted).padding(.horizontal, 10)
+                    }
+                    LisaButton(title: L10n.text("Placer le %@", String(describing: hint.value)), icon: "checkmark") {
+                        selected = hint.index
+                        store.session?.enter(hint.value, at: hint.index)
+                        store.feedback(.place); store.changed(); react(.happy); hintPresented = false
+                    }
+                }
+            }
+        }
+        .padding(18)
+        .background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 24))
+        .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(LisaTheme.line.opacity(0.55), lineWidth: 1))
+        .shadow(color: LisaTheme.ink.opacity(0.18), radius: 20, y: 8)
+        .padding(.horizontal, 16).padding(.bottom, 16)
+        .transition(.move(edge: .bottom).combined(with: .opacity))
+    }
+
+    private func gameHeader(_ game: GameSession, wide: Bool) -> some View {
+        HStack {
+            LisaIconButton(icon: "chevron.left", label: L10n.text("Sauvegarder et revenir à l’accueil")) { store.save(); store.showGame = false }
+            Spacer()
+            VStack(spacing: 0) {
+                Button { companionRequest += 1 } label: {
+                    Label("Lisa !", systemImage: "face.smiling")
+                        .font(LisaTheme.heading(23)).foregroundStyle(LisaTheme.ink)
+                        .frame(minHeight: 44)
+                }
+                .buttonStyle(LisaPressStyle()).accessibilityLabel(L10n.text("Faire rire Lisa"))
+                .accessibilityValue(companionMessage)
+                .disabled(paused || !mascotUncovered || reduceMotion || !store.settings.animatedDecor)
+                Text(wide && !celebrationMessage.isEmpty ? celebrationMessage : (wide ? L10n.text(store.mode) : "Lisa") + " · " + game.puzzle.difficulty.label)
+                    .font(.system(size: 10, weight: .heavy, design: .rounded))
+                    .lineLimit(1).minimumScaleFactor(0.8)
+                    .foregroundStyle(LisaTheme.ink).padding(.top, 4)
+            }
+            Spacer()
+            LisaIconButton(icon: "gearshape", label: L10n.text("Réglages")) { settings = true }.accessibilityIdentifier("gameSettingsButton")
+        }
+    }
+
+    private var modeLabel: some View {
+        Label(celebrationMessage.isEmpty ? L10n.text(store.mode) : celebrationMessage,
+              systemImage: celebrationMessage.isEmpty ? (store.mode == "Libre" ? "sparkles" : "sun.max") : "sparkles")
+            .font(.system(size: 11, weight: .bold, design: .rounded))
+            .lineLimit(1).minimumScaleFactor(0.8)
+            .foregroundStyle(LisaTheme.ink).padding(.horizontal, 10).padding(.vertical, 6)
+            .background(LisaTheme.paper.opacity(0.8), in: Capsule())
+    }
+
+    private func gameStatus(_ game: GameSession, wide: Bool) -> some View {
+        HStack {
+            if !wide { modeLabel }
+            Spacer(minLength: 0)
+            Text(store.settings.autoCheck || store.settings.errorLimit ? L10n.text("Erreurs %@%@", String(describing: game.mistakes), String(describing: store.settings.errorLimit ? "/3" : "")) : L10n.text("Mode zen"))
+                .font(LisaTheme.body(13)).foregroundStyle(game.mistakes > 0 ? LisaTheme.coral : LisaTheme.muted)
+            if store.settings.showTimer {
+                Text(LisaStore.time(game.elapsedSeconds))
+                    .font(.system(size: 14, weight: .medium, design: .monospaced)).foregroundStyle(LisaTheme.muted)
+            }
+            Button { paused = true } label: {
+                Image(systemName: "pause.fill").frame(width: 44, height: 44)
+            }.accessibilityLabel(L10n.text("Mettre en pause"))
+        }
+        .padding(.horizontal, wide ? 8 : 0)
+        .background {
+            if wide { RoundedRectangle(cornerRadius: 14).fill(LisaTheme.paper) }
+        }
+    }
+
+    private func gameControls(_ game: GameSession, compact: Bool, wide: Bool) -> some View {
+        VStack(spacing: compact ? 8 : 16) {
+            if wide { gameStatus(game, wide: true) }
+            HStack(spacing: 8) {
+                tool(L10n.text("Annuler"), icon: "arrow.uturn.backward", enabled: game.canUndo) { store.session?.undo(); store.feedback(.erase); store.changed() }
+                tool(L10n.text("Gommer"), icon: "eraser", enabled: selected.map { game.isEditable($0) } ?? false) { if let selected { store.session?.erase(at: selected); store.feedback(.erase); store.changed() } }
+                tool(notesMode ? L10n.text("Notes oui") : L10n.text("Notes"), icon: "pencil.tip", active: notesMode) { notesMode.toggle(); store.feedback(.note) }
+                tool(L10n.text("Indice"), icon: "lightbulb") { hint = store.session?.hint(); if hint != nil { hintStage = 0; store.session?.recordHintConsultation(); store.save(); store.feedback(.hint); react(.thinking) }; hintPresented = hint != nil }
+            }
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: compact && !wide ? 5 : 3), spacing: 9) {
+                ForEach(1...9, id: \.self) { value in
+                    let remaining = max(0, 9 - game.values.filter { $0 == value }.count)
+                    Button { enter(value) } label: {
+                        HStack(alignment: .firstTextBaseline, spacing: 7) {
+                            Text("\(value)").font(.system(size: compact ? 27 : 30, weight: .black, design: .rounded))
+                                .shadow(color: .black.opacity(0.12), radius: 0, y: 1)
+                            Text("\(remaining)").font(.system(size: 10, weight: .bold, design: .rounded))
+                        }
+                        .foregroundStyle(value == 5 || value == 8 ? Color(red: 0.27, green: 0.12, blue: 0.32) : .white)
+                        .frame(maxWidth: .infinity).frame(height: 47)
+                        .background(CandySurface(tint: candyColor(value), cornerRadius: notesMode ? 10 : 16))
+                        .contentShape(RoundedRectangle(cornerRadius: 16))
+                        .overlay(alignment: .topLeading) {
+                            if notesMode { Image(systemName: "pencil.tip").font(.system(size: 8, weight: .bold)).foregroundStyle(.white).padding(5) }
+                        }
+                    }
+                    .buttonStyle(LisaPressStyle()).accessibilityLabel("\(value), " + L10n.count("remaining", remaining)).disabled(paused || game.isComplete)
+                }
+            }
+            if !compact {
+                Text(!celebrationMessage.isEmpty ? celebrationMessage : notesMode ? L10n.text("Mode notes · Touchez une case puis un chiffre.") : L10n.text("Une case, un chiffre, un petit déclic."))
+                    .font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
+                    .multilineTextAlignment(.center)
+            }
+        }
     }
 
     private func enter(_ value: Int) {
@@ -277,7 +390,9 @@ struct GameView: View {
         let sameNumber = selected.map { game.values[$0] != 0 && game.values[$0] == value } ?? false
         let peer = selected.map { peers(index, $0) } ?? false
         let blue = Color(red: 0.18, green: 0.59, blue: 0.94)
-        let background = (wrong || duplicate) ? Color.red.opacity(colorScheme == .dark ? 0.27 : 0.12)
+        let inHintFocus = hintPresented && (hint?.focusCells.contains(index) ?? false)
+        let background = inHintFocus ? LisaTheme.yellow.opacity(colorScheme == .dark ? 0.45 : 0.72)
+            : (wrong || duplicate) ? Color.red.opacity(colorScheme == .dark ? 0.27 : 0.12)
             : selected == index ? blue.opacity(colorScheme == .dark ? 0.42 : 0.26)
             : sameNumber ? LisaTheme.yellow.opacity(colorScheme == .dark ? 0.27 : 0.45)
             : (peer && store.settings.highlightPeers) ? LisaTheme.lavender.opacity(colorScheme == .dark ? 0.12 : 0.22) : LisaTheme.paper
@@ -291,7 +406,20 @@ struct GameView: View {
             } else {
                 VStack(spacing: 0) { ForEach(0..<3) { row in HStack(spacing: 0) { ForEach(1...3, id: \.self) { col in let note = row * 3 + col; Text(game.notes[index].contains(note) ? "\(note)" : " ").font(.system(size: side * 0.23, weight: .medium, design: .rounded)).foregroundStyle(LisaTheme.muted).frame(width: side / 3, height: side / 3) } } } }
             }
-        }.frame(width: side, height: side).contentShape(Rectangle())
+        }
+        .overlay(alignment: .topTrailing) {
+            if hintPresented, hintStage >= 1,
+               let marks = hint?.eliminationMarks.filter({ $0.index == index }), !marks.isEmpty {
+                HStack(spacing: 0) {
+                    ForEach(marks, id: \.self) { mark in
+                        Text("\(mark.value)").font(.system(size: max(7, side * 0.22), weight: .bold, design: .rounded))
+                            .strikethrough().foregroundStyle(LisaTheme.coral)
+                            .padding(.horizontal, 1).background(LisaTheme.paper.opacity(0.85), in: Capsule())
+                    }
+                }.padding(1).allowsHitTesting(false)
+            }
+        }
+        .frame(width: side, height: side).contentShape(Rectangle())
     }
     private func peers(_ a: Int, _ b: Int) -> Bool { a / 9 == b / 9 || a % 9 == b % 9 || (a / 27 == b / 27 && a % 9 / 3 == b % 9 / 3) }
     private func cellLabel(_ game: GameSession, index: Int) -> String {
@@ -319,7 +447,7 @@ struct GameView: View {
                 Image(systemName: icon).font(.system(size: 22, weight: .bold))
                     .lisaFloat(amplitude: 1, tilt: 3, period: 3.8)
                     .shadow(color: .black.opacity(0.13), radius: 0, y: 2)
-                Text(title).font(.system(size: 10, weight: .heavy, design: .rounded)).lineLimit(1)
+                Text(title).font(.system(size: 10, weight: .heavy, design: .rounded)).lineLimit(1).minimumScaleFactor(0.8)
             }
             .frame(maxWidth: .infinity).frame(height: 60)
             .foregroundStyle(active ? Color(red: 0.3, green: 0.14, blue: 0.38) : .white)

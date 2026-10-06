@@ -28,8 +28,11 @@ struct SudokuLisaApp: App {
     }
 
     private var game: some View {
+        GeometryReader { geometry in
             RootView().environmentObject(store)
+                .environment(\.lisaVisibleBounds, geometry.frame(in: .global))
                 .environment(\.locale, L10n.locale)
+                .background(LisaDisplayObserver().allowsHitTesting(false).accessibilityHidden(true))
                 .preferredColorScheme(store.settings.darkMode ? .dark : .light)
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     LisaAudio.shared.configure(active: phase == .active, music: store.settings.music)
@@ -39,6 +42,7 @@ struct SudokuLisaApp: App {
                     OctopusAssetExporter.exportIfRequested()
                     #endif
                 }
+        }
     }
 }
 

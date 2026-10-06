@@ -333,3 +333,17 @@
 "Paires nues" = "Pares desnudos";
 "Techniques avancées" = "Técnicas avanzadas";
 "Langue de l’iPhone" = "Idioma del iPhone";
+
+"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Mira la zona resaltada y busca las posibilidades que quedan.";
+"Les chiffres présents sur la ligne, la colonne et le bloc éliminent toutes les possibilités sauf une." = "Los números de su fila, columna y bloque descartan todas las posibilidades menos una.";
+"Dans la zone colorée, ce chiffre ne peut aller que dans une case. Les autres emplacements sont bloqués par leur ligne, colonne ou bloc." = "En la zona resaltada, este número solo cabe en una casilla. Su fila, columna o bloque descartan las demás.";
+"Dans le bloc coloré, ce chiffre reste sur une seule ligne ou colonne : élimine-le des autres cases de cette ligne ou colonne." = "En el bloque resaltado, este número solo puede estar en una fila o columna. Elimínalo de las demás casillas de esa fila o columna.";
+"Deux cases partagent les mêmes deux candidats. Ces chiffres sont réservés à cette paire ; retire-les des autres cases de la zone." = "Dos casillas comparten los mismos dos candidatos. Esos números pertenecen a esta pareja; elimínalos de las demás casillas de la zona.";
+"Cette grille demande une technique que Lisa n’a pas encore apprise. Tu peux voir la solution vérifiée à la dernière étape." = "Este sudoku requiere una técnica que Lisa aún no conoce. Puedes ver la solución comprobada en el último paso.";
+"Un indice pour comprendre" = "Una pista para aprender";
+"Étape %@ sur 3" = "Paso %@ de 3";
+"Voir la suite" = "Siguiente paso";
+"La valeur vérifiée est %@, en ligne %@, colonne %@." = "El valor comprobado es %@, en la fila %@, columna %@.";
+"Regarde cette zone" = "Mira esta zona";
+"Cette case est en erreur. Remplace son chiffre pour débloquer la grille." = "Esta casilla tiene un error. Cambia el número para desbloquear el sudoku.";
+"Candidats à éliminer" = "Candidatos que eliminar";

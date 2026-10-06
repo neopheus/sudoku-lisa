@@ -333,3 +333,17 @@
 "Paires nues" = "Naked pairs";
 "Techniques avancées" = "Advanced techniques";
 "Langue de l’iPhone" = "iPhone language";
+
+"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Look at the highlighted area and find the possibilities that remain.";
+"Les chiffres présents sur la ligne, la colonne et le bloc éliminent toutes les possibilités sauf une." = "The numbers in its row, column and box rule out every possibility but one.";
+"Dans la zone colorée, ce chiffre ne peut aller que dans une case. Les autres emplacements sont bloqués par leur ligne, colonne ou bloc." = "In the highlighted area, this number fits in only one cell. The other spots are ruled out by their row, column or box.";
+"Dans le bloc coloré, ce chiffre reste sur une seule ligne ou colonne : élimine-le des autres cases de cette ligne ou colonne." = "In the highlighted box, this number is confined to one row or column. Remove it from the other cells along that row or column.";
+"Deux cases partagent les mêmes deux candidats. Ces chiffres sont réservés à cette paire ; retire-les des autres cases de la zone." = "Two cells share the same pair of candidates. Those numbers belong to this pair, so remove them from the other cells in the area.";
+"Cette grille demande une technique que Lisa n’a pas encore apprise. Tu peux voir la solution vérifiée à la dernière étape." = "This puzzle needs a technique Lisa has not learned yet. You can see the verified solution in the last step.";
+"Un indice pour comprendre" = "A hint to help you learn";
+"Étape %@ sur 3" = "Step %@ of 3";
+"Voir la suite" = "Next step";
+"La valeur vérifiée est %@, en ligne %@, colonne %@." = "The verified value is %@, in row %@, column %@.";
+"Regarde cette zone" = "Look at this area";
+"Cette case est en erreur. Remplace son chiffre pour débloquer la grille." = "This cell is incorrect. Replace its number to unblock the puzzle.";
+"Candidats à éliminer" = "Candidates to remove";

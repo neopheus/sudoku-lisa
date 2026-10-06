@@ -30,6 +30,8 @@ for name in ('skin','cups'):
  rest=deform(0,False);error=float(np.max(np.abs(rest-v)));assert error<1e-5,error
  triangles=np.array(g['indices']).reshape(-1,3);edges=np.concatenate([triangles[:,[0,1]],triangles[:,[1,2]],triangles[:,[2,0]]])
  if name=='cups':
+  uv=np.array(g['textureCoordinates']).reshape(-1,2)
+  assert uv.shape==(len(v),2) and np.isfinite(uv).all() and np.min(uv)>=0 and np.max(uv)<=1, 'Invalid cup UVs'
   normals=np.array(g['normals']).reshape(-1,3)
   assert np.isfinite(normals).all() and np.max(np.abs(np.linalg.norm(normals,axis=1)-1))<1e-4
   area=np.linalg.norm(np.cross(v[triangles[:,1]]-v[triangles[:,0]],v[triangles[:,2]]-v[triangles[:,0]]),axis=1)

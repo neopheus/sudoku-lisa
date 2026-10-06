@@ -46,7 +46,7 @@ struct DailyView: View {
                 }
             }
             HStack { LisaCompanion(size: 70, animationEnabled: motionEnabled && !replace); VStack(alignment: .leading, spacing: 6) { Text(L10n.count("streak", store.streak)).font(LisaTheme.heading(24)); Text(L10n.text("Chaque grille compte. Chaque pause aussi.")).font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted) } }
-        }.padding(24) } }.environment(\.lisaMotionAllowed, motionEnabled && !replace).navigationTitle(L10n.text("Chaque jour")).navigationBarTitleDisplayMode(.inline)
+        }.frame(maxWidth: 720).padding(24).frame(maxWidth: .infinity) } }.environment(\.lisaMotionAllowed, motionEnabled && !replace).navigationTitle(L10n.text("Chaque jour")).navigationBarTitleDisplayMode(.inline)
             .alert(L10n.text("Remplacer la partie en cours ?"), isPresented: $replace) { Button(L10n.text("Annuler l’action"), role: .cancel) {}; Button(L10n.text("Jouer le défi"), role: .destructive) { start() } } message: { Text(L10n.text("Votre progression dans la partie actuelle sera perdue.")) }
     }
     private func start() { store.start(.medium, mode: "Quotidien", date: selected) }
@@ -282,7 +282,7 @@ struct ProgressViewLisa: View {
             ForEach(games.suffix(10).reversed()) { game in
                 HStack { VStack(alignment: .leading, spacing: 4) { Text(game.difficulty.label).font(LisaTheme.heading(17)); Text(game.date.formatted(Date.FormatStyle(date: .abbreviated, time: .omitted).locale(L10n.locale)) + " · " + L10n.text(game.mode)).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted) }; Spacer(); Text(LisaStore.time(game.seconds)).font(LisaTheme.body()) }.padding(18).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 19))
             }
-        }.padding(24) } }.navigationTitle(L10n.text("Mes progrès")).navigationBarTitleDisplayMode(.inline)
+        }.frame(maxWidth: 720).padding(24).frame(maxWidth: .infinity) } }.navigationTitle(L10n.text("Mes progrès")).navigationBarTitleDisplayMode(.inline)
     }
     private func stat(_ value: String, _ title: String, _ icon: String) -> some View { VStack(alignment: .leading, spacing: 10) { Image(systemName: icon).foregroundStyle(LisaTheme.coral).lisaFloat(amplitude: 3, tilt: 8); Text(value).font(LisaTheme.heading(29)); Text(title).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted) }.frame(maxWidth: .infinity, alignment: .leading).padding(20).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 23)) }
     private func badge(_ title: String, subtitle: String, icon: String, earned: Bool) -> some View { HStack(spacing: 16) { Image(systemName: earned ? icon : "lock.fill").foregroundStyle(earned ? LisaTheme.accentInk : LisaTheme.ink).font(.system(size: 22)).frame(width: 50, height: 50).background(earned ? LisaTheme.yellow : LisaTheme.line.opacity(0.4), in: Circle()).lisaFloat(amplitude: 3, tilt: 6, enabled: earned); VStack(alignment: .leading, spacing: 5) { Text(title).font(LisaTheme.heading(17)); Text(subtitle).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted) }; Spacer() }.padding(15).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 21)).opacity(earned ? 1 : 0.65) }

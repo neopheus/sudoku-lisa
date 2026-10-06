@@ -127,31 +127,35 @@ private struct SeededRandom: RandomNumberGenerator {
 }
 
 public enum SudokuGenerator {
-    /// Generates up to four unique-solution candidates and selects the closest
+    /// Generates up to eight unique-solution candidates and selects the closest
     /// supported logical rating. Expert/master favor the strongest candidate;
     /// clue density further distinguishes them. This is bounded best effort,
     /// not a guarantee of six strict human-technique grades.
     public static func generate(difficulty: Difficulty = .easy, seed: UInt64 = UInt64.random(in: 0...UInt64.max)) -> Puzzle {
         let target: HumanTechniqueRating
         switch difficulty {
-        case .quick, .easy: target = .nakedSingles
-        case .medium: target = .hiddenSingles
-        case .hard: target = .lockedCandidates
+        case .quick: target = .nakedSingles
+        case .easy: target = .hiddenSingles
+        case .medium: target = .lockedCandidates
+        case .hard: target = .searchRequired
         case .expert, .master: target = .searchRequired
         }
         var selected: Puzzle?
         var selectedRating = HumanTechniqueRating.nakedSingles
         var bestDistance = Int.max
-        for attempt in 0..<4 {
+        for attempt in 0..<8 {
             let candidateSeed = seed &+ UInt64(attempt) &* 0x9E3779B97F4A7C15
             let candidate = makeCandidate(difficulty: difficulty, seed: seed, randomSeed: candidateSeed)
             let rating = SudokuSolver.humanTechniqueRating(candidate.givens) ?? .searchRequired
-            let distance = abs(rating.rawValue - target.rawValue)
+            let ratingDistance = abs(rating.rawValue - target.rawValue)
+            // Maître shares advanced techniques with Expert but favors a leaner grid.
+            let densityDistance = difficulty == .master ? max(0, candidate.clueCount - 26) / 2 : 0
+            let distance = ratingDistance * 10 + densityDistance
             let fewerClues = candidate.clueCount < (selected?.clueCount ?? 82)
             if distance < bestDistance || (distance == bestDistance && rating == selectedRating && fewerClues) {
                 selected = candidate; selectedRating = rating; bestDistance = distance
             }
-            if distance == 0 && difficulty != .expert && difficulty != .master { break }
+            if distance == 0 && difficulty != .master { break }
         }
         return selected!
     }

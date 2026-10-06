@@ -41,6 +41,7 @@ final class PoulpiRig: @unchecked Sendable {
     private struct Mesh: Decodable {
         let positions: [Float], normals: [Float], weights: [Float], occlusion: [Float]
         let indices: [UInt32], bones: [UInt16]
+        let textureCoordinates: [Float]?
     }
     private struct Surface: Decodable { let positions: [Float], normals: [Float], textureCoordinates: [Float]; let indices: [UInt32] }
     private struct Joint: Decodable { let parent: Int; let position: [Float] }
@@ -74,7 +75,11 @@ final class PoulpiRig: @unchecked Sendable {
             let ao = 0.45 + mesh.occlusion[i/3] * 0.55
             // Pigment transitions and blush belong to the skin, not floating discs.
             colors += tint ? [ao,ao,ao,1] : [1,1,1,1]
-            uv += [atan2(x,z)/(2 * .pi)+0.5, y*0.5+0.5]
+            if mesh.textureCoordinates == nil { uv += [atan2(x,z)/(2 * .pi)+0.5, y*0.5+0.5] }
+        }
+        if let coordinates=mesh.textureCoordinates {
+            precondition(coordinates.count==mesh.positions.count/3*2,"Invalid mesh UV count")
+            uv=coordinates
         }
         return SCNGeometry(sources: [source(uv, semantic: .texcoord, count: uv.count/2, components: 2, floating: true), source(colors, semantic: .color, count: colors.count/4, components: 4, floating: true), source(mesh.positions, semantic: .vertex, count: mesh.positions.count / 3, components: 3, floating: true),
                               source(mesh.normals, semantic: .normal, count: mesh.normals.count / 3, components: 3, floating: true)],
@@ -162,12 +167,12 @@ final class PoulpiRig: @unchecked Sendable {
         float curlBounce=exp(-pow((p.y+0.72)/0.20,4.0))*front;
         _surface.emission.rgb += float3(0.0,0.028,0.16)*curlBounce;
         float mantleBounce=exp(-pow(p.y/0.22,2.0))*front;
-        _surface.emission.rgb += _surface.diffuse.rgb * (0.16*mantleBounce);
-        _surface.emission.rgb += float3(0.0,0.007,0.20)*mantleBounce*exp(-pow(p.x/0.45,4.0));
+        _surface.emission.rgb += _surface.diffuse.rgb * (0.08*mantleBounce);
+        _surface.emission.rgb += float3(0.0,0.004,0.10)*mantleBounce*exp(-pow(p.x/0.45,4.0));
         // Lavender pigment follows the sculpted upper orbital cushion.
         float orbit=length(float2((abs(p.x)-0.380)/0.265,(p.y-0.44)/0.24));
         float orbitalPigment=exp(-pow((orbit-1.08)/0.12,2.0))*smoothstep(0.40,0.58,p.y)*front;
-        _surface.diffuse.rgb=mix(_surface.diffuse.rgb,float3(0.25,0.15,0.65),orbitalPigment*0.45);
+        _surface.diffuse.rgb=mix(_surface.diffuse.rgb,float3(0.25,0.15,0.65),orbitalPigment*0.70);
         float socket=length(float2((abs(p.x)-0.38)/0.265,(p.y-0.44)/0.25));
         float contact=exp(-pow((socket-1.02)/0.12,2.0))*0.12*front;
         float lipContact=exp(-pow(p.x/0.19,2.0)-pow((p.y-0.17)/0.10,2.0))*0.08*front;
@@ -177,12 +182,24 @@ final class PoulpiRig: @unchecked Sendable {
         float mouthShade=exp(-pow(p.x/0.22,4.0)-pow((p.y-0.035)/0.11,2.0))*0.24*front;
         _surface.diffuse.rgb *= 1.0-mouthShade;
         _surface.emission.rgb *= 1.0-mouthShade;
-        float blush=exp(-pow((abs(p.x)-0.47)/0.13,2.0)-pow((p.y-0.18)/0.095,2.0))*front;
-        _surface.diffuse.rgb=mix(_surface.diffuse.rgb,float3(0.45,0.045,0.46),blush*0.50);
+        float blush=exp(-pow((abs(p.x)-0.47)/0.105,2.0)-pow((p.y-0.155)/0.070,2.0))*front;
+        _surface.diffuse.rgb=mix(_surface.diffuse.rgb,float3(0.45,0.045,0.46),blush*0.40);
         """]
         attach(Self.asset.skin, geometry: Self.skinGeometry, material: skin, to: SCNNode())
-        let cups = Self.material(UIColor(red:0.76,green:0.69,blue:0.53,alpha:1),roughness:0.76)
-        cups.emission.contents = UIColor(red:0.50,green:0.40,blue:0.24,alpha:1)
+        let cups = Self.material(UIColor(red:0.78,green:0.73,blue:0.62,alpha:1),roughness:0.52)
+        cups.emission.contents = UIColor(red:0.35,green:0.30,blue:0.22,alpha:1)
+        cups.shaderModifiers = [.surface: """
+        #pragma body
+        // Per-cup coordinates follow the skinned surface, including oval cups.
+        float cupRadius=length(_surface.diffuseTexcoord*2.0-1.0);
+        float recess=exp(-pow(cupRadius/0.36,2.0));
+        float innerRim=exp(-pow((cupRadius-0.46)/0.10,2.0));
+        float cupShade=1.0-0.04*recess-0.04*innerRim;
+        _surface.diffuse.rgb *= cupShade;
+        _surface.emission.rgb *= cupShade;
+        _surface.emission.rgb += float3(0.035,0.017,0.0)*recess;
+        _surface.roughness += 0.08*recess;
+        """]
         attach(Self.asset.cups, geometry:Self.cupGeometry, material:cups, to:cupsNode)
         buildFace()
         node.scale = SCNVector3(0.90,1,1)
@@ -255,10 +272,15 @@ final class PoulpiRig: @unchecked Sendable {
         out.eyeHeight=_geometry.position.y;
         out.eyeDepth=_geometry.position.z;
         """, .surface: """
+        #pragma arguments
+        float ivoryBlueFill;
         #pragma body
         float bounce=1.0-smoothstep(-0.85,0.40,in.eyeHeight);
         _surface.emission.rgb += float3(0.135,0.10,0.075)*bounce;
         _surface.emission.rgb += float3(0.09,0.04,0.08)*pow(bounce,4.0);
+        // Soft ivory fill on the dome; preserve the darker contact at its edge.
+        float ivoryLift=pow(max(0.0,in.eyeDepth),4.0)*bounce;
+        _surface.emission.rgb += float3(0.0,0.08,ivoryBlueFill)*ivoryLift;
         float rim=(1.0-smoothstep(0.10,0.55,in.eyeDepth))*smoothstep(-0.85,-0.20,in.eyeHeight);
         float contact=1.0-0.35*rim;
         _surface.diffuse.rgb *= contact;
@@ -270,16 +292,24 @@ final class PoulpiRig: @unchecked Sendable {
         iris.diffuse.contents=Self.referenceTexture
         // The supplied PNG has partial alpha even inside dark pupils. Iris
         // pigment is opaque; do not blend the ivory underneath into that colour.
-        iris.shaderModifiers = [.surface: """
+        iris.shaderModifiers = [.geometry: """
+        #pragma varyings
+        float irisRadius;
         #pragma body
-        _surface.diffuse.a=1.0;
+        out.irisRadius=length(float2(_geometry.position.x/0.125,_geometry.position.y/0.1625));
+        """, .surface: """
+        #pragma transparent
+        #pragma body
+        // Filter only the geometric rim; dark pigment stays fully opaque inside.
+        float edgeWidth=max(0.008,fwidth(in.irisRadius));
+        _surface.diffuse.a=1.0-smoothstep(1.0-edgeWidth,1.0,in.irisRadius);
         """]
         iris.diffuse.minificationFilter = .linear
         iris.diffuse.magnificationFilter = .linear
         iris.diffuse.mipFilter = .linear
         iris.diffuse.maxAnisotropy=8
-        let browMaterial=Self.material(UIColor(red:0.24,green:0.20,blue:0.64,alpha:1),roughness:0.72)
-        browMaterial.shaderModifiers=[.geometry:Self.grainGeometryModifier,.surface:Self.grainSurfaceModifier()]
+        let browMaterial=Self.material(UIColor(red:0.29,green:0.24,blue:0.69,alpha:1),roughness:0.62)
+        browMaterial.shaderModifiers=[.geometry:Self.grainGeometryModifier,.surface:Self.grainSurfaceModifier(strength:"0.35")]
         let lidMaterial=Self.material(UIColor(red:0.30,green:0.23,blue:0.70,alpha:1),roughness:0.70)
         lidMaterial.shaderModifiers=[.geometry:Self.grainGeometryModifier,
                                      .surface:Self.grainSurfaceModifier(strength:"0.65")]
@@ -290,6 +320,7 @@ final class PoulpiRig: @unchecked Sendable {
             eyeRoot.scale = SCNVector3(1.12,0.88,1)
             _ = eyeShell(0.231, SCNVector3(1,1.14,0.23), SCNVector3(0,-0.006,0), purple, parent: eyeRoot)
             let eyeIvory = ivory.copy() as! SCNMaterial
+            eyeIvory.setValue(NSNumber(value:side < 0 ? 0.08 : -0.08),forKey:"ivoryBlueFill")
             if side > 0 { eyeIvory.diffuse.contents = UIColor(red:0.71,green:0.66,blue:0.57,alpha:1) }
             _ = eyeShell(0.226, SCNVector3(1,1.14,0.33), SCNVector3(0,-0.006,0.012), eyeIvory, parent: eyeRoot)
             let gaze = SCNNode(); gaze.position = SCNVector3(-side * 0.096,-0.010,0.065); eyeRoot.addChildNode(gaze); pupils.append(gaze)
@@ -308,11 +339,11 @@ final class PoulpiRig: @unchecked Sendable {
             seam.opacity=0;eyeRoot.addChildNode(seam);lidCreases.append(seam)
             let brow = tube(points: (0...48).map { step in
                 let t=Float(step)/48
-                return SCNVector3(-0.138+t*0.276, 0.008*sin(t * .pi), 0)
+                return SCNVector3(-0.138+t*0.276, 0.014*sin(t * .pi), 0)
             }, radius: 0.046, material: browMaterial, radiusScale: { t in
                 let inward = side < 0 ? t : 1-t
                 let blend = inward*inward*(3-2*inward)
-                return 0.75+0.40*blend
+                return 0.92+0.23*blend
             })
             brow.position = SCNVector3(side*0.375,0.77,0.435); brow.eulerAngles.z = -side*0.34; brow.eulerAngles.y = side*0.35
             bones[0].addChildNode(brow); brows.append(brow)

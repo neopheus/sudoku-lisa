@@ -1,6 +1,8 @@
 # Lisa Sudoku
 
-Application iPhone native en français, SwiftUI et Swift, iOS 17 minimum. Interface en portrait, mascotte poulpe 3D procédurale animée en temps réel avec SceneKit et progression locale. Aucun SDK tiers ni serveur requis pour jouer.
+Application iPhone native en français, SwiftUI et Swift, iOS 17 minimum. Interface adaptative en portrait et paysage, mascotte poulpe 3D procédurale animée en temps réel avec SceneKit et progression locale. Aucun SDK tiers ni serveur requis pour jouer.
+
+L’interface utilise une ou deux colonnes selon la largeur disponible et conserve la partie au redimensionnement. La validation spécifique aux écrans et aux postures de l’iPhone Duo nécessite Xcode 27.1 et son runtime iOS 27.1 : voir [l’adaptation et les contrôles Duo](docs/iphone-duo.md).
 
 ## Développement
 

@@ -1,6 +1,6 @@
 # Diagnostic de définition et de cadence
 
-État courant : passe 99, visible dans `comparaison-reference-hd.html`. Les sections ci-dessous conservent l’historique ; les derniers contrôles sont en fin de document. La ressemblance exacte reste non atteinte.
+État courant : passe 130, visible dans `comparaison-reference-hd.html`. Les sections ci-dessous conservent l’historique ; les derniers contrôles sont en fin de document. La ressemblance exacte reste non atteinte.
 
 La planche `/pet` comporte des cellules de 192 × 208 px. Les séquences utilisent 4 à 8 poses (hors regards), espacées de 120 à 280 ms. Le générateur source retrouvé dans `work/poulpi/assemble.py` a produit une image de 1027 × 1531 ensuite redimensionnée : il ne contient pas de poses HD cachées.
 
@@ -13,9 +13,9 @@ Le rendu SceneKit utilisait encore la limite de densité de pixels du modèle g�
 
 La version courante utilise `PoulpiRig.swift` et `App/Resources/Mascot/poulpi-rig.json`. La planche originale est archivée ici (`poulpi-original-sprites.png`) et n'est plus chargée par la mascotte.
 
-`blender -b --python-exit-code 1 --python scripts/mascot/build_poulpi.py` reconstruit le maillage soudé, adoucit les raccords, attribue les poids des articulations, prépare 44 ventouses et précalcule l'ombrage des plis. La source Blender est `poulpi-sculpt.blend`. Le squelette exporté comporte 25 nœuds : une racine et trois articulations par bras. Le skinning est effectué par SceneKit ; aucune image de pose ne remplace le personnage. Les yeux, les iris, les sourcils et la bouche sont des géométries distinctes attachées au corps.
+`blender -b --python-exit-code 1 --python scripts/mascot/build_poulpi.py` reconstruit le maillage soudé, adoucit les raccords, attribue les poids des articulations, prépare 40 ventouses et précalcule l'ombrage des plis. La source Blender est `poulpi-sculpt.blend`. Le squelette exporté comporte 25 nœuds : une racine et trois articulations par bras. Le skinning est effectué par SceneKit ; aucune image de pose ne remplace le personnage. Les yeux, les iris, les sourcils et la bouche sont des géométries distinctes attachées au corps.
 
-La peau compte actuellement 45 265 sommets / 90 526 triangles, les ventouses 7 392 sommets / 12 672 triangles. Les géométries sont partagées, les matériaux et les articulations sont propres à chaque instance. Les ombres des plis sont calculées hors ligne. Le rendu reste à la densité native avec MSAA 4× ou 2×, sans désactiver l'anticrénelage en qualité économique.
+La peau compte actuellement 46 690 sommets / 93 376 triangles, les ventouses 5 800 sommets / 10 560 triangles. Les géométries sont partagées, les matériaux et les articulations sont propres à chaque instance. Les ombres des plis sont calculées hors ligne. Le rendu reste à la densité native avec MSAA 4× ou 2×, sans désactiver l'anticrénelage en qualité économique.
 
 `blender -b --python-exit-code 1 --python scripts/mascot/validate_poulpi.py` contrôle la pose de liaison, les valeurs finies, l'étirement des arêtes sur 97 poses et la fermeture de boucle. Résultats : `rig-validation.json`. Il s'agit d'un contrôle géométrique, pas d'une garantie contre toute auto-intersection ni d'une mesure de FPS.
 
@@ -319,3 +319,170 @@ Mesure de 95 après compilation et captures : 39 fenêtres dans l’aperçu anim
 La validation passe sur 97 poses : peau fermée et connexe, Euler 2, 48 478 sommets / 96 952 triangles, étirement maximal 1,892, marge minimale des bras relevés à la tête 0,251. Ventouses : 5 800 sommets / 10 560 triangles, étirement maximal 1,015. Debug et Release passent. Ce contrôle géométrique n’exclut pas toute collision pendant toute animation possible.
 
 Mesure de 99 : 35 fenêtres dans l’aperçu animé Debug, iPhone 16 simulateur iOS 18.5, après compilation et captures. SceneKit min/médiane/max 59,5/60/60 FPS, cadence principale 60/60/60 (`rig-loop99-performance.json`). Pas de garantie pour les appareils physiques ou une partie complète. Les vidéos antérieures restent historiques. `git diff --check` passe.
+
+
+## Essais 100–103 — crochet latéral, retour à 99
+
+**100, rejeté avant capture** : deux derniers points (1,06; −0,62; 0,62), (0,97; −0,47; 0,76). La topologie donne Euler −2.
+
+**101, rejeté visuellement** : même courbe, rayon aminci progressivement de 0,030 unité sur t=0,60…1. La topologie et les 97 poses passent, mais la capture montre une pointe trop droite et trop fine, sans le crochet recherché. L’image reste accessible comme essai rejeté.
+
+**102, rejeté avant capture** : pointe ramenée à (0,84; −0,48; 0,76), affinement conservé. Euler −4.
+
+**103, rejeté avant capture** : pointe reculée à (0,84; −0,35; 0,30). Euler −2. Ces résultats ne localisent pas précisément les connexions ; les hypothèses sur les bras voisins et le lissage ne constituent pas une preuve de leur emplacement exact.
+
+Retour aux courbes et rayons de 99. Le JSON reconstruit est identique octet pour octet à celui référencé par `rig-loop99-performance.json` (SHA-256 4baa3af24c4e838854b93a29c807cf8d27e15483761ea1bcc039f76971de115e). La validation sur 97 poses repasse. La galerie conserve 99 comme version courante : cette série ne constitue pas un progrès de ressemblance retenu.
+
+Le générateur contrôle désormais Euler 2 dès la fin de la reconstruction de peau, avant les poids, les ombres et l’export. Le validateur complet reste nécessaire pour les composantes et les poses. Ce contrôle précoce évite d’exporter les formes à connexions supplémentaires observées ici ; il ne détecte pas toutes les collisions possibles.
+
+Le test de rejet sur la forme 100 s’arrête avec « Unexpected sculpt handle before export », Euler −2, code 1. L’empreinte du modèle 99 reste inchangée après ce test. La compilation Debug de la restauration passe et cette application est réinstallée sur le simulateur. `git diff --check` passe.
+
+
+## Passes 104–105 — reconstruction des courbes latérales
+
+**104** : reprise de toute la courbe, avec les points (0,22; −0,20; −0,04), (0,60; −0,55; 0), (0,94; −0,72; 0,13), (1,08; −0,61; 0,30), (1,08; −0,42; 0,32), (0,91; −0,46; 0,32), avant facteur x de 0,90. Rayon latéral 0,15 × (1−t) + 0,090. Le contrôle précoce et les 97 poses passent. Le crochet devient visible, mais monte trop haut et une ventouse atteint sa partie supérieure.
+
+**105, retenue** : les deux derniers points sont abaissés de 0,04 en y (−0,46 et −0,50). La rangée de quatre ventouses latérales couvre t=0,36…0,70, contre 0,36…0,885 ; la pointe reste libre. Les autres rangées gardent leurs paramètres. Le retour du crochet est plus lisible, mais son ouverture intérieure est encore moins profonde que la référence et son sommet reste un peu haut. Le comparatif affiche 105 et conserve 104. L’identité visuelle n’est pas atteinte.
+
+Debug et Release passent. Validation sur 97 poses : peau fermée, connexe, Euler 2, 46 884 sommets / 93 764 triangles ; étirement maximal 1,887 ; marge minimale des bras relevés à la tête 0,244. Ventouses : 5 800 sommets / 10 560 triangles, étirement maximal 1,015, 40 bases ouvertes enfouies. Cela ne constitue pas une preuve exhaustive d’absence d’auto-intersection.
+
+Le cycle de 105 dure 48,22 s. Les poses examinées à 8 et 20 s conservent les ventouses sur les bras et ne montrent pas de liaison des bras relevés au visage. Cette inspection est échantillonnée ; elle ne couvre pas toutes les images. La vidéo réencodée sert à la revue et ne constitue pas une mesure de FPS.
+
+Mesure de 105 : 40 fenêtres après encodage, aperçu animé Debug sur iPhone 16 simulateur iOS 18.5. SceneKit minimum/médiane/maximum 58,5/60/60 FPS ; cadence principale 60/60/60,1 (`rig-loop105-performance.json`). La médiane reste 60, avec un minimum inférieur à celui de 99 ; cette mesure seule ne permet pas d’attribuer la variation au modèle. Aucun résultat sur appareil physique ou partie complète n’en est déduit. Les 97 images du sélecteur se chargent ; `git diff --check` passe.
+
+
+## Passes 106–108 — parcours des ventouses des bras relevés
+
+**106** : torsion utilisée pour leur implantation 2,4 → 1,1. La rangée se déplace vers le bord extérieur sans résoudre la différence recherchée.
+
+**107, rejetée** : torsion 0,45 et fin de parcours t=0,73 au lieu de 0,79. Les ventouses sont trop extérieures. Les captures de ces deux essais restent accessibles.
+
+**108, retenue** : torsion rétablie à 2,4 ; parcours t=0,38…0,73 au lieu de 0,45…0,79. Les quatre ventouses restent réparties à distance égale le long de la surface projetée. La rangée se rapproche visuellement des positions de référence. Les coussinets sont encore trop frontaux, surtout celui du bas ; la teinte et le relief restent différents. L’identité visuelle n’est pas atteinte.
+
+Les 97 poses passent ; aucune courbe de bras ou surface de peau n’est changée par cette série, seulement l’implantation et l’orientation des ventouses. Debug et Release ont réussi avant qu’une modification externe de l’installation Xcode rende `xcrun` inutilisable (Info.plist et DVTSystemPrerequisites manquants). Après redémarrage du simulateur, la capture 108 provient du binaire Debug compilé avec succès, installé et lancé via le `simctl` de CoreSimulator. Aucun composant Xcode n’a été modifié par ce travail.
+
+La mesure FPS et le cycle de 105 restent historiques ; aucune nouvelle cadence n’est attribuée à 108. Le nombre de sommets et de triangles des ventouses ne change pas.
+
+
+## Passe 109 — profil du coussinet bas des bras relevés
+
+Le coussinet de base reçoit une largeur transversale réduite de 50 %, avec un fondu cubique de t=0,38 à t=0,50 vers la largeur précédente. Sa longueur tangentielle, son centre et son implantation restent inchangés. Les normales utilisent déjà l’inverse de cette échelle transversale ; aucun sommet ni calcul géométrique pendant l’animation n’est ajouté.
+
+La capture montre une silhouette plus ovale, visuellement plus proche du coussinet bas de référence. L’inclinaison, la teinte et les ombres restent différentes ; les autres coussinets paraissent encore trop frontaux. L’identité visuelle n’est pas atteinte.
+
+Xcode est de nouveau disponible (27.1, build 27A9275). Debug et Release passent ; le simulateur arrêté est redémarré, l’application reconstruite est installée et la capture 109 provient de cette application. Le contrôle géométrique sur 97 poses passe. Les mesures FPS et la vidéo de 105 restent historiques ; aucune nouvelle mesure n’est attribuée à 109. `git diff --check` passe.
+
+
+## Passes 110–111 — matière ivoire des ventouses
+
+**110, intermédiaire** : rugosité 0,76 → 0,52, émission RGB 0,50/0,40/0,24 → 0,35/0,28/0,16. Le volume se lit davantage, mais les ombres paraissent trop jaunes.
+
+**111, retenue** : diffuse RGB 0,78/0,73/0,62 et émission 0,35/0,30/0,22, rugosité conservée à 0,52. Le rendu est plus ivoire et moins jaune. Il reste moins détaillé dans les creux et les ombres de contact que la référence. Cette appréciation est visuelle, sans score global de ressemblance. L’identité visuelle n’est pas atteinte.
+
+Seules les constantes du matériau changent : pas de lumière, texture, shader ou sommet supplémentaire. Debug et Release passent. La géométrie conserve les contrôles de 109 ; la mesure de cadence et la vidéo de 105 restent historiques. Des changements parallèles du budget de rendu et de l’accès à l’écran sont présents dans le projet ; cette passe ne les modifie pas et ne leur attribue pas de résultat de performance. `git diff --check` passe.
+
+
+## Passe 112 — section des bras relevés
+
+Le rayon des bras 1 et 6 reçoit un retrait progressif de 0,020 × sin(πt), nul à la racine et à la pointe et maximal au milieu. La courbe centrale et la rondeur de l’extrémité sont conservées. Les ventouses sont reprojetées sur la surface reconstruite avec leurs paramètres de placement existants.
+
+La capture montre une ouverture plus lisible. Son inclinaison et sa forme restent différentes de la référence ; cette passe ne prétend pas reproduire exactement le contour. La surface et les ombres restent également à rapprocher.
+
+Debug et Release passent. Validation sur 97 poses : peau fermée et connexe, Euler 2, 46 478 sommets / 92 952 triangles, étirement maximal 1,889 et marge minimale des bras relevés à la tête 0,255. Ventouses : 5 800 sommets / 10 560 triangles, étirement maximal 1,015. Le contrôle ne couvre pas toutes les collisions possibles. La vidéo de 105 demeure historique. L’identité visuelle n’est pas atteinte.
+
+Mesure de 112 : 47 fenêtres dans l’aperçu animé Debug du simulateur iPhone 16 iOS 18.5, sans compilation ni capture pendant la mesure. SceneKit minimum/médiane/maximum 59,5/60/60 FPS ; cadence principale 59,6/60/60 (`rig-loop112-performance.json`). Aucun résultat sur appareil physique ou partie complète n’est déduit. `git diff --check` passe.
+
+
+## Passes 113–114 — modelé sous la bouche et joues
+
+**113** : émission du manteau réduite de moitié (part diffuse 0,16 → 0,08 ; bleu 0,20 → 0,10). La zone sous la bouche est moins éclaircie. Le relief reste plus plat que dans la référence : cette correction locale ne remplace pas le travail sur les volumes et leur éclairage.
+
+**114, retenue** : centre du blush abaissé de y=0,18 à 0,155, largeurs gaussiennes 0,13/0,095 → 0,105/0,070, mélange 0,50 → 0,40. Les joues roses sont plus localisées. Les captures 112, 113 et 114 sont conservées pour comparaison. Les contours des yeux, leur profondeur, les sourcils et les ombres du visage restent différents ; aucune identité visuelle n’est annoncée.
+
+Seules des constantes du shader de peau changent : mêmes géométries, textures et calculs par image. Debug et Release passent. Le contrôle géométrique sur 97 poses reste celui de 112 ; la dernière mesure de cadence est également celle de 112 et ne constitue pas une mesure de 114. Aucun FPS sur appareil physique n’est déduit de cette passe.
+
+Les 106 images du sélecteur se chargent ; `git diff --check` passe.
+
+
+## Passes 115–118 — sourcils et essai sur les blancs des yeux
+
+**115** : épaisseur relative du bout externe des sourcils 0,75 → 0,92, bout interne conservé à 1,15 ; courbure centrale 0,008 → 0,014. Les extrémités sont moins pincées. Le nombre de sommets et de triangles reste identique.
+
+**116, intermédiaire** : couleur diffuse des sourcils RGB 0,24/0,20/0,64 → 0,29/0,24/0,69 et rugosité 0,72 → 0,56. Le reflet rend le relief plus lisible mais souligne trop le grain.
+
+**117, retenue** : rugosité 0,62 et intensité du grain 0,35. Les sourcils sont plus doux ; leur raccord au front, leur courbe et l’éclairage restent différents de la référence.
+
+**118, écartée** : rugosité des blancs des yeux 0,80 → 0,52. Pas d’amélioration visuelle suffisamment nette ; retour à 0,80. La capture est conservée et étiquetée. Les ombres des blancs et leur raccord au visage restent à améliorer.
+
+Les captures proviennent de builds Debug réussis. La Release de 117 passe. Les modifications ne concernent que le profil statique des sourcils et des constantes de matériaux : aucune géométrie reconstruite pendant l’animation, aucune lumière supplémentaire. Les contrôles des 97 poses de peau, bouche et ventouses restent ceux de 112 et ne valident pas la nouvelle forme des sourcils. Les dernières mesures de cadence restent celles de 112 ; aucune performance matérielle universelle n’est annoncée.
+
+Retour à 117 recompilé et réinstallé. Les 110 images du sélecteur se chargent ; `git diff --check` passe. Le nouveau cycle enregistré dure 36 s (`poulpi-boucle-117-cycle.mp4`). Les poses examinées à 8 et 20 s ne montrent pas de ventouse détachée ni de sourcil désolidarisé ; cette inspection échantillonnée ne valide pas toutes les images et la vidéo réencodée ne sert pas à mesurer les FPS.
+
+
+## Passes 119–120 — relief supérieur des yeux
+
+**119** : largeur du bourrelet orbital dans le champ de distance 0,24 → 0,15 ; amplitude 0,032 → 0,040. Le relief est moins étalé et plus lisible au-dessus des yeux. Il reste différent de la référence dans son contour et son éclairage. Le nouveau zoom « Yeux et contours » permet de comparer cette zone.
+
+**120, retenue** : mélange du pigment violet localisé 0,45 → 0,70. La zone claire au sommet du contour est atténuée ; le raccord aux paupières reste visible et les ombres du blanc manquent encore de profondeur. La ressemblance exacte reste non atteinte.
+
+La peau reconstruite compte 46 550 sommets / 93 096 triangles (+72 / +144). Elle conserve une seule composante fermée, caractéristique d’Euler 2, sans bord ouvert ni arête non-manifold. Les 97 poses passent : erreur de liaison maximale 5,895e-8, étirement maximal d’arête 1,8964 et distance minimale mesurée bras relevés/tête 0,2553. Les 40 ventouses conservent 5 800 sommets / 10 560 triangles. `rig-validation.json` correspond à cette géométrie.
+
+Les poses à fermeture 0,625 et 1 sont capturées : pas d’iris traversant les paupières sur ces deux vues ; le raccord de matière reste visible. Cette inspection ne couvre pas toutes les images du clignement. Le cycle vidéo de 117 reste historique. Les compilations Debug de 119 et 120 passent.
+
+La première Release a échoué pendant des modifications parallèles du moteur Sudoku (`nextLogicalMove` manquante). La méthode étant apparue dans le fichier de travail, la relance réussit sans modification de ce code par cette passe. Mesure 120 : 35 fenêtres, aperçu animé Debug sur iPhone 16 simulateur iOS 18.5 ; SceneKit minimum/médiane/maximum 59,5/60/60 FPS, cadence principale 59,7/60/60 (`rig-loop120-performance.json`). Aucun résultat sur appareil physique ou partie complète n’en est déduit. Les 112 images du sélecteur se chargent et `git diff --check` passe.
+
+
+## Passes 121–123 — lumière ivoire sur le dôme des yeux
+
+**121, écartée** : ajout d’une lumière locale RGB 0,10/0,08/0,04, pondérée par la profondeur du dôme à la puissance 4 et par la transition basse existante. L’éclaircissement ne rapproche pas suffisamment les couleurs : erreur moyenne sur 12 zones 3,86 → 3,92 niveaux RGB ; sur les 6 zones du dôme, 3,00 → 3,00.
+
+**122, invalide** : correction séparée du bleu par œil, mais le paramètre du shader est déclaré sans `#pragma arguments`. L’application compile ; le compilateur Metal échoue à l’exécution (`program scope variable must reside in constant address space`), avec un rendu magenta des blancs. Cette capture est explicitement étiquetée comme invalide.
+
+**123, retenue** : déclaration corrigée sous `#pragma arguments`. La lumière locale utilise RGB 0/0,08/+0,08 à gauche et 0/0,08/−0,08 à droite. Le paramètre est fixé une seule fois à la création de chaque matériau. Le rendu des blancs est vérifié ; le journal du processus ne contient plus l’erreur de compilation du shader lors de cette vérification.
+
+`eye-colour-loop123.json` conserve 12 médianes de carrés 5×5 pixels, avec coordonnées et empreintes des captures. Erreur moyenne 120 → 123 : 3,86 → 3,42 niveaux RGB ; sur les 6 zones du dôme, 3,00 → 1,94. La correspondance repose sur le cadrage CSS fixe et reste approximative. Ces mesures locales ne prouvent ni la forme, ni la profondeur, ni une identité globale avec la référence. Les ombres et le raccord au visage restent différents.
+
+Géométrie inchangée : les contrôles de 119–120 restent applicables au maillage ; la mesure de cadence de 120 reste historique. Aucun nouveau FPS sur appareil physique n’est annoncé.
+
+Debug et Release de 123 passent. Les 115 images du sélecteur se chargent ; `git diff --check` passe. L’aperçu animé est relancé sur la version retenue.
+
+
+## Passe 124 — filtrage du bord des iris
+
+Le disque opaque se terminait par une découpe dure malgré le filtrage linéaire/mipmap de sa texture. Un rayon normalisé interpolé sert désormais à un fondu du seul bord ; sa largeur vaut le maximum de 0,008 et de la dérivée écran `fwidth`. Le matériau déclare cette transparence explicitement dans le shader. Aucune subdivision ni texture supplémentaire n’est ajoutée.
+
+Le gros plan montre une transition plus douce entre iris et ivoire. Deux carrés centraux de 41×41 pixels, centrés en (499,1359) et (678,1360) dans les captures 123/124, présentent une différence RGB maximale de 1 niveau et moyenne de 0,0012/0,0014 : le pigment central n’est pas éclairci de façon significative par le fondu. Cette mesure ne prouve pas la ressemblance globale. Le contour, les ombres et le raccord des yeux restent différents de la référence.
+
+Debug et Release passent. Le shader est vérifié à l’écran et aucune erreur de compilation du shader n’apparaît dans le journal du processus testé. Une capture à fermeture 0,625 montre les iris occultés par les paupières ; c’est une vérification ponctuelle, pas un contrôle exhaustif du clignement ou du tri de transparence à tous les angles. La géométrie conserve les contrôles de 119–120.
+
+Mesure 124 : 33 fenêtres, aperçu animé Debug sur iPhone 16 simulateur iOS 18.5 ; SceneKit minimum/médiane/maximum 59,5/60/60 FPS et cadence principale 60/60/60 (`rig-loop124-performance.json`). Ce contrôle ne mesure ni une partie complète ni un appareil physique. `git diff --check` passe.
+
+
+## Passes 125–126 — détails des ventouses
+
+Le générateur exporte désormais deux coordonnées locales par sommet de ventouse, centrées en (0,5 ; 0,5) sur chaque coussinet. Elles suivent le skinning et la forme ovale. Le chargeur accepte ces coordonnées optionnelles et conserve les coordonnées existantes de la peau. Le générateur et le validateur vérifient leur nombre, leur finitude et leur domaine [0,1].
+
+**125, intermédiaire** : deux transitions radiales ajoutent un ombrage du creux et de son anneau intérieur. Le centre paraît trop gris.
+
+**126, retenue** : ombrages ramenés à 0,04 pour le creux et l’anneau, avec un léger apport crème RGB 0,035/0,017/0 dans le creux. La rugosité y augmente de 0,08. Le détail est plus doux ; la profondeur et les ombres de contact restent différentes de la référence, ainsi que l’orientation de certaines ventouses. Aucun score global de ressemblance n’est déduit.
+
+Pas de sommet, triangle, objet animé ou texture image supplémentaire. Le JSON passe de 11 256 699 à 11 449 002 octets, avec 11 600 valeurs UV pour les 5 800 sommets des ventouses. Le nombre de canaux UV côté rendu reste identique. Les 97 poses et la topologie passent après reconstruction, avec les mêmes métriques géométriques que 119–120.
+
+Debug et Release passent. Le shader est vérifié à l’écran sans erreur de compilation signalée pour le processus examiné. Le nouveau cycle dure 43,04 s ; les poses à 8 et 20 s montrent le détail sur les ventouses déformées sans détachement visible. Cette inspection est échantillonnée et ne valide pas chaque image. La vidéo réencodée ne mesure pas les FPS.
+
+Mesure 126 : 35 fenêtres, aperçu animé Debug sur iPhone 16 simulateur iOS 18.5 ; SceneKit minimum/médiane/maximum 59,5/60/60 FPS et cadence principale 60/60/60 (`rig-loop126-performance.json`). Ce résultat ne mesure ni une partie complète ni un appareil physique. `git diff --check` passe.
+
+
+## Passes 127–131 — séparation des bras avant
+
+**127, rejetée** : troisième point des courbes avant x=0,30 → 0,26 (avant compression horizontale ×0,90). La fente centrale se referme visuellement, malgré une topologie valide.
+
+**128, intermédiaire** : x=0,285. L’ouverture revient mais son sommet est trop bas.
+
+**129** : réduction locale du lissage central 0,23 → 0,40. La fente est lisible et moins évasée, mais son sommet remonte trop.
+
+**130, retenue** : réduction locale 0,35, x=0,285. La partie basse des bras est plus proche et l’ouverture moins large que dans 126. Son sommet reste légèrement trop haut et son ombre plus uniforme que sur la référence ; aucune identité de silhouette n’est annoncée.
+
+**131, rejetée avant export** : réduction locale 0,30. Le garde-fou détecte une caractéristique d’Euler 0, correspondant à une liaison supplémentaire. Le processus s’arrête avant d’écrire le JSON ou le fichier Blender. Le paramètre source est rétabli à 0,35 et l’asset exporté de 130 reste en place. Aucune capture 131 n’est ajoutée.
+
+130 conserve une composante fermée, Euler 2, sans bord ouvert ni arête non-manifold : 46 690 sommets / 93 376 triangles. Les 97 poses passent (étirement maximal 1,8970 ; erreur de liaison 5,894e-8 ; distance minimale mesurée bras relevés/tête 0,2553). Les 40 ventouses et leurs UV passent également. Debug et Release de 130 réussissent. La vidéo et les mesures de cadence de 126 restent historiques ; cette série n’en produit pas de nouvelles.

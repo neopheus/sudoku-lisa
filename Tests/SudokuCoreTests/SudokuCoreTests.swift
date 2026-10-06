@@ -79,12 +79,15 @@ final class SudokuCoreTests: XCTestCase {
     func testHumanRatingDistribution() {
         for difficulty in Difficulty.allCases {
             var counts = [String: Int]()
-            for seed: UInt64 in 0..<12 {
+            var clueCounts = [Int]()
+            for seed: UInt64 in 0..<40 {
                 let puzzle = SudokuGenerator.generate(difficulty: difficulty, seed: seed)
                 guard let rating = SudokuSolver.humanTechniqueRating(puzzle.givens) else { return XCTFail("Valid puzzle has no rating") }
                 counts[rating.label, default: 0] += 1
+                clueCounts.append(puzzle.clueCount)
             }
-            print("RATING \(difficulty.rawValue): \(counts)")
+            let averageClues = Double(clueCounts.reduce(0, +)) / Double(clueCounts.count)
+            print("RATING \(difficulty.rawValue): techniques=\(counts), clues=\(clueCounts.min()!)...\(clueCounts.max()!), average=\(averageClues)")
         }
     }
     func testHintConsultationAndApplicationCountOnlyOnce() {

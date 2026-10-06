@@ -333,3 +333,17 @@
 "Paires nues" = "Открытые пары";
 "Techniques avancées" = "Сложные приёмы";
 "Langue de l’iPhone" = "Язык iPhone";
+
+"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Посмотри на выделенную область и найди оставшиеся варианты.";
+"Les chiffres présents sur la ligne, la colonne et le bloc éliminent toutes les possibilités sauf une." = "Числа в строке, столбце и блоке исключают все варианты, кроме одного.";
+"Dans la zone colorée, ce chiffre ne peut aller que dans une case. Les autres emplacements sont bloqués par leur ligne, colonne ou bloc." = "В выделенной области это число подходит только в одну клетку. Остальные места исключают строка, столбец или блок.";
+"Dans le bloc coloré, ce chiffre reste sur une seule ligne ou colonne : élimine-le des autres cases de cette ligne ou colonne." = "В выделенном блоке это число остаётся в одной строке или столбце. Удали его из остальных клеток этой строки или столбца.";
+"Deux cases partagent les mêmes deux candidats. Ces chiffres sont réservés à cette paire ; retire-les des autres cases de la zone." = "В двух клетках одна и та же пара кандидатов. Эти числа закреплены за парой, поэтому удали их из остальных клеток области.";
+"Cette grille demande une technique que Lisa n’a pas encore apprise. Tu peux voir la solution vérifiée à la dernière étape." = "Для этой головоломки нужна техника, которой Лиза ещё не знает. Проверенное решение можно посмотреть на последнем шаге.";
+"Un indice pour comprendre" = "Подсказка с объяснением";
+"Étape %@ sur 3" = "Шаг %@ из 3";
+"Voir la suite" = "Дальше";
+"La valeur vérifiée est %@, en ligne %@, colonne %@." = "Проверенное число — %@, строка %@, столбец %@.";
+"Regarde cette zone" = "Посмотри на эту область";
+"Cette case est en erreur. Remplace son chiffre pour débloquer la grille." = "В этой клетке ошибка. Замени число, чтобы продолжить судоку.";
+"Candidats à éliminer" = "Кандидаты для исключения";

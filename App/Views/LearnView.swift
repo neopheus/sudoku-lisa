@@ -112,7 +112,9 @@ struct LearnView: View {
                 }
             }
             .foregroundStyle(LisaTheme.ink)
+            .frame(maxWidth: 640)
             .padding(24)
+            .frame(maxWidth: .infinity)
             .padding(.bottom, 24)
         }
         .background(LisaBackground())

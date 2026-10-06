@@ -1,28 +1,28 @@
 {
   "skin": {
-    "vertices": 47420,
-    "triangles": 94836,
-    "bindError": 1.2446195532533899e-08,
-    "maximumEdgeStretch": 1.8870553278794375,
+    "vertices": 46690,
+    "triangles": 93376,
+    "bindError": 5.8941906910803255e-08,
+    "maximumEdgeStretch": 1.8970273359425203,
     "loopError": 0.0,
     "sampledPoses": 97,
     "boundaryEdges": 0,
     "nonManifoldEdges": 0,
     "eulerCharacteristic": 2,
     "connectedComponents": 1,
-    "minimumRaisedArmHeadClearance": 0.25115607635939946
+    "minimumRaisedArmHeadClearance": 0.2552924709154709
   },
   "cups": {
     "vertices": 5800,
     "triangles": 10560,
-    "bindError": 1.0110238007898786e-08,
-    "maximumEdgeStretch": 1.014864737756671,
+    "bindError": 5.761016463878832e-08,
+    "maximumEdgeStretch": 1.0146392548697596,
     "loopError": 0.0,
     "sampledPoses": 97,
     "boundaryLoops": 40,
-    "minimumDoubleTriangleArea": 0.00013946358956055257,
+    "minimumDoubleTriangleArea": 8.274241560880834e-05,
     "boundaryEdges": 960,
-    "maximumNormalLengthError": 1.1318077075550548e-07
+    "maximumNormalLengthError": 1.1216443462913617e-07
   },
   "mouth": {
     "connectedComponents": 1,

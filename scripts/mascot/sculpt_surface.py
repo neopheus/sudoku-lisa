@@ -45,7 +45,7 @@ def sculpt(curve, radius, step=.018):
             # Their close inner surfaces need less union smoothing than roots.
             inner=np.exp(-(p[...,0]/.15)**4)
             below=np.clip((-p[...,1]-.22)/.18,0,1)
-            root_blend*=1-.23*inner*below
+            root_blend*=1-.35*inner*below
         field[box]=union(field[box],arm,root_blend)
     # Shallow orbital depressions embed the whites in the face. Soft cheek
     # cushions and a muzzle sit under the pigment rather than on top of it.
@@ -59,8 +59,8 @@ def sculpt(curve, radius, step=.018):
     # forehead and does not add a separate ring in front of the eye.
     orbit=np.sqrt(((np.abs(x)-.380)/.265)**2+((y-.44)/.24)**2)
     upper=np.clip((y-.40)/.18,0,1)
-    orbital_rim=np.exp(-((orbit-1.08)/.24)**2)*upper*front
-    field-=.032*orbital_rim
+    orbital_rim=np.exp(-((orbit-1.08)/.15)**2)*upper*front
+    field-=.040*orbital_rim
     # A closed result must come from a closed iso-surface, not hole filling
     # after a limb has been clipped by the sampling domain.
     assert all(np.min(np.take(field,[0,-1],axis=axis))>0 for axis in range(3)), 'Sculpt exceeds sampling domain'

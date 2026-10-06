@@ -1,0 +1,47 @@
+{
+  "date": "2026-10-06",
+  "xcode": "27.0 (27A266a)",
+  "core": {
+    "command": "swift test",
+    "passed": 35,
+    "failed": 0,
+    "log": "/tmp/sudoku-lisa-duo-core.log"
+  },
+  "ui": {
+    "iphone16": {
+      "result": "Passed",
+      "passed": 3,
+      "failed": 0,
+      "skipped": 0,
+      "report": "/tmp/sudoku-lisa-duo-green2.xcresult",
+      "runtime_warning_count": 3
+    },
+    "iphone_se": {
+      "result": "Passed",
+      "passed": 2,
+      "failed": 0,
+      "skipped": 0,
+      "report": "/tmp/sudoku-lisa-duo-se.xcresult",
+      "runtime_warning_count": 1
+    },
+    "expanded_window": {
+      "result": "Passed",
+      "passed": 1,
+      "failed": 0,
+      "skipped": 0,
+      "report": "/tmp/sudoku-lisa-duo-reviewed.xcresult",
+      "runtime_warning_count": 2
+    }
+  },
+  "release": {
+    "result": "build succeeded",
+    "signed": false,
+    "minimum_ios": "17.0",
+    "device_family": [
+      1
+    ],
+    "log": "/tmp/sudoku-lisa-duo-release-reviewed.log"
+  },
+  "duo_device_validation": "pending Xcode 27.1 and iOS 27.1 runtime",
+  "distribution": "not uploaded"
+}

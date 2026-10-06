@@ -333,3 +333,17 @@
 "Paires nues" = "Nackte Paare";
 "Techniques avancées" = "Fortgeschrittene Techniken";
 "Langue de l’iPhone" = "iPhone-Sprache";
+
+"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Betrachte den markierten Bereich und suche nach den übrigen Möglichkeiten.";
+"Les chiffres présents sur la ligne, la colonne et le bloc éliminent toutes les possibilités sauf une." = "Die Zahlen in Zeile, Spalte und Block schließen alle Möglichkeiten bis auf eine aus.";
+"Dans la zone colorée, ce chiffre ne peut aller que dans une case. Les autres emplacements sont bloqués par leur ligne, colonne ou bloc." = "Im markierten Bereich passt diese Zahl nur in ein Feld. Die anderen Plätze sind durch Zeile, Spalte oder Block ausgeschlossen.";
+"Dans le bloc coloré, ce chiffre reste sur une seule ligne ou colonne : élimine-le des autres cases de cette ligne ou colonne." = "Im markierten Block bleibt diese Zahl in einer Zeile oder Spalte. Streiche sie aus den übrigen Feldern dieser Zeile oder Spalte.";
+"Deux cases partagent les mêmes deux candidats. Ces chiffres sont réservés à cette paire ; retire-les des autres cases de la zone." = "Zwei Felder haben dieselben zwei Kandidaten. Diese Zahlen gehören zu diesem Paar und können aus den anderen Feldern des Bereichs gestrichen werden.";
+"Cette grille demande une technique que Lisa n’a pas encore apprise. Tu peux voir la solution vérifiée à la dernière étape." = "Dieses Sudoku erfordert eine Technik, die Lisa noch nicht kennt. Die geprüfte Lösung siehst du im letzten Schritt.";
+"Un indice pour comprendre" = "Ein Hinweis zum Lernen";
+"Étape %@ sur 3" = "Schritt %@ von 3";
+"Voir la suite" = "Nächster Schritt";
+"La valeur vérifiée est %@, en ligne %@, colonne %@." = "Die geprüfte Zahl ist %@, in Zeile %@, Spalte %@.";
+"Regarde cette zone" = "Sieh dir diesen Bereich an";
+"Cette case est en erreur. Remplace son chiffre pour débloquer la grille." = "Dieses Feld ist falsch. Ersetze die Zahl, um das Sudoku fortzusetzen.";
+"Candidats à éliminer" = "Zu streichende Kandidaten";

@@ -67,52 +67,26 @@ struct PoulpiView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let stageHeight = ceil(min(350, max(180, geometry.size.height * 0.43)))
+            let wide = geometry.size.width >= 600
+            let contentWidth = max(0, min(1040, geometry.size.width - 32))
+            let panelWidth = wide ? min(340, contentWidth * 0.43) : contentWidth
+            let stageHeight = wide
+                ? max(140, min(500, geometry.size.height - 12))
+                : ceil(min(350, max(140, geometry.size.height * 0.4)))
+            let layout = wide
+                ? AnyLayout(HStackLayout(alignment: .center, spacing: 20))
+                : AnyLayout(VStackLayout(spacing: 10))
             ZStack {
                 LisaBackground(motionEnabled: active, quiet: true)
-                VStack(spacing: 10) {
+                layout {
                     stage(height: stageHeight)
-                    HStack(spacing: 8) {
-                        control(L10n.text("Recentrer"), icon: "viewfinder") { yaw = 0; pitch = 0; zoom = 1 }
-                        control(L10n.text("Éloigner"), icon: "minus.magnifyingglass") { zoom = max(0.75, zoom - 0.15) }
-                        control(L10n.text("Rapprocher"), icon: "plus.magnifyingglass") { zoom = min(1.6, zoom + 0.15) }
-                    }
-                    HStack(spacing: 10) {
-                        control(L10n.text("Surprise !"), icon: "shuffle") {
-                            choose(LisaMascotMood.allCases.filter { $0 != mood }.randomElement() ?? .happy)
-                        }
-                        control(automatic ? L10n.text("Arrêter le défilé") : L10n.text("Tout enchaîner"), icon: automatic ? "stop.fill" : "play.fill") { automatic.toggle() }
-                            .accessibilityIdentifier("poulpiAutoplay")
-                            .accessibilityValue(automatic ? L10n.text("Activé") : L10n.text("Désactivé"))
-                    }.disabled(!running)
-                    if !store.settings.animatedDecor || reduceMotion {
-                        Text(L10n.text("Les animations sont désactivées dans les réglages. Vous pouvez toujours tourner Poulpi et zoomer."))
-                            .font(LisaTheme.body(11)).foregroundStyle(LisaTheme.muted)
-                    }
-                    ScrollView {
-                        LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 9)], spacing: 10) {
-                            ForEach(LisaMascotMood.allCases) { animation in
-                                Button { choose(animation) } label: {
-                                    VStack(spacing: 6) {
-                                        Image(systemName: animation.icon).font(.system(size: 20, weight: .bold))
-                                        Text(animation.title).font(LisaTheme.body(11)).lineLimit(1).minimumScaleFactor(0.8)
-                                    }
-                                    .foregroundStyle(LisaTheme.ink)
-                                    .frame(maxWidth: .infinity).frame(height: 63)
-                                    .background(CandySurface(tint: mood == animation ? LisaTheme.yellow : LisaTheme.paper, cornerRadius: 16, depth: 3))
-                                }
-                                .buttonStyle(LisaPressStyle())
-                                .accessibilityIdentifier("poulpiAnimation-" + animation.rawValue)
-                                .accessibilityAddTraits(mood == animation ? .isSelected : [])
-                            }
-                        }.padding(.bottom, 12)
-                    }
-                    .frame(height: max(80, geometry.size.height - stageHeight - 130 - ((!store.settings.animatedDecor || reduceMotion) ? 50 : 0)))
-                    .accessibilityIdentifier("poulpiAnimationList")
-                    .disabled(!running)
+                        .frame(width: wide ? max(0, contentWidth - panelWidth - 20) : contentWidth)
+                    controls
+                        .frame(width: panelWidth)
+                        .frame(maxHeight: .infinity)
                 }
-                .padding(.horizontal, 16).padding(.top, 6)
-                .frame(maxWidth: 600).frame(maxWidth: .infinity)
+                .padding(.horizontal, 16).padding(.vertical, 6)
+                .frame(maxWidth: 1072).frame(maxWidth: .infinity)
             }
         }
         .navigationTitle("Poulpi").navigationBarTitleDisplayMode(.inline)
@@ -130,6 +104,49 @@ struct PoulpiView: View {
             }
         }
         .onChange(of: active) { _, value in if !value { automatic = false } }
+    }
+
+    private var controls: some View {
+        VStack(spacing: 10) {
+            HStack(spacing: 8) {
+                control(L10n.text("Recentrer"), icon: "viewfinder") { yaw = 0; pitch = 0; zoom = 1 }
+                control(L10n.text("Éloigner"), icon: "minus.magnifyingglass") { zoom = max(0.75, zoom - 0.15) }
+                control(L10n.text("Rapprocher"), icon: "plus.magnifyingglass") { zoom = min(1.6, zoom + 0.15) }
+            }
+            HStack(spacing: 10) {
+                control(L10n.text("Surprise !"), icon: "shuffle") {
+                    choose(LisaMascotMood.allCases.filter { $0 != mood }.randomElement() ?? .happy)
+                }
+                control(automatic ? L10n.text("Arrêter le défilé") : L10n.text("Tout enchaîner"), icon: automatic ? "stop.fill" : "play.fill") { automatic.toggle() }
+                    .accessibilityIdentifier("poulpiAutoplay")
+                    .accessibilityValue(automatic ? L10n.text("Activé") : L10n.text("Désactivé"))
+            }.disabled(!running)
+            if !store.settings.animatedDecor || reduceMotion {
+                Text(L10n.text("Les animations sont désactivées dans les réglages. Vous pouvez toujours tourner Poulpi et zoomer."))
+                    .font(LisaTheme.body(11)).foregroundStyle(LisaTheme.muted)
+            }
+            ScrollView {
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 9)], spacing: 10) {
+                    ForEach(LisaMascotMood.allCases) { animation in
+                        Button { choose(animation) } label: {
+                            VStack(spacing: 6) {
+                                Image(systemName: animation.icon).font(.system(size: 20, weight: .bold))
+                                Text(animation.title).font(LisaTheme.body(11)).lineLimit(1).minimumScaleFactor(0.8)
+                            }
+                            .foregroundStyle(LisaTheme.ink)
+                            .frame(maxWidth: .infinity).frame(height: 63)
+                            .background(CandySurface(tint: mood == animation ? LisaTheme.yellow : LisaTheme.paper, cornerRadius: 16, depth: 3))
+                        }
+                        .buttonStyle(LisaPressStyle())
+                        .accessibilityIdentifier("poulpiAnimation-" + animation.rawValue)
+                        .accessibilityAddTraits(mood == animation ? .isSelected : [])
+                    }
+                }.padding(.bottom, 12)
+            }
+            .frame(maxHeight: .infinity)
+            .accessibilityIdentifier("poulpiAnimationList")
+            .disabled(!running)
+        }
     }
 
     private func stage(height: CGFloat) -> some View {
@@ -191,16 +208,25 @@ struct LisaPauseCard: View {
     @State private var greeted = false
     @State private var reaction = 0
     var body: some View {
-        VStack(spacing: 22) {
-            Button { greeted = true; reaction += 1; store.feedback(.hello) } label: {
-                LisaMascot(size: 110, mood: greeted ? .happy : .sleepy, reactionToken: reaction,
-                           animationEnabled: store.settings.animatedDecor)
-            }.buttonStyle(LisaPressStyle()).accessibilityLabel(L10n.text("Réveiller doucement Poulpi"))
-            Text(L10n.text("Prenez votre temps.")).font(LisaTheme.heading(28))
-            Text(L10n.text("Votre grille vous attend.")).font(LisaTheme.body()).foregroundStyle(LisaTheme.muted)
-            LisaButton(title: L10n.text("Reprendre"), icon: "play.fill", action: resume)
+        GeometryReader { geometry in
+            let compact = geometry.size.height < 450
+            ScrollView {
+                VStack(spacing: compact ? 10 : 22) {
+                    Button { greeted = true; reaction += 1; store.feedback(.hello) } label: {
+                        LisaMascot(size: compact ? 64 : 110, mood: greeted ? .happy : .sleepy, reactionToken: reaction,
+                                   animationEnabled: store.settings.animatedDecor)
+                    }.buttonStyle(LisaPressStyle()).accessibilityLabel(L10n.text("Réveiller doucement Poulpi"))
+                    Text(L10n.text("Prenez votre temps.")).font(LisaTheme.heading(28))
+                    Text(L10n.text("Votre grille vous attend.")).font(LisaTheme.body()).foregroundStyle(LisaTheme.muted)
+                    LisaButton(title: L10n.text("Reprendre"), icon: "play.fill", action: resume)
+                }
+                .padding(compact ? 18 : 28)
+                .frame(maxWidth: 440)
+                .background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 30))
+                .padding(16)
+                .frame(maxWidth: .infinity, minHeight: geometry.size.height)
+            }
         }
-        .padding(28).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 30)).padding(24)
         .lisaAppear()
         .task(id: reaction) {
             guard reaction > 0 else { return }
