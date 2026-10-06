@@ -56,3 +56,13 @@ La seconde commande Xcode **envoie le build à Apple**. Créer auparavant la fic
 - Archive envoyée : `/tmp/sudoku-lisa-testflight-20261006-fixed.xcarchive`.
 - Envoi accepté à 00 h 43 (Europe/Paris) : `Upload succeeded` et `EXPORT SUCCEEDED`. Journal local : `/tmp/sudoku-lisa-20261006-fixed-upload.log`. Le traitement Apple a commencé ; cet accusé ne prouve pas encore la disponibilité pour les testeurs.
 - Groupe interne « Lisa — Interne » créé sans distribution automatique ni testeur invité.
+
+## Livraison 1.0 (3) — 6 octobre 2026, après-midi
+
+- Sources livrées : commit `edd382f` (159 fichiers), comprenant Poulpi interactif, les animations, les nouveaux visuels et les cinq langues. Aucun push Git effectué.
+- 35 tests Swift réussis ; couverture des 335 clés et des 4 descriptions iMessage validée dans les cinq langues. Générateur Xcode aligné sur les langues et le build 3.
+- Archive Release signée : `/tmp/lisa-release-20261006-b3.xcarchive`, vérification `codesign --verify --deep --strict` réussie. Application et extension en 1.0 (3), catalogues d’icônes, quatre stickers et traductions présents. Bundle local : 19 612 122 octets ; ce chiffre n’est pas la taille téléchargée depuis TestFlight.
+- Envoi accepté le 6 octobre à 16 h 52 (Europe/Paris), avec `Upload succeeded` et `EXPORT SUCCEEDED` dans `/tmp/lisa-release-20261006-b3-upload.log`.
+- Traitement Apple terminé et build ajouté au groupe **Lisa — Interne**, qui compte deux testeurs. Notes de test enregistrées. L’installation du build 3 sur un appareil physique n’a pas été vérifiée.
+- [Fiche du build](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/b535580f-7326-424f-b588-8fbe1048196c) · [preuve](screenshots/testflight-build-3.jpg).
+- Des retouches du modèle et de ses fichiers de sculpture sont apparues en parallèle après le commit de livraison. Elles sont conservées dans le dossier de travail et ne font pas partie du build 3.
