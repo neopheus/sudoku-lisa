@@ -1,0 +1,96 @@
+{
+  "method": "Approximate occupied bounds. Reference alpha > 180; simulator pixels differing from background by >35 within y 40%-78%; rows/columns need >12 pixels. A silhouette dimension check, not a likeness score.",
+  "measurements": [
+    {
+      "image": "docs/mascot-hd/poulpi-reference-hd.png",
+      "bounds": [
+        101,
+        60,
+        1152,
+        1206
+      ],
+      "widthHeightRatio": 0.9171029668411868,
+      "upperSilhouetteEllipse": {
+        "centerY": 0.3372961390905203,
+        "radiusX": 0.33885344871986167,
+        "radiusY": 0.33194602501504245
+      }
+    },
+    {
+      "image": "docs/screenshots/poulpi-proportions-v1.png",
+      "bounds": [
+        213,
+        1085,
+        970,
+        1815
+      ],
+      "widthHeightRatio": 1.036986301369863
+    },
+    {
+      "image": "docs/screenshots/poulpi-loop-06.png",
+      "bounds": [
+        213,
+        1080,
+        966,
+        1834
+      ],
+      "widthHeightRatio": 0.9986737400530504
+    },
+    {
+      "image": "docs/screenshots/poulpi-loop-11.png",
+      "bounds": [
+        244,
+        1080,
+        935,
+        1841
+      ],
+      "widthHeightRatio": 0.9080157687253614
+    },
+    {
+      "image": "docs/screenshots/poulpi-loop-12.png",
+      "bounds": [
+        244,
+        1080,
+        935,
+        1841
+      ],
+      "widthHeightRatio": 0.9080157687253614,
+      "upperSilhouetteEllipse": {
+        "centerY": 0.3141222057000179,
+        "radiusX": 0.3529734800918794,
+        "radiusY": 0.3218233374877156
+      }
+    },
+    {
+      "image": "docs/screenshots/poulpi-loop-14.png",
+      "bounds": [
+        244,
+        1080,
+        935,
+        1841
+      ],
+      "widthHeightRatio": 0.9080157687253614,
+      "upperSilhouetteEllipse": {
+        "centerY": 0.3487862114711025,
+        "radiusX": 0.3543268041625686,
+        "radiusY": 0.3529754330858215
+      }
+    },
+    {
+      "image": "docs/screenshots/poulpi-loop-15.png",
+      "bounds": [
+        244,
+        1080,
+        935,
+        1841
+      ],
+      "widthHeightRatio": 0.9080157687253614,
+      "upperSilhouetteEllipse": {
+        "centerY": 0.33859748496131864,
+        "radiusX": 0.3415972064917414,
+        "radiusY": 0.344900466745137
+      }
+    }
+  ],
+  "headFitMethod": "Least-squares ellipse fitted to silhouette half-width squared at normalized heights 0.045 to 0.46. All values divided by occupied character height; measures the upper contour only, not likeness."
+}

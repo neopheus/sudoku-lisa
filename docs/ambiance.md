@@ -140,3 +140,57 @@ Une capture de télémétrie Release, sans compilation concurrente ni enregistre
 Télémétrie opt-in via `LISA_RENDER_METRICS=1`, catégorie OSLog `AnimationBudget`. [Mesures brutes structurées](animation-performance.json) · [Aperçu des effets](screenshots/wahoo-adaptatif.png). Rapports locaux : `/tmp/lisa-adaptive-all-core.log`, `/tmp/lisa-adaptive-ui.log`, `/tmp/lisa-adaptive-release-ui.log`, `/tmp/lisa-adaptive-release-cadence.log`.
 
 Vérifications finales : build Release iPhone arm64 réussi (`/tmp/lisa-adaptive-final-release2.log`) ; scénario effets/pause/reprise réussi en Release sur iPhone SE avec réduction des animations (`/tmp/lisa-adaptive-final-se.log`). La capture de cadence ci-dessus reste un résultat simulateur, sans extrapolation aux appareils physiques ou au mode 120 Hz.
+
+
+## Déplacements en profondeur — révision du 6 octobre 2026
+
+Cette révision remplace les rubans, étoiles et accessoires de la mascotte en partie : l'effet recherché vient désormais de son animation. Les décors et les célébrations de grille restent indépendants ; les touches numériques restent fixes.
+
+- Un seul poulpe traverse la surface de jeu sur une courbe fermée de 32 secondes, avec des déplacements horizontaux, verticaux et en profondeur. La position et la vitesse sont continues, y compris au raccord de boucle.
+- Une caméra en perspective produit le rapprochement et l'éloignement réels. Le corps s'incline selon la trajectoire ; tentacules et bouche accompagnent les pitreries.
+- Un masque de profondeur aligné sur la grille cache les passages derrière celle-ci. Le poulpe réapparaît au premier plan lorsqu'il revient vers la caméra. Le bouton « Lisa ! » déclenche les pitreries ; le personnage ne capture aucun toucher.
+- SceneKit calcule le parcours sans mise à jour SwiftUI à chaque image. La qualité adaptative conserve une résolution minimale de 1,5 pixel par point pour le personnage, avec un plafond de 2 ; les détails et l'anticrénelage diminuent selon la charge.
+- Les mouvements sont suspendus en pause, hors écran et sous les fenêtres. « Réduire les animations » et « Décor animé » désactivé conservent une pose fixe.
+
+Validation : 30 tests du noyau passent, dont la couverture des trois axes et la continuité de la trajectoire. Les scénarios UI vérifient la saisie pendant le vol, un tour complet et la pause/reprise. Le contrôle sur iPhone SE avec « Réduire les animations » passe également, ainsi que la compilation Release pour iPhone (sans signature). La capture `screenshots/poulpe-profondeur.mp4` montre le rendu sur simulateur iPhone 16. Les mesures FPS de la section précédente concernent l'ancienne surface de rendu ; elles ne constituent pas une mesure de cette version plein écran ni une garantie sur appareil physique.
+
+
+## Tentacules et ventouses
+
+Les huit tentacules ondulent avec des phases décalées et trois cadences, avec une flexion amplifiée sur les trois axes. Chaque bras porte cinq ventouses creuses à rebord clair, orientées sur sa surface vers l'avant. Les ventouses utilisent les mêmes poids de déformation que leur tentacule : elles restent attachées pendant les ondulations et les pitreries. Un maillage regroupe les cinq ventouses de chaque bras, sans mise à jour individuelle de leur position à chaque image. Elles restent visibles en qualité économique ; seules les petites sphères de finition peuvent être masquées. Les pauses et le réglage de réduction des animations restent respectés.
+
+Vérification : parcours complet et saisie pendant le vol validés par le test UI, compilation Release iPhone réussie, inspection du modèle agrandi dans `screenshots/poulpe-ventouses.png`. Vidéo : `screenshots/poulpe-tentacules.mp4`.
+
+
+## Silhouette adoucie d'après la référence visuelle
+
+La tête est plus ronde, les yeux possèdent désormais un iris et une pupille distincts avec deux reflets, et la bouche conserve une petite lèvre arrondie. Le manteau relie le corps aux huit bras plus dodus. Les pointes sont arrondies dans le maillage, sans sphère de finition séparée. Les matériaux utilisent un éclairage physique avec une peau plus mate.
+
+Correction anatomique : les ventouses sont désormais placées sur la face inférieure des bras. Leur orientation est transportée le long de la courbe : elles regardent vers le sol à la base, puis se révèlent lorsque la pointe se relève ou se recourbe. Cette version remplace leur orientation antérieure vers la caméra. Les ventouses restent regroupées par bras et suivent les mêmes déformations ; elles sont conservées en mode économique.
+
+Aperçu final : `screenshots/poulpe-mignon.png` et `screenshots/poulpe-mignon.mp4` (modèle agrandi animé). Compilation Debug et Release iPhone réussie ; saisie pendant un tour complet validée par le test UI. Les sections des bras utilisent un repère continu pendant les replis, avec des normales tenant compte du rétrécissement des pointes.
+
+
+## Intégration du Poulpi original de `/pet`
+
+Le modèle procédural est remplacé par le dessin original fourni, sans retouche. Source : `/Users/xavier/Documents/Codex/2026-10-05/pets-plugin-work-pets-openai-curated/outputs/poulpi-violet-bleu.png`. Copie embarquée : `App/Resources/Mascot/poulpi-original.png`, SHA-256 `79b38446c0f3c30228535cd192d86b3b215feb4efd4eb6d135d9fe558eede16f` (identique à la validation source).
+
+La planche RGBA de 1536 × 2288 contient 73 images utiles, dans des cellules de 192 × 208. Neuf animations et seize regards sont disponibles. `PoulpiArtwork` découpe et partage les images en mémoire, puis change la texture seulement au changement d'image, aux cadences originales de 120 à 280 ms. Il ne génère aucune image intermédiaire. Le personnage conserve donc exactement ses proportions, son éclairage dessiné et ses ventouses.
+
+Le dessin est porté par un plan dans la scène en perspective : la trajectoire continue sur les trois axes, le rapprochement et l'occlusion par la grille sont conservés. C'est une représentation 2,5D : les inclinaisons sont bornées pour éviter de voir une tranche plate ; aucune vue arrière nouvelle n'est inventée. Les anciennes pitreries utilisent les animations disponibles et leurs mouvements de scène. Le mode statique, la pause et la suspension hors écran sont conservés. L'agrandissement est limité par la résolution originale des cellules.
+
+Cette section remplace les descriptions précédentes de géométrie du personnage. Les captures précédentes restent des étapes de travail, et leurs anciennes mesures FPS ne décrivent pas ce nouveau rendu.
+
+Contrôles de l'intégration : hash de la ressource identique à l'original, aperçu agrandi inspecté, parcours enregistré dans `screenshots/poulpi-original-jeu.mp4`, compilation Release iPhone réussie, réaction/pause sur iPhone 16 et réduction des animations sur iPhone SE vérifiées. Le premier contrôle d'accessibilité de la touche 9 en fin de parcours a rencontré une erreur XCTest de point d'activation ; le scénario vérifie désormais une saisie effective et la valeur de la case.
+Le scénario renforcé passe : saisies avant et après le tour complet, valeurs de la case confirmées, puis mise en pause.
+
+
+## Version 3D articulée du Poulpi
+
+Le dessin animé est remplacé par un maillage continu préparé dans Blender d'après la référence HD. `PoulpiRig` charge le maillage validé, crée 24 articulations de bras, puis fait déformer la peau et les 40 ventouses par le GPU. Le visage est géométrique, avec iris, reflets, paupières, sourcils et bouche. Respiration, clignements, regards et ondulations des huit bras sont continus ; ils ne dépendent plus des 4 à 8 poses des anciennes séquences.
+
+La caméra en perspective, les rotations libres, les passages derrière la grille et les interactions existantes sont conservés. L'éclairage suit la position de la mascotte pour éviter les variations d'exposition lors des passages près de la caméra. Le rendu reste en résolution native, avec MSAA 4× ou 2× même lorsque la qualité adaptative diminue. La réduction des animations et la pause arrêtent les articulations.
+
+Sources et procédure : `docs/mascot-hd/README.md`, `scripts/mascot/build_poulpi.py`, `scripts/mascot/validate_poulpi.py`. Le rapport géométrique est `docs/mascot-hd/rig-validation.json`. La planche `/pet` est archivée dans la documentation ; le moteur de lecture de sprites a été retiré de l'application.
+
+Validation fonctionnelle : réaction/pause sur iPhone 16, saisie avant/après le parcours complet, réduction des animations sur iPhone SE ; compilation Release iPhone sans signature. Les captures historiques montrent les versions précédentes et ne décrivent pas le modèle actuel.

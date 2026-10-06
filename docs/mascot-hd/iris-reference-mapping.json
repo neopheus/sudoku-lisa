@@ -1,0 +1,45 @@
+{
+  "source": "docs/mascot-hd/poulpi-reference-hd.png",
+  "runtimeTexture": "App/Resources/Mascot/poulpi-eye-reference.png",
+  "sha256": "cbc2a89044f2f7d773094f2a4ca709ed50372f06545f60a5a474d5914c348878",
+  "encodedBytes": 1375465,
+  "textureDimensions": [
+    1254,
+    1254
+  ],
+  "sampling": "The iris ellipses and, since pass 50, the measured mouth region are sampled by UVs on closed or curved 3D geometry. No whole-character image plane is displayed. One cached image shared by the facial materials, with opaque pigment.",
+  "irisRegions": [
+    {
+      "side": "left",
+      "center": [
+        491,
+        471
+      ],
+      "radii": [
+        64,
+        71
+      ]
+    },
+    {
+      "side": "right",
+      "center": [
+        759,
+        472
+      ],
+      "radii": [
+        64,
+        70
+      ]
+    }
+  ],
+  "mouthRegion": {
+    "bboxPixels": [
+      544,
+      555,
+      706,
+      658
+    ],
+    "geometrySource": "mouth-reference-contour.json",
+    "surface": "Closed sculpted volume with a physical crease; source lighting retained in the texture."
+  }
+}

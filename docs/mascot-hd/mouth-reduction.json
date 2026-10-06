@@ -1,0 +1,7 @@
+{
+  "sourceTriangles": 54076,
+  "reducedTriangles": 18926,
+  "maximumSampledForwardDistance": 6.596712046302855e-05,
+  "maximumSampledBackwardDistance": 7.110941805876791e-05,
+  "method": "Bidirectional nearest-surface distances at every vertex and triangle centroid, relative to smoothed high-resolution lips, before x/y scale. Not an exhaustive Hausdorff bound."
+}

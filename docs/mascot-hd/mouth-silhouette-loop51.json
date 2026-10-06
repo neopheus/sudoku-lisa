@@ -1,0 +1,61 @@
+{
+  "scope": "Approximate orange silhouette overlap in the mouth ROI, mapped using the fixed comparison CSS without fitting translation or scale. Colour threshold affects edges; not a global likeness score.",
+  "referenceROI": [
+    530,
+    540,
+    190,
+    140
+  ],
+  "passes": {
+    "47": {
+      "captureSHA256": "34b870e6f4cb47d6eb5c8a273b08135067bf893d31737f55afeaa7ecb88f295f",
+      "intersectionOverUnion": 0.8241644836072081,
+      "mappedBBox": [
+        544,
+        556,
+        710,
+        655
+      ]
+    },
+    "48": {
+      "captureSHA256": "b2f059931946e5fb2f54ee52ede3a475238b2fcea668f82a78a8bc1d43b59121",
+      "intersectionOverUnion": 0.8405442842010918,
+      "mappedBBox": [
+        547,
+        559,
+        706,
+        655
+      ]
+    },
+    "49": {
+      "captureSHA256": "e8ebabff0cdd761233af419aa61ad688b540cde17e4393afe4b882b1a7237cbf",
+      "intersectionOverUnion": 0.9247816240698803,
+      "mappedBBox": [
+        547,
+        554,
+        706,
+        658
+      ]
+    },
+    "50": {
+      "captureSHA256": "3c9da20b959749e33c591606e624733fd49782b618fe09037ffdc7ee210afcd5",
+      "intersectionOverUnion": 0.9243567892216541,
+      "mappedBBox": [
+        547,
+        554,
+        706,
+        658
+      ]
+    },
+    "51": {
+      "captureSHA256": "7c14900df0b5bae62c394fb23c7b00ebe13e4469be6d5c9b9c22d3e135742f01",
+      "intersectionOverUnion": 0.9339553752535497,
+      "mappedBBox": [
+        544,
+        556,
+        706,
+        658
+      ]
+    }
+  }
+}

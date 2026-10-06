@@ -1,0 +1,713 @@
+{
+  "method": "9x9 median RGB patches, approximate correspondence from fixed comparison CSS; not a global likeness metric",
+  "passes": {
+    "51": {
+      "patches": [
+        {
+          "name": "crown",
+          "referenceXY": [
+            625,
+            130
+          ],
+          "captureXY": [
+            588,
+            1132
+          ],
+          "referenceRGB": [
+            147.0,
+            109.0,
+            250.0
+          ],
+          "captureRGB": [
+            143.0,
+            115.0,
+            255.0
+          ]
+        },
+        {
+          "name": "forehead",
+          "referenceXY": [
+            625,
+            290
+          ],
+          "captureXY": [
+            588,
+            1239
+          ],
+          "referenceRGB": [
+            150.0,
+            122.0,
+            251.0
+          ],
+          "captureRGB": [
+            153.0,
+            125.0,
+            255.0
+          ]
+        },
+        {
+          "name": "left temple",
+          "referenceXY": [
+            300,
+            330
+          ],
+          "captureXY": [
+            371,
+            1265
+          ],
+          "referenceRGB": [
+            102.0,
+            73.0,
+            224.0
+          ],
+          "captureRGB": [
+            125.0,
+            96.0,
+            222.0
+          ]
+        },
+        {
+          "name": "right temple",
+          "referenceXY": [
+            940,
+            330
+          ],
+          "captureXY": [
+            798,
+            1265
+          ],
+          "referenceRGB": [
+            135.0,
+            106.0,
+            251.0
+          ],
+          "captureRGB": [
+            138.0,
+            121.0,
+            255.0
+          ]
+        },
+        {
+          "name": "between eyes",
+          "referenceXY": [
+            625,
+            470
+          ],
+          "captureXY": [
+            588,
+            1359
+          ],
+          "referenceRGB": [
+            118.0,
+            106.0,
+            251.0
+          ],
+          "captureRGB": [
+            138.0,
+            118.0,
+            255.0
+          ]
+        },
+        {
+          "name": "under mouth",
+          "referenceXY": [
+            625,
+            680
+          ],
+          "captureXY": [
+            588,
+            1499
+          ],
+          "referenceRGB": [
+            77.0,
+            82.0,
+            230.0
+          ],
+          "captureRGB": [
+            104.0,
+            112.0,
+            255.0
+          ]
+        },
+        {
+          "name": "mantle",
+          "referenceXY": [
+            625,
+            760
+          ],
+          "captureXY": [
+            588,
+            1552
+          ],
+          "referenceRGB": [
+            87.0,
+            103.0,
+            251.0
+          ],
+          "captureRGB": [
+            95.0,
+            111.0,
+            255.0
+          ]
+        },
+        {
+          "name": "left stem",
+          "referenceXY": [
+            505,
+            890
+          ],
+          "captureXY": [
+            508,
+            1639
+          ],
+          "referenceRGB": [
+            100.0,
+            125.0,
+            251.0
+          ],
+          "captureRGB": [
+            112.0,
+            128.0,
+            255.0
+          ]
+        },
+        {
+          "name": "right stem",
+          "referenceXY": [
+            745,
+            890
+          ],
+          "captureXY": [
+            668,
+            1639
+          ],
+          "referenceRGB": [
+            118.0,
+            145.0,
+            251.0
+          ],
+          "captureRGB": [
+            114.0,
+            133.0,
+            255.0
+          ]
+        },
+        {
+          "name": "left curl",
+          "referenceXY": [
+            410,
+            1110
+          ],
+          "captureXY": [
+            445,
+            1785
+          ],
+          "referenceRGB": [
+            74.0,
+            106.0,
+            242.0
+          ],
+          "captureRGB": [
+            86.0,
+            98.0,
+            211.0
+          ]
+        },
+        {
+          "name": "right curl",
+          "referenceXY": [
+            840,
+            1110
+          ],
+          "captureXY": [
+            732,
+            1785
+          ],
+          "referenceRGB": [
+            79.0,
+            108.0,
+            245.0
+          ],
+          "captureRGB": [
+            86.0,
+            95.0,
+            192.0
+          ]
+        }
+      ],
+      "meanAbsoluteRGBError": 12.0
+    },
+    "52": {
+      "patches": [
+        {
+          "name": "crown",
+          "referenceXY": [
+            625,
+            130
+          ],
+          "captureXY": [
+            588,
+            1132
+          ],
+          "referenceRGB": [
+            147.0,
+            109.0,
+            250.0
+          ],
+          "captureRGB": [
+            142.0,
+            115.0,
+            255.0
+          ]
+        },
+        {
+          "name": "forehead",
+          "referenceXY": [
+            625,
+            290
+          ],
+          "captureXY": [
+            588,
+            1239
+          ],
+          "referenceRGB": [
+            150.0,
+            122.0,
+            251.0
+          ],
+          "captureRGB": [
+            153.0,
+            125.0,
+            255.0
+          ]
+        },
+        {
+          "name": "left temple",
+          "referenceXY": [
+            300,
+            330
+          ],
+          "captureXY": [
+            371,
+            1265
+          ],
+          "referenceRGB": [
+            102.0,
+            73.0,
+            224.0
+          ],
+          "captureRGB": [
+            134.0,
+            118.0,
+            255.0
+          ]
+        },
+        {
+          "name": "right temple",
+          "referenceXY": [
+            940,
+            330
+          ],
+          "captureXY": [
+            798,
+            1265
+          ],
+          "referenceRGB": [
+            135.0,
+            106.0,
+            251.0
+          ],
+          "captureRGB": [
+            127.0,
+            98.0,
+            226.0
+          ]
+        },
+        {
+          "name": "between eyes",
+          "referenceXY": [
+            625,
+            470
+          ],
+          "captureXY": [
+            588,
+            1359
+          ],
+          "referenceRGB": [
+            118.0,
+            106.0,
+            251.0
+          ],
+          "captureRGB": [
+            138.0,
+            118.0,
+            255.0
+          ]
+        },
+        {
+          "name": "under mouth",
+          "referenceXY": [
+            625,
+            680
+          ],
+          "captureXY": [
+            588,
+            1499
+          ],
+          "referenceRGB": [
+            77.0,
+            82.0,
+            230.0
+          ],
+          "captureRGB": [
+            104.0,
+            112.0,
+            255.0
+          ]
+        },
+        {
+          "name": "mantle",
+          "referenceXY": [
+            625,
+            760
+          ],
+          "captureXY": [
+            588,
+            1552
+          ],
+          "referenceRGB": [
+            87.0,
+            103.0,
+            251.0
+          ],
+          "captureRGB": [
+            95.0,
+            110.0,
+            251.0
+          ]
+        },
+        {
+          "name": "left stem",
+          "referenceXY": [
+            505,
+            890
+          ],
+          "captureXY": [
+            508,
+            1639
+          ],
+          "referenceRGB": [
+            100.0,
+            125.0,
+            251.0
+          ],
+          "captureRGB": [
+            114.0,
+            133.0,
+            255.0
+          ]
+        },
+        {
+          "name": "right stem",
+          "referenceXY": [
+            745,
+            890
+          ],
+          "captureXY": [
+            668,
+            1639
+          ],
+          "referenceRGB": [
+            118.0,
+            145.0,
+            251.0
+          ],
+          "captureRGB": [
+            113.0,
+            129.0,
+            255.0
+          ]
+        },
+        {
+          "name": "left curl",
+          "referenceXY": [
+            410,
+            1110
+          ],
+          "captureXY": [
+            445,
+            1785
+          ],
+          "referenceRGB": [
+            74.0,
+            106.0,
+            242.0
+          ],
+          "captureRGB": [
+            85.0,
+            94.0,
+            190.0
+          ]
+        },
+        {
+          "name": "right curl",
+          "referenceXY": [
+            840,
+            1110
+          ],
+          "captureXY": [
+            732,
+            1785
+          ],
+          "referenceRGB": [
+            79.0,
+            108.0,
+            245.0
+          ],
+          "captureRGB": [
+            86.0,
+            98.0,
+            213.0
+          ]
+        }
+      ],
+      "meanAbsoluteRGBError": 14.636363636363637
+    },
+    "53": {
+      "patches": [
+        {
+          "name": "crown",
+          "referenceXY": [
+            625,
+            130
+          ],
+          "captureXY": [
+            588,
+            1132
+          ],
+          "referenceRGB": [
+            147.0,
+            109.0,
+            250.0
+          ],
+          "captureRGB": [
+            143.0,
+            115.0,
+            255.0
+          ]
+        },
+        {
+          "name": "forehead",
+          "referenceXY": [
+            625,
+            290
+          ],
+          "captureXY": [
+            588,
+            1239
+          ],
+          "referenceRGB": [
+            150.0,
+            122.0,
+            251.0
+          ],
+          "captureRGB": [
+            153.0,
+            125.0,
+            255.0
+          ]
+        },
+        {
+          "name": "left temple",
+          "referenceXY": [
+            300,
+            330
+          ],
+          "captureXY": [
+            371,
+            1265
+          ],
+          "referenceRGB": [
+            102.0,
+            73.0,
+            224.0
+          ],
+          "captureRGB": [
+            120.0,
+            98.0,
+            222.0
+          ]
+        },
+        {
+          "name": "right temple",
+          "referenceXY": [
+            940,
+            330
+          ],
+          "captureXY": [
+            798,
+            1265
+          ],
+          "referenceRGB": [
+            135.0,
+            106.0,
+            251.0
+          ],
+          "captureRGB": [
+            134.0,
+            123.0,
+            255.0
+          ]
+        },
+        {
+          "name": "between eyes",
+          "referenceXY": [
+            625,
+            470
+          ],
+          "captureXY": [
+            588,
+            1359
+          ],
+          "referenceRGB": [
+            118.0,
+            106.0,
+            251.0
+          ],
+          "captureRGB": [
+            120.0,
+            125.0,
+            255.0
+          ]
+        },
+        {
+          "name": "under mouth",
+          "referenceXY": [
+            625,
+            680
+          ],
+          "captureXY": [
+            588,
+            1499
+          ],
+          "referenceRGB": [
+            77.0,
+            82.0,
+            230.0
+          ],
+          "captureRGB": [
+            87.0,
+            101.0,
+            234.0
+          ]
+        },
+        {
+          "name": "mantle",
+          "referenceXY": [
+            625,
+            760
+          ],
+          "captureXY": [
+            588,
+            1552
+          ],
+          "referenceRGB": [
+            87.0,
+            103.0,
+            251.0
+          ],
+          "captureRGB": [
+            93.0,
+            109.0,
+            251.0
+          ]
+        },
+        {
+          "name": "left stem",
+          "referenceXY": [
+            505,
+            890
+          ],
+          "captureXY": [
+            508,
+            1639
+          ],
+          "referenceRGB": [
+            100.0,
+            125.0,
+            251.0
+          ],
+          "captureRGB": [
+            112.0,
+            128.0,
+            255.0
+          ]
+        },
+        {
+          "name": "right stem",
+          "referenceXY": [
+            745,
+            890
+          ],
+          "captureXY": [
+            668,
+            1639
+          ],
+          "referenceRGB": [
+            118.0,
+            145.0,
+            251.0
+          ],
+          "captureRGB": [
+            114.0,
+            133.0,
+            255.0
+          ]
+        },
+        {
+          "name": "left curl",
+          "referenceXY": [
+            410,
+            1110
+          ],
+          "captureXY": [
+            445,
+            1785
+          ],
+          "referenceRGB": [
+            74.0,
+            106.0,
+            242.0
+          ],
+          "captureRGB": [
+            86.0,
+            98.0,
+            211.0
+          ]
+        },
+        {
+          "name": "right curl",
+          "referenceXY": [
+            840,
+            1110
+          ],
+          "captureXY": [
+            732,
+            1785
+          ],
+          "referenceRGB": [
+            79.0,
+            108.0,
+            245.0
+          ],
+          "captureRGB": [
+            86.0,
+            95.0,
+            192.0
+          ]
+        }
+      ],
+      "meanAbsoluteRGBError": 9.848484848484848
+    }
+  }
+}

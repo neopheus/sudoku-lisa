@@ -1,0 +1,243 @@
+{
+  "context": "Pass 39, iPhone 16 simulator iOS 18.5, Debug enlarged animated preview; no capture, compilation or app interaction during measurement.",
+  "physicalDevice": false,
+  "fullGameMeasurement": false,
+  "processID": 62596,
+  "assetSHA256": "c71651ccd2707a9baad67ce30e344f4574e15c22e46b270cb933a2d4d9c3bdf3",
+  "rigSourceSHA256": "fb84769e53d027962ff5a3ddde6a92e3d717a4acd58f4c723c41c64de3a60397",
+  "sceneSourceSHA256": "137a54667b2f08a29f83274d7ec3e58a4ecf9c9acb9f497a931f4a548c324f89",
+  "SceneKit delivered": {
+    "min": 60.0,
+    "median": 60.0,
+    "max": 60.0,
+    "windows": [
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:15.981781+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:17.980438+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:19.980822+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:21.981187+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:23.979687+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:25.981493+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:27.980401+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:29.981169+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:31.980720+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:33.980939+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:35.980782+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:37.980797+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:39.980580+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:41.980820+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:43.980849+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:45.980059+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:47.981368+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:49.980852+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:51.980987+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:53.980948+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:55.980847+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:57.980911+0200",
+        "message": "SceneKit delivered 60.0 fps; late 0.00"
+      }
+    ]
+  },
+  "Display cadence": {
+    "min": 60.0,
+    "median": 60.0,
+    "max": 60.0,
+    "windows": [
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:16.013555+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:18.012972+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:20.013032+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:22.013246+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:24.013072+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:26.013110+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:28.013573+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:30.013614+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:32.013395+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:34.013409+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:36.013262+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:38.013149+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:40.013047+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:42.013121+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:44.013015+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:46.013309+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:48.013058+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:50.013551+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:52.013047+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:54.012998+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:56.013046+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      },
+      {
+        "fps": 60.0,
+        "time": "2026-10-06 13:59:58.013216+0200",
+        "message": "Display cadence 60.0 fps; late 0.00; detail 0; target 60"
+      }
+    ]
+  }
+}

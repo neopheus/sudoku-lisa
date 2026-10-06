@@ -15,6 +15,9 @@ struct GameView: View {
     @State private var errorPresented = false
     @State private var mascotMood: LisaMascotMood = .idle
     @State private var mascotReaction = 0
+    @State private var companionRequest = 0
+    @State private var boardFrame = CGRect.zero
+    @State private var companionMessage = "Au repos"
     @State private var glowCells: Set<Int> = []
     @State private var completedUnits: Set<Int> = []
     @State private var completedDigits: Set<Int> = []
@@ -37,9 +40,14 @@ struct GameView: View {
                                 LisaIconButton(icon: "chevron.left", label: "Sauvegarder et revenir à l’accueil") { store.save(); store.showGame = false }
                                 Spacer()
                                 VStack(spacing: 0) {
-                                    LisaGameCompanion(mood: mascotMood, reaction: mascotReaction,
-                                                      active: !paused && mascotUncovered && !store.showVictory,
-                                                      stageWidth: max(110, min(270, geometry.size.width - 160)))
+                                    Button { companionRequest += 1 } label: {
+                                        Label("Lisa !", systemImage: "face.smiling")
+                                            .font(LisaTheme.heading(23)).foregroundStyle(LisaTheme.ink)
+                                            .frame(minHeight: 48)
+                                    }
+                                    .buttonStyle(.plain).accessibilityLabel("Faire rire Lisa")
+                                    .accessibilityValue(companionMessage)
+                                    .disabled(paused || !mascotUncovered || reduceMotion || !store.settings.animatedDecor)
                                     Text("Lisa · " + game.puzzle.difficulty.label)
                                         .font(.system(size: 10, weight: .heavy, design: .rounded))
                                         .foregroundStyle(LisaTheme.ink).padding(.top, 4)
@@ -59,7 +67,7 @@ struct GameView: View {
                                 if store.settings.showTimer { Text(LisaStore.time(game.elapsedSeconds)).font(.system(size: 14, weight: .medium, design: .monospaced)).foregroundStyle(LisaTheme.muted) }
                                 Button { paused = true } label: { Image(systemName: "pause.fill").frame(width: 36, height: 40) }.accessibilityLabel("Mettre en pause")
                             }
-                            board(game, width: max(9, min(geometry.size.width - 32, compact ? geometry.size.height - 342 : 480)))
+                            board(game, width: max(9, min(geometry.size.width - 32, compact ? geometry.size.height - 318 : 480)))
                             HStack(spacing: 8) {
                                 tool("Annuler", icon: "arrow.uturn.backward", enabled: game.canUndo) { store.session?.undo(); store.feedback(.erase); store.changed() }
                                 tool("Gommer", icon: "eraser", enabled: selected.map { game.isEditable($0) } ?? false) { if let selected { store.session?.erase(at: selected); store.feedback(.erase); store.changed() } }
@@ -92,11 +100,18 @@ struct GameView: View {
                     }
                 }
             }
+            LisaGameCompanion(mood: mascotMood, reaction: mascotReaction,
+                              active: !paused && mascotUncovered && !store.showVictory,
+                              requestToken: companionRequest, occlusionRect: boardFrame,
+                              onMessage: { companionMessage = $0 })
+                .opacity(!paused && mascotUncovered ? 1 : 0)
             if paused {
                 Color.black.opacity(0.3).ignoresSafeArea()
                 VStack(spacing: 22) { LisaMascot(size: 100, mood: .sleepy, animationEnabled: false); Text("Prenez votre temps.").font(LisaTheme.heading(28)); Text("Votre grille vous attend.").font(LisaTheme.body()).foregroundStyle(LisaTheme.muted); LisaButton(title: "Reprendre", icon: "play.fill") { paused = false } }.padding(28).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 30)).padding(24)
             }
         }
+        .coordinateSpace(name: "game-space")
+        .onPreferenceChange(LisaBoardFrameKey.self) { boardFrame = $0 }
         .preferredColorScheme(store.settings.darkMode ? .dark : .light)
         .saturation(store.settings.paperMode ? 0 : 1)
         .environment(\.lisaMotionAllowed, !paused && mascotUncovered)
@@ -233,6 +248,11 @@ struct GameView: View {
         .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(.white.opacity(0.5), lineWidth: 2))
         .overlay { LisaBoardSparkles() }
         .shadow(color: Color(red: 0.36, green: 0.12, blue: 0.54).opacity(0.25), radius: 10, y: 6)
+        .background {
+            GeometryReader { proxy in
+                Color.clear.preference(key: LisaBoardFrameKey.self, value: proxy.frame(in: .named("game-space")))
+            }
+        }
         .blur(radius: paused ? 12 : 0).accessibilityHidden(paused)
     }
 
@@ -420,5 +440,13 @@ struct VictoryView: View {
         }
         .frame(maxWidth: .infinity).padding(.vertical, 13)
         .background(CandySurface(tint: LisaTheme.paper, cornerRadius: 18, depth: 3))
+    }
+}
+
+private struct LisaBoardFrameKey: PreferenceKey {
+    static let defaultValue = CGRect.zero
+    static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
+        let frame = nextValue()
+        if !frame.isEmpty { value = frame }
     }
 }

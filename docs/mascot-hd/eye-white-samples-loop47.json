@@ -1,0 +1,253 @@
+{
+  "method": "7x7 median RGB patches, approximate corresponding positions from comparison CSS. Local colour check, not a likeness score.",
+  "referenceSHA256": "cbc2a89044f2f7d773094f2a4ca709ed50372f06545f60a5a474d5914c348878",
+  "samples": [
+    {
+      "name": "left top",
+      "referencePosition": [
+        405,
+        383
+      ],
+      "capturePosition": [
+        441,
+        1301
+      ],
+      "referenceRGB": [
+        249,
+        240,
+        222
+      ],
+      "passes": {
+        "44": [
+          250,
+          241,
+          220
+        ],
+        "45": [
+          247,
+          229,
+          197
+        ],
+        "46": [
+          250,
+          241,
+          220
+        ],
+        "47": [
+          250,
+          241,
+          220
+        ]
+      }
+    },
+    {
+      "name": "left side",
+      "referencePosition": [
+        362,
+        478
+      ],
+      "capturePosition": [
+        413,
+        1364
+      ],
+      "referenceRGB": [
+        228,
+        214,
+        197
+      ],
+      "passes": {
+        "44": [
+          235,
+          223,
+          199
+        ],
+        "45": [
+          236,
+          216,
+          180
+        ],
+        "46": [
+          236,
+          224,
+          199
+        ],
+        "47": [
+          236,
+          224,
+          199
+        ]
+      }
+    },
+    {
+      "name": "left lower",
+      "referencePosition": [
+        408,
+        554
+      ],
+      "capturePosition": [
+        443,
+        1415
+      ],
+      "referenceRGB": [
+        219,
+        202,
+        186
+      ],
+      "passes": {
+        "44": [
+          214,
+          202,
+          179
+        ],
+        "45": [
+          221,
+          202,
+          167
+        ],
+        "46": [
+          218,
+          204,
+          180
+        ],
+        "47": [
+          218,
+          204,
+          180
+        ]
+      }
+    },
+    {
+      "name": "right top",
+      "referencePosition": [
+        821,
+        383
+      ],
+      "capturePosition": [
+        719,
+        1301
+      ],
+      "referenceRGB": [
+        253,
+        253,
+        249
+      ],
+      "passes": {
+        "44": [
+          255,
+          255,
+          253
+        ],
+        "45": [
+          247,
+          238,
+          230
+        ],
+        "46": [
+          255,
+          255,
+          249
+        ],
+        "47": [
+          255,
+          255,
+          249
+        ]
+      }
+    },
+    {
+      "name": "right side",
+      "referencePosition": [
+        877,
+        478
+      ],
+      "capturePosition": [
+        756,
+        1364
+      ],
+      "referenceRGB": [
+        252,
+        245,
+        226
+      ],
+      "passes": {
+        "44": [
+          255,
+          248,
+          240
+        ],
+        "45": [
+          236,
+          228,
+          220
+        ],
+        "46": [
+          255,
+          248,
+          237
+        ],
+        "47": [
+          255,
+          248,
+          237
+        ]
+      }
+    },
+    {
+      "name": "right lower",
+      "referencePosition": [
+        846,
+        554
+      ],
+      "capturePosition": [
+        736,
+        1415
+      ],
+      "referenceRGB": [
+        232,
+        216,
+        195
+      ],
+      "passes": {
+        "44": [
+          223,
+          211,
+          199
+        ],
+        "45": [
+          213,
+          201,
+          186
+        ],
+        "46": [
+          226,
+          213,
+          197
+        ],
+        "47": [
+          226,
+          213,
+          197
+        ]
+      }
+    }
+  ],
+  "captureSHA256": {
+    "44": "170cf673f102c3f17473e611592f1176725a01a85bd2b3d85293906fb89387e0",
+    "45": "e428fbc40483e7ffe3ed32f293996294c8f2b3774ed9eb2f3b2f339f63d15a8f",
+    "46": "4a051d9a287c59a29f559840b3e38af0e1c71158f74e7af0d4a2bf05f4ce22e4",
+    "47": "34b870e6f4cb47d6eb5c8a273b08135067bf893d31737f55afeaa7ecb88f295f"
+  },
+  "bodyRefactorCheck": {
+    "passes": [
+      46,
+      47
+    ],
+    "regionXYWH": [
+      150,
+      1380,
+      880,
+      420
+    ],
+    "maximumRGBDifference": 0
+  }
+}

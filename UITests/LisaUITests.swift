@@ -75,6 +75,27 @@ final class LisaUITests: XCTestCase {
         attach(app, name: "03-Reprise-persistée")
     }
 
+    func testSpatialCompanionDoesNotBlockBoard() {
+        let app = launchFresh()
+        button("C’est parti !", in: app).tap()
+        app.buttons.containing(.staticText, identifier: "Facile").firstMatch.tap()
+        let empty = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Ligne ", ", vide")).firstMatch
+        XCTAssertTrue(empty.waitForExistence(timeout: 15))
+        let coordinate = empty.label.components(separatedBy: ", vide")[0]
+        empty.tap()
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "1, ")).firstMatch.tap()
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", coordinate + ", 1")).firstMatch.waitForExistence(timeout: 5))
+        attach(app, name: "Vol-spatial-départ")
+        let flight = expectation(description: "One complete depth flight")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 33) { flight.fulfill() }
+        waitForExpectations(timeout: 36)
+        attach(app, name: "Vol-spatial-retour")
+        app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "9, ")).firstMatch.tap()
+        XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", coordinate + ", 9")).firstMatch.waitForExistence(timeout: 5))
+        app.buttons["Mettre en pause"].tap()
+        XCTAssertTrue(app.staticTexts["Votre grille vous attend."].waitForExistence(timeout: 5))
+    }
+
     func testAdaptiveEffectsAndPause() {
         let app = launchFresh(metrics: true)
         button("C’est parti !", in: app).tap()
@@ -87,7 +108,7 @@ final class LisaUITests: XCTestCase {
             companion.tap()
             expectation(for: NSPredicate(format: "value == %@", "Reviens, papillon !"), evaluatedWith: companion)
             waitForExpectations(timeout: 5)
-            attach(app, name: "Wahoo-rubans-et-étoiles")
+            attach(app, name: "Poulpe-perspective")
             expectation(for: NSPredicate(format: "value == %@", "Au repos"), evaluatedWith: companion)
             waitForExpectations(timeout: 10)
             // Collect steady-state render windows without driving the UI.

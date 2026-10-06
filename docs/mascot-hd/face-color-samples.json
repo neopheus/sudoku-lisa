@@ -1,0 +1,239 @@
+{
+  "method": "Median RGB over 7x7 patches in visually corresponding upper, outer-middle and lower areas of the left ivory eye. Coordinates are approximate correspondences, not an image registration or overall likeness score. Captures use the same fixed camera.",
+  "measurements": [
+    {
+      "image": "docs/mascot-hd/poulpi-reference-hd.png",
+      "sha256": "cbc2a89044f2f7d773094f2a4ca709ed50372f06545f60a5a474d5914c348878",
+      "patches": [
+        {
+          "center": [
+            400,
+            400
+          ],
+          "medianRGB": [
+            249.0,
+            240.0,
+            222.0
+          ]
+        },
+        {
+          "center": [
+            375,
+            460
+          ],
+          "medianRGB": [
+            238.0,
+            225.0,
+            208.0
+          ]
+        },
+        {
+          "center": [
+            420,
+            550
+          ],
+          "medianRGB": [
+            228.0,
+            212.0,
+            193.0
+          ]
+        }
+      ]
+    },
+    {
+      "image": "docs/screenshots/poulpi-loop-18.png",
+      "sha256": "e3f8ea39dec6d18547163c7578e52cbef79ff313e5d654c1dbb7e42aa350e7d0",
+      "patches": [
+        {
+          "center": [
+            441,
+            1304
+          ],
+          "medianRGB": [
+            255.0,
+            244.0,
+            200.0
+          ]
+        },
+        {
+          "center": [
+            409,
+            1360
+          ],
+          "medianRGB": [
+            246.0,
+            221.0,
+            174.0
+          ]
+        },
+        {
+          "center": [
+            459,
+            1417
+          ],
+          "medianRGB": [
+            221.0,
+            199.0,
+            157.0
+          ]
+        }
+      ]
+    },
+    {
+      "image": "docs/screenshots/poulpi-loop-19.png",
+      "sha256": "97778f74c6648e2f11c665dfa42ca22a30833ff9d843f0168020e8b28955f1fa",
+      "patches": [
+        {
+          "center": [
+            441,
+            1304
+          ],
+          "medianRGB": [
+            247.0,
+            233.0,
+            214.0
+          ]
+        },
+        {
+          "center": [
+            409,
+            1360
+          ],
+          "medianRGB": [
+            228.0,
+            213.0,
+            189.0
+          ]
+        },
+        {
+          "center": [
+            459,
+            1417
+          ],
+          "medianRGB": [
+            205.0,
+            192.0,
+            171.0
+          ]
+        }
+      ]
+    },
+    {
+      "image": "docs/screenshots/poulpi-loop-20.png",
+      "sha256": "5782bfab1c3e13dcb8471eee8ad7b16b2eb323e21875e3b85ea050a1ae7b4ab6",
+      "patches": [
+        {
+          "center": [
+            441,
+            1304
+          ],
+          "medianRGB": [
+            249.0,
+            240.0,
+            220.0
+          ]
+        },
+        {
+          "center": [
+            409,
+            1360
+          ],
+          "medianRGB": [
+            235.0,
+            224.0,
+            199.0
+          ]
+        },
+        {
+          "center": [
+            459,
+            1417
+          ],
+          "medianRGB": [
+            222.0,
+            211.0,
+            187.0
+          ]
+        }
+      ]
+    },
+    {
+      "image": "docs/screenshots/poulpi-loop-21.png",
+      "sha256": "47661737629e31fc8b08567cd3aaffb2fad39790c8ff957d72335948fa3bb488",
+      "patches": [
+        {
+          "center": [
+            441,
+            1304
+          ],
+          "medianRGB": [
+            249.0,
+            240.0,
+            220.0
+          ]
+        },
+        {
+          "center": [
+            409,
+            1360
+          ],
+          "medianRGB": [
+            235.0,
+            224.0,
+            199.0
+          ]
+        },
+        {
+          "center": [
+            459,
+            1417
+          ],
+          "medianRGB": [
+            222.0,
+            211.0,
+            187.0
+          ]
+        }
+      ]
+    },
+    {
+      "image": "docs/screenshots/poulpi-loop-27.png",
+      "sha256": "236d9077d6572254147a4fb77b13d63fff63ebe58fa2764dbf9867cb42e8cd43",
+      "patches": [
+        {
+          "center": [
+            441,
+            1304
+          ],
+          "medianRGB": [
+            249.0,
+            240.0,
+            220.0
+          ]
+        },
+        {
+          "center": [
+            409,
+            1360
+          ],
+          "medianRGB": [
+            235.0,
+            224.0,
+            199.0
+          ]
+        },
+        {
+          "center": [
+            459,
+            1417
+          ],
+          "medianRGB": [
+            222.0,
+            211.0,
+            187.0
+          ]
+        }
+      ]
+    }
+  ]
+}
