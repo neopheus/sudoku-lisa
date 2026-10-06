@@ -1,7 +1,8 @@
+import SudokuCore
 import SwiftUI
 
 enum LisaJourneyAtmosphere {
-    static let names = ["Les jardins guimauve", "La forêt des sucettes", "Le lagon pétillant", "Les sommets givrés", "La voie des étoiles"]
+    static var names: [String] { [L10n.text("Les jardins guimauve"), L10n.text("La forêt des sucettes"), L10n.text("Le lagon pétillant"), L10n.text("Les sommets givrés"), L10n.text("La voie des étoiles")] }
     static let symbols = ["leaf.fill", "leaf.fill", "circle", "snowflake", "star.fill"]
     static let colors: [Color] = [.pink, .mint, .cyan, .purple, .indigo]
     static func chapter(_ wins: Int) -> Int { min(max(wins / 5, 0), 4) }
@@ -104,7 +105,7 @@ struct LisaGridGlow: View {
                     .overlay(RoundedRectangle(cornerRadius: 4).strokeBorder(.white.opacity(expanded ? 0 : 0.85), lineWidth: 1.5))
                     .frame(width: side - 2, height: side - 2)
                     .position(x: (CGFloat(index % 9) + 0.5) * side, y: (CGFloat(index / 9) + 0.5) * side)
-                    .animation(reduceMotion ? nil : .easeOut(duration: 0.65).delay(Double(index / 9 + index % 9) * 0.025), value: expanded)
+                    .animation(reduceMotion ? nil : .easeOut(duration: 0.32).delay(Double(index / 9 + index % 9) * 0.012), value: expanded)
             }
         }
         .allowsHitTesting(false)
@@ -117,71 +118,51 @@ struct LisaGridGlow: View {
     }
 }
 
-/// Lights travel only around the frame, never across a number or a touch target.
-struct LisaBoardSparkles: View {
-    var body: some View {
-        LisaMotionClock { time in
-            Canvas { context, size in
-                guard time > 0 else { return }
-                let w = size.width - 8
-                let h = size.height - 8
-                let perimeter = 2 * (w + h)
-                for index in 0..<8 {
-                    let d = (time * 28 + Double(index) * perimeter / 8).truncatingRemainder(dividingBy: perimeter)
-                    let point: CGPoint
-                    if d < w { point = CGPoint(x: 4 + d, y: 4) }
-                    else if d < w + h { point = CGPoint(x: 4 + w, y: 4 + d - w) }
-                    else if d < 2 * w + h { point = CGPoint(x: 4 + 2 * w + h - d, y: 4 + h) }
-                    else { point = CGPoint(x: 4, y: 4 + perimeter - d) }
-                    let star = context.resolve(Text(Image(systemName: "sparkle")).foregroundColor(index.isMultiple(of: 2) ? LisaTheme.yellow : .white).font(.system(size: 10)))
-                    context.draw(star, at: point)
-                }
-            }
-        }.allowsHitTesting(false).accessibilityHidden(true)
-    }
-}
-
-/// Finite sweeps follow the completed unit; a box receives its own expanding star burst.
+/// One finite Canvas for the whole move: cell ripples, twin comets and block bursts.
+/// Detail scales with load while feedback keeps the display's fast cadence.
 struct LisaUnitCelebration: View {
     let units: Set<Int>
+    let cells: Set<Int>
+    let originIndex: Int
     let token: Int
     @State private var started = Date().timeIntervalSinceReferenceDate
     @State private var finished = false
+    @ObservedObject private var budget = LisaRenderBudget.shared
+
     var body: some View {
-        LisaMotionClock(enabled: !units.isEmpty && !finished) { time in
+        LisaMotionClock(enabled: !cells.isEmpty && !finished, fps: 60) { time in
             Canvas { context, size in
-                guard !finished else { return }
+                guard !finished, !cells.isEmpty else { return }
                 let age = time == 0 ? 0 : max(0, time - started)
                 let side = size.width / 9
+                let origin = CGPoint(x: (CGFloat(originIndex % 9) + 0.5) * side,
+                                     y: (CGFloat(originIndex / 9) + 0.5) * side)
+                drawCells(context, side: side, origin: origin, age: age, animated: time > 0)
+                guard time > 0 else { return }
                 for unit in units.sorted() {
-                    let row = unit < 9
-                    let column = (9..<18).contains(unit)
-                    let box = unit - 18
-                    let rect: CGRect
-                    if row { rect = CGRect(x: 1, y: CGFloat(unit) * side + 1, width: size.width - 2, height: side - 2) }
-                    else if column { rect = CGRect(x: CGFloat(unit - 9) * side + 1, y: 1, width: side - 2, height: size.height - 2) }
-                    else { rect = CGRect(x: CGFloat(box % 3 * 3) * side + 1, y: CGFloat(box / 3 * 3) * side + 1, width: side * 3 - 2, height: side * 3 - 2) }
-                    let color = row ? LisaTheme.mint : column ? Color.cyan : LisaTheme.yellow
-                    var layer = context
-                    layer.opacity = age < 1.7 ? 1 : max(0, (2.4 - age) / 0.7)
-                    layer.fill(Path(roundedRect: rect, cornerRadius: 5), with: .color(color.opacity(0.13)))
-                    layer.stroke(Path(roundedRect: rect.insetBy(dx: 2, dy: 2), cornerRadius: 5), with: .color(color), lineWidth: 3)
-                    guard time > 0 else { continue }
-                    let travel = min(1, age / 1.1)
-                    for index in 0..<12 {
-                        let phase = Double(index) / 12 * .pi * 2
-                        let point: CGPoint
-                        if row {
-                            point = CGPoint(x: rect.minX + rect.width * travel - Double(index % 4) * 5, y: rect.midY + sin(phase) * side * 0.35)
-                        } else if column {
-                            point = CGPoint(x: rect.midX + cos(phase) * side * 0.35, y: rect.minY + rect.height * travel - Double(index % 4) * 5)
-                        } else {
-                            let radius = side * (0.25 + min(1, age / 1.2) * 1.1)
-                            point = CGPoint(x: rect.midX + cos(phase + age) * radius, y: rect.midY + sin(phase + age) * radius)
-                        }
-                        let star = layer.resolve(Text(Image(systemName: "sparkle")).font(.system(size: index.isMultiple(of: 3) ? 16 : 9)).foregroundColor(index.isMultiple(of: 2) ? color : .white))
-                        layer.draw(star, at: point)
+                    let rect = unitRect(unit, side: side)
+                    let color: Color = unit < 9 ? .cyan : unit < 18 ? LisaTheme.mint : LisaTheme.yellow
+                    var outline = context
+                    outline.opacity = fade(age, hold: 0.38, end: 0.9)
+                    let path = Path(roundedRect: rect.insetBy(dx: 1, dy: 1), cornerRadius: 6)
+                    luminousStroke(path, in: outline, color: color, width: 2.5)
+                    if unit < 18 {
+                        drawComets(context, rect: rect, origin: origin, horizontal: unit < 9,
+                                   side: side, age: age, color: color)
+                    } else {
+                        drawBlock(context, rect: rect, side: side, age: age, color: color)
                     }
+                }
+                // A local impact ties simultaneous row / column / block rewards together.
+                if units.count > 1 {
+                    var combo = context
+                    combo.opacity = fade(age, hold: 0.16, end: 0.65)
+                    let radius = side * (0.2 + easeOut(age / 0.55) * 1.15)
+                    let ring = Path(ellipseIn: CGRect(x: origin.x - radius, y: origin.y - radius,
+                                                     width: radius * 2, height: radius * 2))
+                    luminousStroke(ring, in: combo, color: LisaTheme.coral, width: 2)
+                    burst(context, at: origin, age: age, reach: side * 1.4,
+                          color: LisaTheme.coral, count: min(12, budget.particleCount))
                 }
             }
         }
@@ -189,8 +170,103 @@ struct LisaUnitCelebration: View {
         .task(id: token) {
             started = Date().timeIntervalSinceReferenceDate
             finished = false
-            do { try await Task.sleep(for: .seconds(2.4)) } catch { return }
+            do { try await Task.sleep(for: .seconds(1.15)) } catch { return }
             finished = true
         }
+    }
+
+    private func drawCells(_ context: GraphicsContext, side: Double, origin: CGPoint, age: Double, animated: Bool) {
+        for cell in cells.sorted() {
+            let center = CGPoint(x: (Double(cell % 9) + 0.5) * side, y: (Double(cell / 9) + 0.5) * side)
+            let delay = hypot(center.x - origin.x, center.y - origin.y) / side * 0.025
+            let local = animated ? age - delay : 0
+            guard local >= 0 else { continue }
+            var layer = context
+            layer.opacity = animated ? fade(local, hold: 0.12, end: 0.65) : 0.65
+            let rect = CGRect(x: center.x - side / 2 + 2, y: center.y - side / 2 + 2, width: side - 4, height: side - 4)
+            let path = Path(roundedRect: rect, cornerRadius: 5)
+            layer.fill(path, with: .color(LisaTheme.yellow.opacity(0.18)))
+            layer.stroke(path, with: .color(LisaTheme.yellow), lineWidth: 1.5)
+            if animated {
+                // Small glints sit on cell corners, leaving every digit unobstructed.
+                LisaFXGeometry.spark(in: layer, at: CGPoint(x: rect.maxX, y: rect.minY),
+                                     radius: 3 + 3 * sin(min(1, local / 0.65) * .pi),
+                                     rotation: local * 4, color: .white)
+            }
+        }
+    }
+
+    private func drawComets(_ context: GraphicsContext, rect: CGRect, origin: CGPoint,
+                            horizontal: Bool, side: Double, age: Double, color: Color) {
+        let start = horizontal ? origin.x : origin.y
+        let low = horizontal ? rect.minX : rect.minY
+        let high = horizontal ? rect.maxX : rect.maxY
+        let travel = easeOut(age / 0.4)
+        // Two heads launch from the placed digit along both edges of the unit.
+        for end in [low, high] {
+            let head = start + (end - start) * travel
+            let tail = start + (end - start) * easeOut(max(0, age - 0.10) / 0.4)
+            var comet = context
+            comet.opacity = fade(age, hold: 0.36, end: 0.55)
+            for edge in [horizontal ? rect.minY + 2 : rect.minX + 2,
+                         horizontal ? rect.maxY - 2 : rect.maxX - 2] {
+                let point = CGPoint(x: horizontal ? head : edge, y: horizontal ? edge : head)
+                var path = Path()
+                path.move(to: CGPoint(x: horizontal ? tail : edge, y: horizontal ? edge : tail))
+                path.addLine(to: point)
+                luminousStroke(path, in: comet, color: color, width: 3)
+                LisaFXGeometry.spark(in: comet, at: point, radius: 6, rotation: age * 9, color: .white)
+            }
+            let impact = CGPoint(x: horizontal ? end : rect.midX, y: horizontal ? rect.midY : end)
+            burst(context, at: impact, age: age - 0.32, reach: side * 0.8,
+                  color: color, count: min(10, budget.particleCount))
+        }
+    }
+
+    private func drawBlock(_ context: GraphicsContext, rect: CGRect, side: Double, age: Double, color: Color) {
+        var wave = context
+        wave.opacity = fade(age, hold: 0.22, end: 0.75)
+        let expansion = easeOut(age / 0.55) * side * 0.25
+        let ring = Path(roundedRect: rect.insetBy(dx: -expansion, dy: -expansion), cornerRadius: 7 + expansion)
+        luminousStroke(ring, in: wave, color: color, width: 2.5)
+        // Corner fireworks give the 3x3 a square silhouette rather than a generic circle.
+        let corners = [CGPoint(x: rect.minX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.minY),
+                       CGPoint(x: rect.maxX, y: rect.maxY), CGPoint(x: rect.minX, y: rect.maxY)]
+        for (index, corner) in corners.enumerated() {
+            burst(context, at: corner, age: age - 0.06 - Double(index) * 0.035,
+                  reach: side * 0.72, color: color, count: max(4, min(8, budget.particleCount / 2)))
+        }
+    }
+
+    private func burst(_ context: GraphicsContext, at origin: CGPoint, age: Double,
+                       reach: Double, color: Color, count: Int) {
+        guard age >= 0, age < 0.72 else { return }
+        let travel = easeOut(age / 0.72)
+        var layer = context
+        layer.opacity = min(1, age / 0.035) * fade(age, hold: 0.28, end: 0.72)
+        for index in 0..<count {
+            let angle = Double(index) / Double(count) * .pi * 2 + .pi / 8
+            let distance = reach * travel * (index.isMultiple(of: 2) ? 1 : 0.7)
+            let point = CGPoint(x: origin.x + cos(angle) * distance, y: origin.y + sin(angle) * distance + age * age * 12)
+            LisaFXGeometry.spark(in: layer, at: point,
+                                 radius: (index.isMultiple(of: 3) ? 8 : 4.5) * (1 - travel * 0.55),
+                                 rotation: angle + age * 5, color: index.isMultiple(of: 3) ? .white : color)
+        }
+    }
+
+    private func luminousStroke(_ path: Path, in context: GraphicsContext, color: Color, width: Double) {
+        context.stroke(path, with: .color(color.opacity(0.16)), style: StrokeStyle(lineWidth: width * 4, lineCap: .round))
+        context.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: width * 2, lineCap: .round))
+        context.stroke(path, with: .color(.white.opacity(0.9)), style: StrokeStyle(lineWidth: width * 0.55, lineCap: .round))
+    }
+
+    private func easeOut(_ value: Double) -> Double { 1 - pow(1 - min(1, max(0, value)), 3) }
+    private func fade(_ age: Double, hold: Double, end: Double) -> Double { 1 - min(1, max(0, (age - hold) / (end - hold))) }
+
+    private func unitRect(_ unit: Int, side: Double) -> CGRect {
+        if unit < 9 { return CGRect(x: 1, y: Double(unit) * side + 1, width: side * 9 - 2, height: side - 2) }
+        if unit < 18 { return CGRect(x: Double(unit - 9) * side + 1, y: 1, width: side - 2, height: side * 9 - 2) }
+        let box = unit - 18
+        return CGRect(x: Double(box % 3 * 3) * side + 1, y: Double(box / 3 * 3) * side + 1, width: side * 3 - 2, height: side * 3 - 2)
     }
 }

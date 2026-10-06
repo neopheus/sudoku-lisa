@@ -87,7 +87,7 @@ struct LisaCard<Content: View>: View {
         self.content = content()
     }
     var body: some View {
-        content.padding(20).background(CandySurface(tint: tint, cornerRadius: 28, depth: 5))
+        content.padding(20).background(CandySurface(tint: tint, cornerRadius: 28, depth: 5)).lisaAppear()
     }
 }
 
@@ -127,6 +127,7 @@ struct LisaIconButton: View {
             Image(systemName: icon)
                 .font(.system(size: 20, weight: .bold))
                 .foregroundStyle(LisaTheme.ink)
+                .lisaFloat(amplitude: 1, tilt: 4, period: 3.6)
                 .frame(width: 48, height: 48)
                 .background(CandySurface(cornerRadius: 18, depth: 3))
                 .contentShape(RoundedRectangle(cornerRadius: 18))
@@ -137,13 +138,17 @@ struct LisaIconButton: View {
 }
 
 struct LisaPressStyle: ButtonStyle {
+    @EnvironmentObject private var store: LisaStore
+    @Environment(\.lisaMotionAllowed) private var allowed
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    private var motion: Bool { allowed && store.settings.animatedDecor && !reduceMotion }
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .brightness(configuration.isPressed ? -0.04 : 0)
-            .offset(y: configuration.isPressed && !reduceMotion ? 4 : 0)
-            .scaleEffect(x: configuration.isPressed && !reduceMotion ? 0.96 : 1, y: configuration.isPressed && !reduceMotion ? 0.90 : 1)
-            .animation(reduceMotion ? nil : .spring(response: 0.32, dampingFraction: 0.48), value: configuration.isPressed)
+            .offset(y: configuration.isPressed && motion ? 4 : 0)
+            .scaleEffect(x: configuration.isPressed && motion ? 0.96 : 1, y: configuration.isPressed && motion ? 0.90 : 1)
+            .symbolEffect(.bounce, options: .speed(1.4), value: configuration.isPressed && motion)
+            .animation(!motion ? nil : .spring(response: 0.32, dampingFraction: 0.48), value: configuration.isPressed)
     }
 }
 

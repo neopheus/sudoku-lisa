@@ -1,0 +1,425 @@
+{
+  "method": "Four scanlines through each ivory eye, threshold R>140, G>125, 70<B<1.05R, R-G<65. Captures mapped by fixed comparison CSS with nearest pixel lookup. Selected spans avoid iris occlusion and the mouth. Threshold and rasterization affect the boundary; not a global likeness score.",
+  "referenceSHA256": "cbc2a89044f2f7d773094f2a4ca709ed50372f06545f60a5a474d5914c348878",
+  "scanlines": {
+    "reference": {
+      "captureSHA256": "cbc2a89044f2f7d773094f2a4ca709ed50372f06545f60a5a474d5914c348878",
+      "rows": [
+        {
+          "eye": "left",
+          "referenceY": 370,
+          "spanX": [
+            398,
+            504
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 400,
+          "spanX": [
+            364,
+            535
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 500,
+          "spanX": [
+            337,
+            560
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 550,
+          "spanX": [
+            360,
+            536
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 370,
+          "spanX": [
+            748,
+            859
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 400,
+          "spanX": [
+            716,
+            888
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 500,
+          "spanX": [
+            692,
+            908
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 550,
+          "spanX": [
+            716,
+            883
+          ]
+        }
+      ]
+    },
+    "62": {
+      "captureSHA256": "eebf7e6d7274d55cc2d4fd9f5824aae8e43a75b09bf01a7090cbcac529c560b3",
+      "rows": [
+        {
+          "eye": "left",
+          "referenceY": 370,
+          "spanX": [
+            385,
+            508
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 400,
+          "spanX": [
+            355,
+            535
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 500,
+          "spanX": [
+            334,
+            561
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 550,
+          "spanX": [
+            367,
+            546
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 370,
+          "spanX": [
+            744,
+            869
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 400,
+          "spanX": [
+            717,
+            899
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 500,
+          "spanX": [
+            687,
+            920
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 550,
+          "spanX": [
+            708,
+            887
+          ]
+        }
+      ],
+      "meanAbsoluteBoundaryErrorPixels": 6.375
+    },
+    "63": {
+      "captureSHA256": "6a43758fefaeafd29fcc927444b6a400efbd9563cd445841e6351764dd87fb2b",
+      "rows": [
+        {
+          "eye": "left",
+          "referenceY": 370,
+          "spanX": [
+            397,
+            496
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 400,
+          "spanX": [
+            367,
+            531
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 500,
+          "spanX": [
+            338,
+            561
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 550,
+          "spanX": [
+            364,
+            538
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 370,
+          "spanX": [
+            756,
+            856
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 400,
+          "spanX": [
+            722,
+            887
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 500,
+          "spanX": [
+            689,
+            914
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 550,
+          "spanX": [
+            716,
+            889
+          ]
+        }
+      ],
+      "meanAbsoluteBoundaryErrorPixels": 3.5625
+    },
+    "64": {
+      "captureSHA256": "555e1e13d34daa085d13533300c6874535e7c5b1da3f72c2a1ed904e1acb5f4c",
+      "rows": [
+        {
+          "eye": "left",
+          "referenceY": 370,
+          "spanX": [
+            397,
+            496
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 400,
+          "spanX": [
+            367,
+            531
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 500,
+          "spanX": [
+            338,
+            561
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 550,
+          "spanX": [
+            364,
+            538
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 370,
+          "spanX": [
+            756,
+            856
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 400,
+          "spanX": [
+            722,
+            887
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 500,
+          "spanX": [
+            689,
+            914
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 550,
+          "spanX": [
+            716,
+            889
+          ]
+        }
+      ],
+      "meanAbsoluteBoundaryErrorPixels": 3.5625
+    },
+    "65": {
+      "captureSHA256": "f25373053cc8f75a999c043991473e4e15d4fcaf894e460542c040ad8a03e491",
+      "rows": [
+        {
+          "eye": "left",
+          "referenceY": 370,
+          "spanX": [
+            397,
+            496
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 400,
+          "spanX": [
+            367,
+            531
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 500,
+          "spanX": [
+            338,
+            561
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 550,
+          "spanX": [
+            364,
+            538
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 370,
+          "spanX": [
+            756,
+            856
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 400,
+          "spanX": [
+            722,
+            887
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 500,
+          "spanX": [
+            689,
+            914
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 550,
+          "spanX": [
+            716,
+            889
+          ]
+        }
+      ],
+      "meanAbsoluteBoundaryErrorPixels": 3.5625
+    },
+    "66": {
+      "captureSHA256": "efb2811e27eba821228240c56dc22c2a06d802e95467ae495436b389445b1321",
+      "rows": [
+        {
+          "eye": "left",
+          "referenceY": 370,
+          "spanX": [
+            397,
+            496
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 400,
+          "spanX": [
+            367,
+            531
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 500,
+          "spanX": [
+            338,
+            561
+          ]
+        },
+        {
+          "eye": "left",
+          "referenceY": 550,
+          "spanX": [
+            364,
+            538
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 370,
+          "spanX": [
+            756,
+            856
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 400,
+          "spanX": [
+            722,
+            887
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 500,
+          "spanX": [
+            689,
+            914
+          ]
+        },
+        {
+          "eye": "right",
+          "referenceY": 550,
+          "spanX": [
+            716,
+            889
+          ]
+        }
+      ],
+      "meanAbsoluteBoundaryErrorPixels": 3.5625
+    }
+  }
+}

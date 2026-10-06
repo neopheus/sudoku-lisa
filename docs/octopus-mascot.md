@@ -30,3 +30,10 @@ Contrôler visuellement l’icône, les quatre expressions et les plus petits fo
 - Journaux : `/tmp/lisa-octopus-se-retry.log`, `/tmp/lisa-octopus-16-retry.log`. Vidéo réelle : `/tmp/lisa-octopus-animation.mp4`.
 - Réduction des animations et suspension relues dans le code ; mesure de performance et d’énergie sur appareil physique encore à faire.
 - Ancienne archive TestFlight antérieure à cette mascotte : reconstruire avant tout envoi. Aucune nouvelle version publiée.
+
+## Actualisation des visuels du 6 octobre 2026
+
+- Les 17 PNG ont été régénérés depuis le modèle 3D actuel : icône principale, 12 formats iMessage et 4 stickers transparents.
+- Dimensions, intégrité PNG et canaux alpha validés par le script d’export ; cadrage contrôlé sur l’icône, les quatre stickers et les formats iMessage, dont le plus petit (54 × 40).
+- Compilation Debug après remplacement réussie : `/tmp/lisa-visuals-final-build.log`. Les catalogues compilés sont présents dans l’app et son extension ; les quatre stickers embarqués ont exactement les mêmes pixels décodés que les sources (contrôle Core Graphics, après optimisation PNG par Xcode).
+- Aucun nouvel envoi TestFlight effectué.

@@ -1,0 +1,12 @@
+{
+  "pass": 93,
+  "renderSource": "Shared workspace Debug simulator build",
+  "intermediate92": "Isolated diagnostic copy with localization bridge; not shared build validation",
+  "geometryValidation": "rig-validation.json",
+  "files": {
+    "App/Design/PoulpiRig.swift": "9ef03741d7cd243382fd36f57bfab384c16c5010ccc9afd1624de9296058711b",
+    "App/Design/OctopusScene.swift": "9ae523499c3f1acd2317c695c2a8290a905b89d8be226805b272460297c3902e",
+    "App/Resources/Mascot/poulpi-rig.json": "7e6202922ec04a8d1326549b33955e9783988e38e56dc89031f3ca8aa02d049e",
+    "Sources/SudokuCore/CompanionFlight.swift": "31dc6f302475868737711a800067d4542688101850523638f7c8e6421e9b304b"
+  }
+}

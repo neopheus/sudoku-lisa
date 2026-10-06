@@ -31,7 +31,7 @@ private final class LisaStickerBrowser: MSStickerBrowserViewController {
     ].compactMap { name, description in
         guard let url = Bundle.main.url(forResource: name, withExtension: "png")
             ?? Bundle.main.url(forResource: name, withExtension: "png", subdirectory: "Resources") else { return nil }
-        return try? MSSticker(contentsOfFileURL: url, localizedDescription: description)
+        return try? MSSticker(contentsOfFileURL: url, localizedDescription: NSLocalizedString(description, comment: "Sticker accessibility description"))
     }
 
     override func numberOfStickers(in stickerBrowserView: MSStickerBrowserView) -> Int {

@@ -83,7 +83,10 @@ final class LisaStore: ObservableObject {
         let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         saveURL = dir.appendingPathComponent("sudoku-lisa-v1.json")
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("--uitest-reset") { try? FileManager.default.removeItem(at: saveURL) }
+        if ProcessInfo.processInfo.arguments.contains("--uitest-reset") {
+            try? FileManager.default.removeItem(at: saveURL)
+            UserDefaults.standard.removeObject(forKey: L10n.languagePreferenceKey)
+        }
         #endif
         do {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
@@ -231,10 +234,10 @@ final class LisaStore: ObservableObject {
     var seasonProgress: Int { eventMedals.filter { $0.hasPrefix(seasonKey + "-") }.count }
     var seasonTitle: String {
         switch Calendar.current.component(.month, from: Date()) {
-        case 3...5: return "Les petits bourgeons"
-        case 6...8: return "Le soleil en poche"
-        case 9...11: return "Les feuilles dorées"
-        default: return "La fabrique des flocons"
+        case 3...5: return L10n.text("Les petits bourgeons")
+        case 6...8: return L10n.text("Le soleil en poche")
+        case 9...11: return L10n.text("Les feuilles dorées")
+        default: return L10n.text("La fabrique des flocons")
         }
     }
     func startSeason() {

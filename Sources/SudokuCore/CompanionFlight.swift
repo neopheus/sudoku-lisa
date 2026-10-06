@@ -10,6 +10,33 @@ public enum CompanionFlight {
         public let dy: Double
         public let dz: Double
     }
+    /// The same clock drives the route, arm stroke and mantle contraction.
+    public struct SwimPose: Sendable {
+        public let pose: Pose
+        public let phase: Double
+        public let propulsion: Double
+        public let braking: Double
+        public let turn: Double
+        public let effort: Double
+    }
+    public static func swimming(seconds: Double) -> SwimPose {
+        let phase = seconds * .pi
+        // Integrate a positive speed multiplier: a push followed by a glide.
+        // Sixteen complete strokes close exactly at the 32-second route seam.
+        let routeTime = seconds + 0.18 * (1 - cos(phase))
+        let rate = 1 + 0.18 * .pi * sin(phase)
+        let p = sample(seconds: routeTime)
+        let next = sample(seconds: routeTime + 0.08)
+        let previous = sample(seconds: routeTime - 0.08)
+        let headingChange = atan2(previous.dx * next.dy - previous.dy * next.dx,
+                                  previous.dx * next.dx + previous.dy * next.dy)
+        return SwimPose(
+            pose: Pose(x: p.x, y: p.y, depth: p.depth,
+                       dx: p.dx * rate, dy: p.dy * rate, dz: p.dz * rate),
+            phase: phase, propulsion: (1 + sin(phase)) / 2,
+            braking: max(0, -cos(phase)), turn: max(-1, min(1, headingChange * 5)),
+            effort: min(1, sqrt(p.dx * p.dx + p.dy * p.dy + p.dz * p.dz * 0.025) * 4))
+    }
     private static let points: [(Double, Double, Double)] = [
         (0, 0.76, -1), (0.72, 0.35, 1.2), (0.68, -0.62, 0),
         (-0.58, -0.72, -1), (-0.74, 0.10, 1.5), (-0.35, 0.32, -5),

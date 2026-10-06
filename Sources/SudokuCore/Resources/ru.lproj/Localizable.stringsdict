@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>count.collection</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%d головоломки в коллекции</string>
+			<key>many</key>
+			<string>%d головоломок в коллекции</string>
+			<key>one</key>
+			<string>%d головоломка в коллекции</string>
+			<key>other</key>
+			<string>%d головоломки в коллекции</string>
+		</dict>
+	</dict>
+	<key>count.days</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%d дня</string>
+			<key>many</key>
+			<string>%d дней</string>
+			<key>one</key>
+			<string>%d день</string>
+			<key>other</key>
+			<string>%d дня</string>
+		</dict>
+	</dict>
+	<key>count.remaining</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>осталось %d</string>
+			<key>many</key>
+			<string>осталось %d</string>
+			<key>one</key>
+			<string>осталась %d</string>
+			<key>other</key>
+			<string>осталось %d</string>
+		</dict>
+	</dict>
+	<key>count.streak</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%d дня подряд</string>
+			<key>many</key>
+			<string>%d дней подряд</string>
+			<key>one</key>
+			<string>%d день подряд</string>
+			<key>other</key>
+			<string>%d дня подряд</string>
+		</dict>
+	</dict>
+	<key>count.wins</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>%#@count@</string>
+		<key>count</key>
+		<dict>
+			<key>NSStringFormatSpecTypeKey</key>
+			<string>NSStringPluralRuleType</string>
+			<key>NSStringFormatValueTypeKey</key>
+			<string>d</string>
+			<key>few</key>
+			<string>%d победы</string>
+			<key>many</key>
+			<string>%d побед</string>
+			<key>one</key>
+			<string>%d победа</string>
+			<key>other</key>
+			<string>%d победы</string>
+		</dict>
+	</dict>
+</dict>
+</plist>

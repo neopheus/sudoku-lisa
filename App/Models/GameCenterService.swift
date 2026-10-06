@@ -1,3 +1,4 @@
+import SudokuCore
 import SwiftUI
 import UIKit
 @preconcurrency import GameKit

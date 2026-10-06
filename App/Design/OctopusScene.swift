@@ -8,6 +8,10 @@ struct OctopusSceneView: UIViewRepresentable {
     let animated: Bool
     var spatial = false
     var occlusionRect = CGRect.zero
+    var interactivePortrait = false
+    var yaw: Double = 0
+    var pitch: Double = 0
+    var zoom: Double = 1
     @ObservedObject private var budget = LisaRenderBudget.shared
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: OctopusHostView, context: Context) -> CGSize {
@@ -17,6 +21,7 @@ struct OctopusSceneView: UIViewRepresentable {
     func makeUIView(context: Context) -> OctopusHostView { OctopusHostView() }
     func updateUIView(_ view: OctopusHostView, context: Context) {
         view.renderer.setSpatial(spatial)
+        view.renderer.setPortrait(interactive: interactivePortrait, yaw: yaw, pitch: pitch, zoom: zoom)
         view.renderer.setOcclusion(occlusionRect)
         view.renderer.setQuality(level: budget.level, frames: budget.frameRate)
         view.renderer.configure(mood: mood, reaction: reactionToken, animated: animated)
@@ -97,6 +102,10 @@ final class OctopusRenderView: SCNView {
         viewport = .zero
         updateViewport()
     }
+    func setPortrait(interactive: Bool, yaw: Double, pitch: Double, zoom: Double) {
+        companion.setPortrait(interactive: interactive, yaw: yaw, pitch: pitch, zoom: zoom)
+        if interactive { setNeedsDisplay() }
+    }
     func setOcclusion(_ rect: CGRect) {
         guard occlusionRect != rect else { return }
         occlusionRect = rect
@@ -145,6 +154,7 @@ final class OctopusModel {
     private let body = SCNNode()
     private let gesture = SCNNode()
     private let flight = SCNNode()
+    private let portraitRotation = SCNNode()
     private let camera = SCNNode()
     private let occluder = SCNNode()
     private var spatial = false
@@ -195,7 +205,8 @@ final class OctopusModel {
         occluder.renderingOrder = -1
         occluder.isHidden = true
         scene.rootNode.addChildNode(occluder)
-        scene.rootNode.addChildNode(flight)
+        scene.rootNode.addChildNode(portraitRotation)
+        portraitRotation.addChildNode(flight)
         flight.addChildNode(gesture)
         gesture.addChildNode(body)
         body.addChildNode(rig.node)
@@ -204,6 +215,13 @@ final class OctopusModel {
         if ProcessInfo.processInfo.arguments.contains("--octopus-preview") && ProcessInfo.processInfo.arguments.contains("--octopus-still") {
             rig.play(.idle, animated:false)
         }
+        if ProcessInfo.processInfo.arguments.contains("--octopus-preview") && ProcessInfo.processInfo.arguments.contains("--octopus-motion-preview") {
+            camera.camera?.orthographicScale = 1.60
+            let rig = rig
+            body.runAction(.repeatForever(.customAction(duration: 32) { _, elapsed in
+                rig.setSwimming(CompanionFlight.swimming(seconds: Double(elapsed)))
+            }), forKey: "swim-inspection")
+        }
         if ProcessInfo.processInfo.arguments.contains("--octopus-preview") && ProcessInfo.processInfo.arguments.contains("--octopus-turntable") {
             // Rear curls project lower when they turn toward the camera.
             // Keep the full animated silhouette inside this inspection view.
@@ -211,6 +229,12 @@ final class OctopusModel {
             body.runAction(.repeatForever(.rotateBy(x: 0, y: .pi * 2, z: 0, duration: 12)), forKey: "inspection")
         }
         #endif
+    }
+
+    func setPortrait(interactive: Bool, yaw: Double, pitch: Double, zoom: Double) {
+        guard interactive, !spatial else { return }
+        portraitRotation.eulerAngles = SCNVector3(Float(pitch), Float(yaw), 0)
+        camera.camera?.orthographicScale = 1.65 / max(0.75, min(1.6, zoom))
     }
 
     func setSpatial(_ enabled: Bool, aspect: Float) {
@@ -227,6 +251,7 @@ final class OctopusModel {
             if motionEnabled { installFlight() }
         } else {
             flight.removeAction(forKey: "travel")
+            rig.setSwimming(nil)
             flight.transform = SCNMatrix4Identity
             lighting.position = SCNVector3Zero
             camera.position = SCNVector3(0, 1.30, 7)
@@ -257,13 +282,16 @@ final class OctopusModel {
     private func installFlight() {
         let aspect = flightAspect
         let lighting = lighting
+        let rig = rig
         // SceneKit advances this curve directly; no SwiftUI redraw per frame.
         flight.runAction(.repeatForever(.customAction(duration: 32) { node, elapsed in
-            let p = CompanionFlight.sample(seconds: Double(elapsed))
+            let swim = CompanionFlight.swimming(seconds: Double(elapsed))
+            let p = swim.pose
+            rig.setSwimming(swim)
             let halfHeight = Float(12 - p.depth) * tan(Float.pi / 9)
             node.position = SCNVector3(Float(p.x) * halfHeight * aspect, Float(p.y) * halfHeight, Float(p.depth))
             lighting.position = node.position
-            node.eulerAngles = SCNVector3(Float(-p.dz * 0.10), Float(p.dx * 1.8), Float(-p.dx * 0.9))
+            node.eulerAngles = SCNVector3(Float(-p.dz * 0.10), Float(p.dx * 1.8), Float(-p.dx * 0.9 - swim.turn * 0.18))
             // Distant passes remain visually light over the puzzle.
             node.opacity = p.depth < -2 ? CGFloat(max(0.55, 1 + (p.depth + 2) * 0.12)) : 1
         }), forKey: "travel")
@@ -280,6 +308,7 @@ final class OctopusModel {
             else { flight.removeAction(forKey: "travel"); restFlight() }
         }
         if !enabled {
+            rig.setSwimming(nil)
             gesture.removeAllActions()
             gesture.transform = SCNMatrix4Identity
         }
@@ -287,11 +316,15 @@ final class OctopusModel {
     func setMood(_ mood: LisaMascotMood, animated: Bool) {
         currentMood = mood
         rig.play(mood, animated: animated && motionEnabled)
+        if mood == .idle || mood == .sleepy {
+            gesture.removeAllActions()
+            gesture.transform = SCNMatrix4Identity
+        }
     }
     func react(_ mood: LisaMascotMood) {
         guard motionEnabled, mood != .sleepy, mood != .idle else { return }
         rig.play(mood, animated: true)
-        // Continuous travel is independent of the articulated arm motion.
+        // Arm gestures blend over the synchronized swimming stroke.
         // Preserve the visible pose when another reaction interrupts this one.
         let startPosition = gesture.presentation.position
         let startRotation = gesture.presentation.eulerAngles

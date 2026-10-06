@@ -25,10 +25,10 @@ def curve(i,t):
         anchors=[Vector((side*x,y,z)) for x,y,z in [(.36,-.20,.23),(.55,-.31,.48),(.77,-.27,.65),(.90,-.10,.72),(.84,.045,.73),(.71,.005,.73)]]
     elif i in (0,7):
         side=1 if i==0 else -1
-        anchors=[Vector((side*x,y,z)) for x,y,z in [(.14,-.02,.36),(.25,-.36,.43),(.32,-.72,.72),(.51,-.74,.80),(.65,-.72,.87),(.59,-.63,.94)]]
+        anchors=[Vector((side*x,y,z)) for x,y,z in [(.14,-.02,.36),(.25,-.36,.43),(.30,-.72,.72),(.51,-.74,.80),(.65,-.72,.87),(.59,-.63,.94)]]
     elif i in (2,5):
         side=1 if i==2 else -1
-        anchors=[Vector((side*x,y,z)) for x,y,z in [(.22,-.20,-.04),(.55,-.55,.08),(.84,-.69,.22),(1.00,-.63,.40),(1.04,-.58,.70),(1.00,-.52,.88)]]
+        anchors=[Vector((side*x,y,z)) for x,y,z in [(.22,-.20,-.04),(.55,-.55,.08),(.84,-.69,.22),(1.00,-.63,.40),(1.06,-.62,.62),(.84,-.35,.30)]]
     else:
         side=1 if i==3 else -1
         # The rear pair peeks through the front web instead of spreading behind
@@ -58,6 +58,9 @@ def basis(i,t):
 def radius(t, i=None):
     if i in (0,7): return .18+.055*math.sin(math.pi*t)-.06*t
     if i in (1,6): return .105*(1-t)+.085
+    if i in (2,5):
+        tip=max(0,min(1,(t-.60)/.40))
+        return .19*(1-t)+.100-.030*tip*tip*(3-2*tip)
     return .19*(1-t)+.100
 
 def mesh(name,vertices,faces):
@@ -163,8 +166,8 @@ def bind_surface(p):
 # Forty cups, one draw call, with the SAME skin binding as the supporting arm.
 cv=[];cn=[];ci=[];cb=[];cw=[]
 cup_sides=24
-profile=[(.74,-.06),(.94,.10),(1,.34),(.90,.58),(.65,.66),(.30,.59)]
-cup_centre_height=.56
+profile=[(.74,-.06),(.94,.10),(1,.34),(.90,.58),(.65,.66),(.30,.64)]
+cup_centre_height=.63
 def cup_seat(i,t):
     p=curve(i,t);tan,u,normal=basis(i,t)
     # Cast out from the arm centre. A nearest-point query from outside can
@@ -182,14 +185,18 @@ for i in range(8):
         t=float(t)
         tan,u,normal=basis(i,t);centre=cup_seat(i,t)
         oval_progress=max(0,min(1,(t-.78)/.105)) if i in (0,7) else 0
-        oval=1.15+.25*oval_progress*oval_progress*(3-2*oval_progress)
+        oval_blend=oval_progress*oval_progress*(3-2*oval_progress)
+        oval=1.15+.25*oval_blend
+        # Slim the exposed front-tip cushions across the arm while keeping
+        # their length, supporting seat and skin binding unchanged.
+        across_scale=1-.22*oval_blend
         size=.082-t*.009;base=len(cv)//3
         ids,cupWeights=bind_surface(centre)
         for ring,(r,h) in enumerate(profile):
             prev=profile[max(0,ring-1)];nxt=profile[ring+1] if ring+1<len(profile) else (0,cup_centre_height)
             for k in range(cup_sides):
-                a=k*math.tau/cup_sides;radial=tan*(oval*math.cos(a))+u*math.sin(a)
-                point=centre+size*(radial*r+normal*h);normal_radial=tan*(math.cos(a)/oval)+u*math.sin(a)
+                a=k*math.tau/cup_sides;radial=tan*(oval*math.cos(a))+u*(across_scale*math.sin(a))
+                point=centre+size*(radial*r+normal*h);normal_radial=tan*(math.cos(a)/oval)+u*(math.sin(a)/across_scale)
                 norm=(normal_radial*(nxt[1]-prev[1])+normal*(prev[0]-nxt[0])).normalized()
                 cv.extend(point);cn.extend(norm);cb.extend(ids);cw.extend(cupWeights)
                 if ring<len(profile)-1:

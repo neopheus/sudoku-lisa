@@ -1,0 +1,401 @@
+{
+  "method": "5x5 median RGB patches at six near-rim locations, mapped by fixed comparison CSS. Approximate correspondence; not global likeness.",
+  "passes": {
+    "71": {
+      "meanAbsoluteRGBError": 13.277777777777779,
+      "patches": [
+        {
+          "name": "left top",
+          "referenceXY": [
+            440,
+            362
+          ],
+          "captureXY": [
+            465,
+            1287
+          ],
+          "referenceRGB": [
+            244.0,
+            235.0,
+            217.0
+          ],
+          "captureRGB": [
+            255.0,
+            252.0,
+            239.0
+          ]
+        },
+        {
+          "name": "left edge",
+          "referenceXY": [
+            348,
+            470
+          ],
+          "captureXY": [
+            403,
+            1359
+          ],
+          "referenceRGB": [
+            224.0,
+            209.0,
+            193.0
+          ],
+          "captureRGB": [
+            228.0,
+            217.0,
+            193.0
+          ]
+        },
+        {
+          "name": "left bottom",
+          "referenceXY": [
+            420,
+            573
+          ],
+          "captureXY": [
+            451,
+            1427
+          ],
+          "referenceRGB": [
+            202.0,
+            181.0,
+            170.0
+          ],
+          "captureRGB": [
+            187.0,
+            174.0,
+            153.0
+          ]
+        },
+        {
+          "name": "right top",
+          "referenceXY": [
+            805,
+            360
+          ],
+          "captureXY": [
+            708,
+            1285
+          ],
+          "referenceRGB": [
+            250.0,
+            242.0,
+            224.0
+          ],
+          "captureRGB": [
+            255.0,
+            255.0,
+            245.0
+          ]
+        },
+        {
+          "name": "right edge",
+          "referenceXY": [
+            901,
+            470
+          ],
+          "captureXY": [
+            772,
+            1359
+          ],
+          "referenceRGB": [
+            247.0,
+            237.0,
+            217.0
+          ],
+          "captureRGB": [
+            249.0,
+            244.0,
+            240.0
+          ]
+        },
+        {
+          "name": "right bottom",
+          "referenceXY": [
+            828,
+            573
+          ],
+          "captureXY": [
+            724,
+            1427
+          ],
+          "referenceRGB": [
+            211.0,
+            190.0,
+            174.0
+          ],
+          "captureRGB": [
+            185.0,
+            170.0,
+            153.0
+          ]
+        }
+      ],
+      "captureSHA256": "bdb85a9dbbb46eba4f2dacb9bf2fa034c628add82ab401d0cd295408f869bc77"
+    },
+    "73": {
+      "meanAbsoluteRGBError": 11.38888888888889,
+      "patches": [
+        {
+          "name": "left top",
+          "referenceXY": [
+            440,
+            362
+          ],
+          "captureXY": [
+            465,
+            1287
+          ],
+          "referenceRGB": [
+            244.0,
+            235.0,
+            217.0
+          ],
+          "captureRGB": [
+            243.0,
+            237.0,
+            225.0
+          ]
+        },
+        {
+          "name": "left edge",
+          "referenceXY": [
+            348,
+            470
+          ],
+          "captureXY": [
+            403,
+            1359
+          ],
+          "referenceRGB": [
+            224.0,
+            209.0,
+            193.0
+          ],
+          "captureRGB": [
+            225.0,
+            214.0,
+            191.0
+          ]
+        },
+        {
+          "name": "left bottom",
+          "referenceXY": [
+            420,
+            573
+          ],
+          "captureXY": [
+            451,
+            1427
+          ],
+          "referenceRGB": [
+            202.0,
+            181.0,
+            170.0
+          ],
+          "captureRGB": [
+            178.0,
+            166.0,
+            145.0
+          ]
+        },
+        {
+          "name": "right top",
+          "referenceXY": [
+            805,
+            360
+          ],
+          "captureXY": [
+            708,
+            1285
+          ],
+          "referenceRGB": [
+            250.0,
+            242.0,
+            224.0
+          ],
+          "captureRGB": [
+            250.0,
+            238.0,
+            223.0
+          ]
+        },
+        {
+          "name": "right edge",
+          "referenceXY": [
+            901,
+            470
+          ],
+          "captureXY": [
+            772,
+            1359
+          ],
+          "referenceRGB": [
+            247.0,
+            237.0,
+            217.0
+          ],
+          "captureRGB": [
+            249.0,
+            244.0,
+            240.0
+          ]
+        },
+        {
+          "name": "right bottom",
+          "referenceXY": [
+            828,
+            573
+          ],
+          "captureXY": [
+            724,
+            1427
+          ],
+          "referenceRGB": [
+            211.0,
+            190.0,
+            174.0
+          ],
+          "captureRGB": [
+            178.0,
+            164.0,
+            148.0
+          ]
+        }
+      ],
+      "captureSHA256": "095fba925e0958b654cebe7d962ade21169e69b237d8799649bf336ecda60562"
+    },
+    "74": {
+      "meanAbsoluteRGBError": 4.722222222222222,
+      "patches": [
+        {
+          "name": "left top",
+          "referenceXY": [
+            440,
+            362
+          ],
+          "captureXY": [
+            465,
+            1287
+          ],
+          "referenceRGB": [
+            244.0,
+            235.0,
+            217.0
+          ],
+          "captureRGB": [
+            243.0,
+            237.0,
+            225.0
+          ]
+        },
+        {
+          "name": "left edge",
+          "referenceXY": [
+            348,
+            470
+          ],
+          "captureXY": [
+            403,
+            1359
+          ],
+          "referenceRGB": [
+            224.0,
+            209.0,
+            193.0
+          ],
+          "captureRGB": [
+            225.0,
+            214.0,
+            191.0
+          ]
+        },
+        {
+          "name": "left bottom",
+          "referenceXY": [
+            420,
+            573
+          ],
+          "captureXY": [
+            451,
+            1427
+          ],
+          "referenceRGB": [
+            202.0,
+            181.0,
+            170.0
+          ],
+          "captureRGB": [
+            202.0,
+            181.0,
+            169.0
+          ]
+        },
+        {
+          "name": "right top",
+          "referenceXY": [
+            805,
+            360
+          ],
+          "captureXY": [
+            708,
+            1285
+          ],
+          "referenceRGB": [
+            250.0,
+            242.0,
+            224.0
+          ],
+          "captureRGB": [
+            250.0,
+            238.0,
+            223.0
+          ]
+        },
+        {
+          "name": "right edge",
+          "referenceXY": [
+            901,
+            470
+          ],
+          "captureXY": [
+            772,
+            1359
+          ],
+          "referenceRGB": [
+            247.0,
+            237.0,
+            217.0
+          ],
+          "captureRGB": [
+            249.0,
+            244.0,
+            240.0
+          ]
+        },
+        {
+          "name": "right bottom",
+          "referenceXY": [
+            828,
+            573
+          ],
+          "captureXY": [
+            724,
+            1427
+          ],
+          "referenceRGB": [
+            211.0,
+            190.0,
+            174.0
+          ],
+          "captureRGB": [
+            199.0,
+            178.0,
+            170.0
+          ]
+        }
+      ],
+      "captureSHA256": "bb17b88323eba2adc8a610c276dd1bea13bb3d551fe7ee7a968f98522de79f6f"
+    }
+  }
+}

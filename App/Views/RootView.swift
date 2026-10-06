@@ -2,18 +2,22 @@ import SwiftUI
 import SudokuCore
 
 struct RootView: View {
+    @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     @EnvironmentObject private var store: LisaStore
     @State private var tab = 0
     @State private var settings = false
     var body: some View {
         TabView(selection: $tab) {
-            NavigationStack { HomeView(onRoute: { tab = $0 }, mascotAnimationEnabled: tab == 0 && !store.showGame && !settings && !store.isGenerating && store.saveError == nil).toolbar { ToolbarItem(placement: .topBarTrailing) { Button { settings = true } label: { Image(systemName: "slider.horizontal.3").foregroundStyle(LisaTheme.ink) }.accessibilityLabel("Réglages") } } }
+            NavigationStack { HomeView(onRoute: { tab = $0 }, mascotAnimationEnabled: tab == 0 && !store.showGame && !settings && !store.isGenerating && store.saveError == nil).toolbar { ToolbarItem(placement: .topBarTrailing) { Button { settings = true } label: { Image(systemName: "slider.horizontal.3").foregroundStyle(LisaTheme.ink) }.accessibilityLabel(L10n.text("Réglages")) } } }
                 .environment(\.lisaMotionAllowed, motionAllowed(tab: 0))
-                .tabItem { Label("Jouer", systemImage: "square.grid.3x3.fill") }.tag(0)
-            NavigationStack { DailyView(motionEnabled: tab == 1 && !store.showGame && !settings && !store.isGenerating && store.saveError == nil) }.environment(\.lisaMotionAllowed, motionAllowed(tab: 1)).tabItem { Label("Chaque jour", systemImage: "sun.max.fill") }.tag(1)
-            NavigationStack { JourneyView(motionEnabled: tab == 2 && !store.showGame && !settings && !store.isGenerating && store.saveError == nil) }.environment(\.lisaMotionAllowed, motionAllowed(tab: 2)).tabItem { Label("Voyage", systemImage: "sparkles") }.tag(2)
-            NavigationStack { ProgressViewLisa() }.environment(\.lisaMotionAllowed, motionAllowed(tab: 3)).tabItem { Label("Mes progrès", systemImage: "chart.bar.fill") }.tag(3)
+                .tabItem { Label(L10n.text("Jouer"), systemImage: "square.grid.3x3.fill") }.tag(0)
+            NavigationStack { DailyView(motionEnabled: tab == 1 && !store.showGame && !settings && !store.isGenerating && store.saveError == nil) }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 1)).tabItem { Label(L10n.text("Chaque jour"), systemImage: "sun.max.fill") }.tag(1)
+            NavigationStack { JourneyView(motionEnabled: tab == 2 && !store.showGame && !settings && !store.isGenerating && store.saveError == nil) }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 2)).tabItem { Label(L10n.text("Voyage"), systemImage: "sparkles") }.tag(2)
+            NavigationStack { ProgressViewLisa() }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 3)).tabItem { Label(L10n.text("Mes progrès"), systemImage: "chart.bar.fill") }.tag(3)
+            NavigationStack { PoulpiView(active: motionAllowed(tab: 4)) }
+                .tabItem { Label("Poulpi", systemImage: "face.smiling.fill") }.tag(4)
         }
+        .buttonStyle(LisaPressStyle())
         .tint(LisaTheme.actionInk)
         .toolbarBackground(LisaTheme.paper, for: .tabBar)
         .toolbarBackground(.visible, for: .tabBar)
@@ -22,10 +26,10 @@ struct RootView: View {
         .fullScreenCover(isPresented: $store.showGame) { GameView() }
         .overlay {
             if store.isGenerating {
-                ZStack { Color.black.opacity(0.25).ignoresSafeArea(); VStack(spacing: 18) { LisaMascot(size: 80, mood: .thinking, animationEnabled: !store.showGame && !settings && store.saveError == nil); ProgressView("On prépare votre petite pause…").font(LisaTheme.body()) }.padding(30).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 28)) }
+                ZStack { Color.black.opacity(0.25).ignoresSafeArea(); VStack(spacing: 18) { LisaMascot(size: 80, mood: .thinking, animationEnabled: !store.showGame && !settings && store.saveError == nil); ProgressView(L10n.text("On prépare votre petite pause…")).font(LisaTheme.body()) }.padding(30).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 28)) }
             }
         }
-        .alert("Sauvegarde", isPresented: Binding(get: { store.saveError != nil }, set: { if !$0 { store.saveError = nil } })) { Button("D’accord") { store.saveError = nil } } message: { Text(store.saveError ?? "") }
+        .alert(L10n.text("Sauvegarde"), isPresented: Binding(get: { store.saveError != nil }, set: { if !$0 { store.saveError = nil } })) { Button(L10n.text("D’accord")) { store.saveError = nil } } message: { Text(L10n.text(store.saveError ?? "")) }
     }
     private func motionAllowed(tab index: Int) -> Bool {
         tab == index && !store.showGame && !settings && !store.isGenerating && store.saveError == nil
@@ -52,6 +56,7 @@ struct LisaWordmark: View {
 }
 
 struct HomeView: View {
+    @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     var onRoute: (Int) -> Void = { _ in }
     var mascotAnimationEnabled = true
     @EnvironmentObject private var store: LisaStore
@@ -67,9 +72,9 @@ struct HomeView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     HStack {
-                        LisaPill(title: "\(store.streak) jour\(store.streak > 1 ? "s" : "")", icon: "flame.fill", tint: LisaTheme.yellow)
+                        LisaPill(title: L10n.count("days", store.streak), icon: "flame.fill", tint: LisaTheme.yellow)
                         Spacer()
-                        LisaPill(title: "\(store.history.count) victoire\(store.history.count > 1 ? "s" : "")", icon: "crown.fill", tint: LisaTheme.mint)
+                        LisaPill(title: L10n.count("wins", store.history.count), icon: "crown.fill", tint: LisaTheme.mint)
                     }
                     HStack(spacing: 24) {
                         LisaWordmark(size: 83).rotationEffect(.degrees(-5)).lisaFloat(amplitude: 5, tilt: 2, period: 4.5)
@@ -81,8 +86,8 @@ struct HomeView: View {
                     .frame(maxWidth: .infinity).padding(.top, 4).padding(.bottom, 5)
                     .scaleEffect(appeared ? 1 : 0.85)
                     VStack(spacing: 5) {
-                        Text("À vous de briller !").font(LisaTheme.heading(26)).foregroundStyle(LisaTheme.ink)
-                        Text("Des chiffres, des défis et plein de déclics.").font(LisaTheme.body(13)).foregroundStyle(LisaTheme.muted)
+                        Text(L10n.text("À vous de briller !")).font(LisaTheme.heading(26)).foregroundStyle(LisaTheme.ink)
+                        Text(L10n.text("Des chiffres, des défis et plein de déclics.")).font(LisaTheme.body(13)).foregroundStyle(LisaTheme.muted)
                     }
                     LisaCard {
                         VStack(spacing: 15) {
@@ -90,36 +95,36 @@ struct HomeView: View {
                                 MiniGrid().frame(width: 106, height: 106).rotationEffect(.degrees(-5)).lisaFloat(amplitude: 5, tilt: 4, period: 4.5).accessibilityHidden(true)
                                 VStack(alignment: .leading, spacing: 6) {
                                     if let session = store.session, !session.isComplete {
-                                        Text("Votre aventure\ncontinue").font(LisaTheme.heading(22))
+                                        Text(L10n.text("Votre aventure\ncontinue")).font(LisaTheme.heading(22))
                                         Text("\(session.puzzle.difficulty.label) · \(LisaStore.time(session.elapsedSeconds))").font(LisaTheme.body(13)).foregroundStyle(LisaTheme.muted)
                                     } else {
-                                        Text("Un nouveau\ndéfi vous attend").font(LisaTheme.heading(22))
-                                        Text("6 niveaux · À votre rythme").font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
+                                        Text(L10n.text("Un nouveau\ndéfi vous attend")).font(LisaTheme.heading(22))
+                                        Text(L10n.text("6 niveaux · À votre rythme")).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
                                     }
                                 }.frame(maxWidth: .infinity, alignment: .leading)
                             }
                             if let session = store.session, !session.isComplete {
-                                LisaButton(title: "Reprendre ma partie", icon: "play.fill") { store.showGame = true }
-                                Button("Nouvelle partie") { replaceAlert = true }.font(LisaTheme.heading(14)).foregroundStyle(LisaTheme.actionInk).padding(.top, 2)
+                                LisaButton(title: L10n.text("Reprendre ma partie"), icon: "play.fill") { store.showGame = true }
+                                Button(L10n.text("Nouvelle partie")) { replaceAlert = true }.font(LisaTheme.heading(14)).foregroundStyle(LisaTheme.actionInk).padding(.top, 2)
                             } else {
-                                LisaButton(title: "C’est parti !", icon: "play.fill") { difficultySheet = true }
+                                LisaButton(title: L10n.text("C’est parti !"), icon: "play.fill") { difficultySheet = true }
                             }
                         }
                     }
                     .offset(y: appeared ? 0 : 20)
                     HStack(spacing: 14) {
-                        shortcut(title: "Défi du jour", subtitle: store.completedDays.contains(LisaStore.dayKey(Date())) ? "Défi accompli !" : "Une étoile à décrocher", icon: "sun.max.fill", color: LisaTheme.yellow) { onRoute(1) }
-                        shortcut(title: "Voyage gourmand", subtitle: "\(min(store.eventWins, 25)) / 25 étapes", icon: "map.fill", color: LisaTheme.mint) { onRoute(2) }
+                        shortcut(title: L10n.text("Défi du jour"), subtitle: store.completedDays.contains(LisaStore.dayKey(Date())) ? L10n.text("Défi accompli !") : L10n.text("Une étoile à décrocher"), icon: "sun.max.fill", color: LisaTheme.yellow) { onRoute(1) }
+                        shortcut(title: L10n.text("Voyage gourmand"), subtitle: L10n.text("%@ / 25 étapes", String(describing: min(store.eventWins, 25))), icon: "map.fill", color: LisaTheme.mint) { onRoute(2) }
                     }
                     Button { learn = true } label: {
                         HStack(spacing: 12) {
                             Image(systemName: "lightbulb.fill").font(.system(size: 26, weight: .bold)).foregroundStyle(LisaTheme.actionInk)
-                            VStack(alignment: .leading, spacing: 4) { Text("Le déclic commence ici").font(LisaTheme.heading(16)); Text("Trois petits défis pour apprendre.").font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted) }
+                            VStack(alignment: .leading, spacing: 4) { Text(L10n.text("Le déclic commence ici")).font(LisaTheme.heading(16)); Text(L10n.text("Trois petits défis pour apprendre.")).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted) }
                             Spacer(minLength: 0)
                             Image(systemName: "chevron.right.circle.fill").font(.title2).foregroundStyle(LisaTheme.actionInk)
                         }.padding(17).background(LisaTheme.paper.opacity(0.9), in: RoundedRectangle(cornerRadius: 24)).overlay(RoundedRectangle(cornerRadius: 24).stroke(.white.opacity(0.7), lineWidth: 2))
                     }.buttonStyle(LisaPressStyle())
-                    Label("Sans pub. Tout le plaisir du jeu.", systemImage: "heart.fill").font(LisaTheme.body(11)).foregroundStyle(LisaTheme.muted).padding(.bottom, 12)
+                    Label(L10n.text("Sans pub. Tout le plaisir du jeu."), systemImage: "heart.fill").font(LisaTheme.body(11)).foregroundStyle(LisaTheme.muted).padding(.bottom, 12)
                 }.padding(.horizontal, 22).padding(.top, 5)
             }
         }
@@ -128,7 +133,7 @@ struct HomeView: View {
         .toolbarBackground(.hidden, for: .navigationBar)
         .sheet(isPresented: $difficultySheet) { DifficultyView().environment(\.lisaMotionAllowed, true) }
         .sheet(isPresented: $learn) { LearnView().environment(\.lisaMotionAllowed, true) }
-        .alert("Commencer une autre grille ?", isPresented: $replaceAlert) { Button("Garder ma partie", role: .cancel) {}; Button("Nouvelle partie", role: .destructive) { difficultySheet = true } } message: { Text("La partie en cours sera remplacée après le choix du niveau.") }
+        .alert(L10n.text("Commencer une autre grille ?"), isPresented: $replaceAlert) { Button(L10n.text("Garder ma partie"), role: .cancel) {}; Button(L10n.text("Nouvelle partie"), role: .destructive) { difficultySheet = true } } message: { Text(L10n.text("La partie en cours sera remplacée après le choix du niveau.")) }
     }
 
     private func shortcut(title: String, subtitle: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
@@ -163,19 +168,20 @@ struct MiniGrid: View {
 }
 
 struct DifficultyView: View {
+    @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     @EnvironmentObject private var store: LisaStore
     @Environment(\.dismiss) private var dismiss
-    private let descriptions = ["Une pause express", "Pour prendre confiance", "Le bon petit défi", "On passe à la vitesse supérieure", "Pour les esprits affûtés", "Toute votre concentration"]
+    private var descriptions: [String] { [L10n.text("Une pause express"), L10n.text("Pour prendre confiance"), L10n.text("Le bon petit défi"), L10n.text("On passe à la vitesse supérieure"), L10n.text("Pour les esprits affûtés"), L10n.text("Toute votre concentration")] }
     var body: some View {
         NavigationStack {
             ZStack { LisaBackground(); ScrollView { VStack(alignment: .leading, spacing: 14) {
-                Text("À chaque humeur,\nson défi.").font(LisaTheme.heading(31)).padding(.bottom, 12)
+                Text(L10n.text("À chaque humeur,\nson défi.")).font(LisaTheme.heading(31)).padding(.bottom, 12)
                 ForEach(Array(Difficulty.allCases.enumerated()), id: \.element.rawValue) { index, difficulty in
                     Button { dismiss(); store.start(difficulty) } label: {
                         HStack { VStack(alignment: .leading, spacing: 5) { Text(difficulty.label).font(LisaTheme.heading(20)); Text(descriptions[index]).font(LisaTheme.body(13)).foregroundStyle(LisaTheme.muted) }; Spacer(); HStack(spacing: 3) { ForEach(0..<6) { dot in Circle().fill(dot <= index ? LisaTheme.coral : LisaTheme.line).frame(width: 6, height: 6) } }; Image(systemName: "chevron.right").font(.caption).padding(.leading, 5) }.padding(19).background(CandySurface(tint: LisaTheme.paper, cornerRadius: 23, depth: 4)).contentShape(RoundedRectangle(cornerRadius: 23))
                     }.buttonStyle(LisaPressStyle())
                 }
-            }.padding(24) } }.navigationTitle("Nouvelle partie").navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Fermer") { dismiss() } } }
+            }.padding(24) } }.navigationTitle(L10n.text("Nouvelle partie")).navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button(L10n.text("Fermer")) { dismiss() } } }
         }
     }
 }

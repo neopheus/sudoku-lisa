@@ -6,7 +6,7 @@ final class LisaUITests: XCTestCase {
     private func launchFresh(metrics: Bool = false) -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--uitest-reset"]
+        app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
         if metrics { app.launchEnvironment["LISA_RENDER_METRICS"] = "1" }
         app.launch()
         XCTAssertTrue(app.tabBars.buttons["Jouer"].waitForExistence(timeout: 10))
@@ -22,6 +22,71 @@ final class LisaUITests: XCTestCase {
 
     private func button(_ title: String, in app: XCUIApplication) -> XCUIElement {
         app.buttons.containing(.staticText, identifier: title).firstMatch
+    }
+
+    func testPoulpiAnimationsRotationZoomAndAutoplay() {
+        let app = launchFresh()
+        app.tabBars.buttons["Poulpi"].tap()
+        let stage = app.otherElements["poulpiStage"]
+        XCTAssertTrue(stage.waitForExistence(timeout: 10))
+        app.buttons["poulpiAnimation-happy"].tap()
+        XCTAssertTrue((stage.value as? String)?.contains("Coucou") == true)
+        let before = stage.value as? String
+        stage.swipeLeft()
+        XCTAssertNotEqual(stage.value as? String, before)
+        app.buttons["Recentrer"].tap()
+        XCTAssertTrue((stage.value as? String)?.contains("rotation 0 degrés, zoom 100") == true)
+        attach(app, name: "Poulpi-accueil")
+        app.buttons["Rapprocher"].tap()
+        XCTAssertTrue((stage.value as? String)?.contains("zoom 114") == true || (stage.value as? String)?.contains("zoom 115") == true)
+        app.buttons["Recentrer"].tap()
+        let auto = app.buttons["poulpiAutoplay"]
+        auto.tap()
+        XCTAssertEqual(auto.value as? String, "Activé")
+        expectation(for: NSPredicate(format: "NOT (value BEGINSWITH %@)", "Coucou"), evaluatedWith: stage)
+        waitForExpectations(timeout: 8)
+        auto.tap()
+        XCTAssertEqual(auto.value as? String, "Désactivé")
+        let superhero = app.buttons["poulpiAnimation-superhero"]
+        for _ in 0..<6 {
+            if superhero.isHittable { break }
+            let list = app.scrollViews["poulpiAnimationList"]
+            let visible = list.frame.intersection(app.frame)
+            print("Poulpi list frame: \(list.frame), visible: \(visible)")
+            let start = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: visible.midX, dy: min(visible.maxY - 55, app.frame.maxY - 100)))
+            let end = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: visible.midX, dy: visible.minY + 20))
+            start.press(forDuration: 0.05, thenDragTo: end)
+        }
+        XCTAssertTrue(superhero.isHittable)
+        superhero.tap()
+        XCTAssertTrue((stage.value as? String)?.contains("Super Poulpi") == true)
+        attach(app, name: "Poulpi-interactif")
+        auto.tap()
+        app.tabBars.buttons["Jouer"].tap()
+        app.tabBars.buttons["Poulpi"].tap()
+        XCTAssertEqual(auto.value as? String, "Désactivé")
+    }
+
+    func testPoulpiManualCameraWithAnimationsDisabled() {
+        let app = launchFresh()
+        app.buttons["Réglages"].tap()
+        let decor = app.switches["decorToggle"]
+        XCTAssertTrue(decor.waitForExistence(timeout: 5))
+        if decor.value as? String == "1" { decor.coordinate(withNormalizedOffset: CGVector(dx: 0.9, dy: 0.5)).tap() }
+        XCTAssertEqual(decor.value as? String, "0")
+        app.buttons["Terminé"].tap()
+        app.tabBars.buttons["Poulpi"].tap()
+        let stage = app.otherElements["poulpiStage"]
+        XCTAssertTrue(stage.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["poulpiAutoplay"].isEnabled)
+        XCTAssertFalse(app.buttons["poulpiAnimation-happy"].isEnabled)
+        let before = stage.value as? String
+        stage.swipeRight()
+        XCTAssertNotEqual(stage.value as? String, before)
+        app.buttons["Rapprocher"].tap()
+        app.buttons["Recentrer"].tap()
+        XCTAssertTrue((stage.value as? String)?.contains("rotation 0 degrés, zoom 100") == true)
+        attach(app, name: "Poulpi-animations-désactivées")
     }
 
     func testPlayNotesUndoPauseAndResume() {
@@ -59,6 +124,9 @@ final class LisaUITests: XCTestCase {
         attach(app, name: "02-Partie")
         app.buttons["Mettre en pause"].tap()
         XCTAssertTrue(app.staticTexts["Votre grille vous attend."].waitForExistence(timeout: 5))
+        app.buttons["Réveiller doucement Poulpi"].tap()
+        XCTAssertTrue(app.staticTexts["Votre grille vous attend."].exists, "Playing with Poulpi must not resume the game")
+        attach(app, name: "Pause-animée")
         button("Reprendre", in: app).tap()
         XCTAssertFalse(app.staticTexts["Votre grille vous attend."].exists)
         app.buttons["Sauvegarder et revenir à l’accueil"].tap()
@@ -67,7 +135,7 @@ final class LisaUITests: XCTestCase {
 
         // Relaunch without resetting: prove persistence across process termination.
         app.terminate()
-        app.launchArguments = []
+        app.launchArguments = ["-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
         app.launch()
         XCTAssertTrue(resume.waitForExistence(timeout: 10))
         resume.tap()
@@ -195,7 +263,7 @@ final class LisaUITests: XCTestCase {
         attach(app, name: "07-Ambiance-réglages")
         app.buttons["Terminé"].tap()
         app.terminate()
-        app.launchArguments = []
+        app.launchArguments = ["-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
         app.launch()
         app.buttons["Réglages"].tap()
         XCTAssertTrue(music.waitForExistence(timeout: 5))

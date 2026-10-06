@@ -1,0 +1,68 @@
+{
+  "method": "Luminance gradients and Laplacian on two small patches; source bilinearly sampled onto the fixed CSS simulator pixel grid. These measure local high-frequency contrast, not texture identity, likeness or temporal stability.",
+  "referenceSHA256": "cbc2a89044f2f7d773094f2a4ca709ed50372f06545f60a5a474d5914c348878",
+  "regions": {
+    "forehead": {
+      "referenceXYXY": [
+        550,
+        165,
+        700,
+        285
+      ],
+      "captureXYXY": [
+        538,
+        1155,
+        638,
+        1235
+      ],
+      "passes": {
+        "reference": {
+          "gradientXStandardDeviation": 3.47425398872887,
+          "gradientYStandardDeviation": 3.094462902137744,
+          "laplacianStandardDeviation": 6.329103575840718
+        },
+        "74": {
+          "gradientXStandardDeviation": 1.5315688924494313,
+          "gradientYStandardDeviation": 1.4879652301252846,
+          "laplacianStandardDeviation": 2.5714354808148467
+        },
+        "75": {
+          "gradientXStandardDeviation": 3.160457445190186,
+          "gradientYStandardDeviation": 3.053477863351598,
+          "laplacianStandardDeviation": 5.0985258909654485
+        }
+      }
+    },
+    "mantle": {
+      "referenceXYXY": [
+        570,
+        715,
+        680,
+        800
+      ],
+      "captureXYXY": [
+        551,
+        1522,
+        625,
+        1579
+      ],
+      "passes": {
+        "reference": {
+          "gradientXStandardDeviation": 1.9246659087327243,
+          "gradientYStandardDeviation": 2.2554549823208494,
+          "laplacianStandardDeviation": 4.214707184463512
+        },
+        "74": {
+          "gradientXStandardDeviation": 2.8273131528833986,
+          "gradientYStandardDeviation": 3.352181240123593,
+          "laplacianStandardDeviation": 5.183640117328926
+        },
+        "75": {
+          "gradientXStandardDeviation": 2.0071097697392264,
+          "gradientYStandardDeviation": 2.369889400547928,
+          "laplacianStandardDeviation": 3.6802470949066697
+        }
+      }
+    }
+  }
+}

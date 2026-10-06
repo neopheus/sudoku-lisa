@@ -99,7 +99,7 @@ struct LisaMagicHalo: View {
     var color: Color = LisaTheme.yellow
     var strong = false
     var body: some View {
-        LisaMotionClock { time in
+        LisaMotionClock(fps: 60) { time in
             GeometryReader { geometry in
                 let size = min(geometry.size.width, geometry.size.height)
                 ZStack {
@@ -111,7 +111,7 @@ struct LisaMagicHalo: View {
                             .rotationEffect(.degrees(Double(index) * 30 + time.truncatingRemainder(dividingBy: 60) * 6))
                     }
                     ForEach(0..<5, id: \.self) { index in
-                        let angle = Double(index) * .pi * 0.4 + time * 0.22
+                        let angle = Double(index) * .pi * 0.4 + time * (strong ? 0.65 : 0.35)
                         Image(systemName: index.isMultiple(of: 2) ? "star.fill" : "sparkle")
                             .font(.system(size: strong ? 19 : 13, weight: .bold))
                             .foregroundStyle(index.isMultiple(of: 2) ? color : .white)
@@ -205,4 +205,48 @@ struct LisaSweet: View {
                 .shadow(color: color.opacity(0.25), radius: 4, y: 5)
         }
     }
+}
+
+/// Reusable vector geometry: no SF Symbol/text layout in per-particle frame loops.
+enum LisaFXGeometry {
+    static let star: Path = {
+        var path = Path()
+        for index in 0..<10 {
+            let angle = Double(index) * .pi / 5 - .pi / 2
+            let radius = index.isMultiple(of: 2) ? 1.0 : 0.43
+            let point = CGPoint(x: cos(angle) * radius, y: sin(angle) * radius)
+            if index == 0 { path.move(to: point) } else { path.addLine(to: point) }
+        }
+        path.closeSubpath()
+        return path
+    }()
+
+    static func spark(in context: GraphicsContext, at point: CGPoint, radius: Double,
+                      rotation: Double = 0, color: Color) {
+        var particle = context
+        particle.translateBy(x: point.x, y: point.y)
+        particle.rotate(by: .radians(rotation))
+        particle.scaleBy(x: radius, y: radius)
+        particle.fill(star, with: .color(color))
+    }
+}
+
+/// One finite entrance per appearance, with no idle timer for cards or screens.
+private struct LisaEntrance: ViewModifier {
+    @EnvironmentObject private var store: LisaStore
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.lisaMotionAllowed) private var allowed
+    @State private var appeared = false
+    private var animated: Bool { allowed && store.settings.animatedDecor && !reduceMotion }
+    func body(content: Content) -> some View {
+        content
+            .opacity(appeared || !animated ? 1 : 0)
+            .offset(y: appeared || !animated ? 0 : 12)
+            .scaleEffect(appeared || !animated ? 1 : 0.98)
+            .onAppear { withAnimation(animated ? .spring(response: 0.45, dampingFraction: 0.8) : nil) { appeared = true } }
+            .onDisappear { appeared = false }
+    }
+}
+extension View {
+    func lisaAppear() -> some View { modifier(LisaEntrance()) }
 }

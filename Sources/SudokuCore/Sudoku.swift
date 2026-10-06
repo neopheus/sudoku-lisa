@@ -5,12 +5,12 @@ public enum Difficulty: String, CaseIterable, Codable, Sendable, Identifiable {
     public var id: String { rawValue }
     public var label: String {
         switch self {
-        case .quick: return "Express"
-        case .easy: return "Facile"
-        case .medium: return "Moyen"
-        case .hard: return "Difficile"
-        case .expert: return "Expert"
-        case .master: return "Maître"
+        case .quick: return L10n.text("Express")
+        case .easy: return L10n.text("Facile")
+        case .medium: return L10n.text("Moyen")
+        case .hard: return L10n.text("Difficile")
+        case .expert: return L10n.text("Expert")
+        case .master: return L10n.text("Maître")
         }
     }
     public var targetClues: Int {

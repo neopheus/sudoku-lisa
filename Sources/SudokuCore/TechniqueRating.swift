@@ -8,11 +8,11 @@ public enum HumanTechniqueRating: Int, Codable, Sendable, CaseIterable, Comparab
     public static func < (lhs: Self, rhs: Self) -> Bool { lhs.rawValue < rhs.rawValue }
     public var label: String {
         switch self {
-        case .nakedSingles: return "Candidats uniques"
-        case .hiddenSingles: return "Positions uniques"
-        case .lockedCandidates: return "Candidats verrouillés"
-        case .nakedPairs: return "Paires nues"
-        case .searchRequired: return "Techniques avancées"
+        case .nakedSingles: return L10n.text("Candidats uniques")
+        case .hiddenSingles: return L10n.text("Positions uniques")
+        case .lockedCandidates: return L10n.text("Candidats verrouillés")
+        case .nakedPairs: return L10n.text("Paires nues")
+        case .searchRequired: return L10n.text("Techniques avancées")
         }
     }
 }

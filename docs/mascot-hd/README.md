@@ -1,6 +1,6 @@
 # Diagnostic de définition et de cadence
 
-État courant : passe 62, visible dans `comparaison-reference-hd.html`. Les sections ci-dessous conservent l’historique ; les derniers contrôles sont en fin de document. La ressemblance exacte reste non atteinte.
+État courant : passe 99, visible dans `comparaison-reference-hd.html`. Les sections ci-dessous conservent l’historique ; les derniers contrôles sont en fin de document. La ressemblance exacte reste non atteinte.
 
 La planche `/pet` comporte des cellules de 192 × 208 px. Les séquences utilisent 4 à 8 poses (hors regards), espacées de 120 à 280 ms. Le générateur source retrouvé dans `work/poulpi/assemble.py` a produit une image de 1027 × 1531 ensuite redimensionnée : il ne contient pas de poses HD cachées.
 
@@ -173,3 +173,149 @@ Validation de 54 : builds Debug simulateur et Release iOS réussis. Aperçu anim
 ## Passe 62 — profondeur des boucles latérales
 
 Les deux bras latéraux sont abaissés et leurs pointes avancées pour les rendre visibles. Plusieurs trajectoires provoquant des contacts sont rejetées par le contrôle topologique. La version retenue est fermée, connexe, Euler 2 et passe les 97 poses. Les rangées latérales comportent quatre ventouses orientées vers le dessous extérieur, soit 40 pour le personnage. Le journal détaille les essais 55 à 62. Les boucles restent moins creusées que celles de la référence ; l'identité visuelle n'est pas atteinte.
+
+Validation de 62 : Debug simulateur et Release iOS compilent. Rotation de contrôle de 46,87 s, réencodée pour la revue, inspection de profil effectuée ; cet enregistrement ne mesure pas les FPS. Mesure indépendante sur simulateur iPhone 16 iOS 18.5 : 33 fenêtres, SceneKit min/médiane/max 57,5/60/60 FPS, cadence principale 60/60/60,1 FPS (`rig-loop62-performance.json`). Aucune garantie pour un appareil physique ou le jeu complet.
+
+
+## Passe 66 — contour oculaire et occlusion des iris
+
+Blancs moins larges et moins hauts, inclinaison corrigée, iris recalés. Un défaut de traversée à mi-fermeture introduit en 64 est corrigé en 65 ; le pli de fermeture est recalé en 66 avec une profondeur commune. Les diagnostics locaux sont conservés dans `eye-outline-loop66.json` et `lid-clearance-loop66.json`. Les captures à mi-course et fermées complètent ces calculs sans constituer une preuve exhaustive.
+
+Debug/Release passent. Sur 36 fenêtres indépendantes de capture/compilation, médiane 60 FPS, minimum SceneKit 59,5 (`rig-loop66-performance.json`), sur simulateur uniquement. Le comparatif affiche 66 et continue d'indiquer les différences restantes ; les vidéos de 62 et 39 sont historiques.
+
+
+## Passe 71 — relief orbital et filet sombre
+
+Après deux essais diagnostiques (ombre seule, contour seul), le relief orbital de la peau est adouci. Le contour oculaire est assombri, affiné et aligné verticalement avec le blanc. L'essai d'enfoncement 72 est rejeté car il masque les blancs près des iris ; la version courante reste 71. Le rig reconstruit passe 97 poses, fermé, connexe, Euler 2. Les différences de modelé et de matière restent explicites dans le comparatif et le journal.
+
+Validation finale de 71 : builds Debug simulateur et Release iOS réussis après restauration du code retenu. Mesure indépendante sur iPhone 16 simulateur iOS 18.5, 38 fenêtres, minimum/médiane/maximum à 60 FPS pour SceneKit et la cadence principale (`rig-loop71-performance.json`). Pas de garantie pour un appareil physique ou le jeu complet. `git diff --check` passe.
+
+
+## Passes 73–74 — ombres des blancs
+
+**73, intermédiaire** : ajout d'une ombre douce selon la profondeur locale de la surface ivoire. Le haut des yeux gagne du volume, mais l'ombre assombrit trop leur partie basse, déjà trop foncée. La géométrie ne change pas.
+
+**74** : l'ombre est limitée au haut et aux côtés par un fondu vertical. Un faible remplissage des ombres inférieures, proportionnel à la quatrième puissance de la courbe de rebond existante, préserve la clarté du centre. Six médianes RGB 5 × 5 près des bords donnent un écart moyen de 13,28 en 71, 11,39 en 73 et 4,72 en 74. Coordonnées, couleurs, empreintes et limites dans `eye-rim-colour-loop74.json` : ce diagnostic local n'est pas une mesure de ressemblance globale. Le côté droit reste trop froid et son ombre basse encore trop sombre.
+
+Debug et Release passent. Sur 36 fenêtres indépendantes de compilation/capture dans l'aperçu animé du simulateur iPhone 16 iOS 18.5, SceneKit minimum/médiane/maximum 59,5/60/60 FPS, cadence principale 60/60/60 (`rig-loop74-performance.json`). Aucun résultat sur appareil physique ou jeu complet n'en est déduit. Géométrie, rig, iris et paupières inchangés : les validations géométriques et de clignement précédentes restent datées de leurs passes respectives.
+
+Le comparatif affiche 74. Restent notamment le modelé du raccord oculaire, les sourcils, la texture de peau, les boucles et la matière des ventouses. L'identité visuelle n'est pas atteinte.
+
+
+## Passe 75 — grain de peau selon la zone
+
+Le diagnostic à échelle égale montre deux écarts opposés : le front est trop uniforme, le manteau trop contrasté. Le grain de peau reçoit une intensité variant doucement de 0,70 en bas à 2,10 sur le haut de la tête. La même intensité pilote les deux échelles de couleur et le relief des normales ; les fréquences et le filtrage par dérivées restent inchangés. Les sourcils conservent leur intensité précédente grâce au paramètre de la fonction de shader partagée. Il n'y a pas de texture supplémentaire ni de géométrie reconstruite pendant l'animation.
+
+`skin-grain-loop75.json` compare deux petites régions à la résolution de capture, avec rééchantillonnage bilinéaire de la référence. Sur le front, les écarts-types des gradients X/Y passent de 1,53/1,49 à 3,16/3,05, contre 3,47/3,09 dans la référence. Sur le manteau, 2,83/3,35 deviennent 2,01/2,37, contre 1,92/2,26. Le contraste haute fréquence est donc rapproché dans ces zones, sans démontrer une identité de motif, de personnage ou une stabilité temporelle exhaustive.
+
+La géométrie et les trajectoires restent celles validées précédemment. Les couleurs globales, le raccord oculaire, les sourcils, les boucles et la matière des ventouses restent différents. L'identité visuelle n'est pas atteinte.
+
+
+## Passe 76 — correction du clignement entre les poses
+
+Le cycle enregistré en 75 révèle un débordement de l'iris dans une paupière partiellement fermée, visible notamment vers 9 secondes. Les contrôles fixes de 65–66 et leur diagnostic analytique ne couvraient pas cette interpolation : ils ne prouvaient donc pas l'absence de ce défaut en mouvement. L'enregistrement 75 est conservé comme preuve historique, pas présenté comme une animation sans défaut.
+
+Les cibles de morphing passent de 4 à 16, espacées de π/16 plutôt que π/4. Le calcul des poids dépend du nombre de cibles et ne conserve que deux poids voisins non nuls. Les formes sont précalculées et mises en cache ; aucune géométrie n'est reconstruite par image. Les intervalles plus petits limitent l'aplatissement de la surface interpolée entre deux formes courbes.
+
+Le mode Debug `--octopus-eyelids-intermediate` fixe la fermeture à 0,625 pour inspecter cette zone. La capture `poulpi-loop76-paupieres-intermediaires.png` ne montre pas le débordement. Le grain de 75, la sculpture et les autres animations sont conservés. La capture statique 76 reste comparable aux précédentes. Le comparatif affiche désormais 76 et son nouveau cycle animé ; l'identité visuelle avec la référence reste non atteinte.
+
+
+Validation de 76 : Debug et Release passent. Le nouvel enregistrement dure 174,51 s ; les images contrôlées à 4,70 s et 8,68 s ne montrent pas le débordement observé en 75. Une extraction est conservée dans `poulpi-loop76-clignement-video.png`. Cette inspection échantillonnée ne prétend pas couvrir chaque image. L'enregistrement, réencodé pour la revue, n'est pas une mesure de FPS.
+
+Mesure indépendante après l'encodage : 35 fenêtres sur iPhone 16 simulateur iOS 18.5, SceneKit min/médiane/max 59,5/60/60 FPS, cadence principale 59,7/60/60 (`rig-loop76-performance.json`). Pas de garantie sur appareil physique ou jeu complet. `git diff --check` passe. Le diagnostic de grain de 75 s'applique à la matière inchangée de 76 ; le clignement seul est repris dans cette dernière passe.
+
+
+## Passes 77 à 80 — forme et matière des sourcils
+
+**77** : rayon variable le long du sourcil, avec une pointe extérieure plus fine et un bout intérieur plus plein. Le générateur de tube accepte un profil optionnel ; les plis de paupières gardent le profil constant précédent. Les normales sont recalculées sur la surface obtenue. Le premier effilement est un peu trop pointu.
+
+**78** : courbure de la ligne centrale réduite de 0,020 à 0,008 et inclinaison au repos 0,28 → 0,34 radian. Initialisation, réinitialisation et animation partagent cette base corrigée.
+
+**79** : matériau plus profond, RGB 0,29/0,28/0,72 → 0,24/0,20/0,64, rugosité inchangée. La teinte reste calculée par l'éclairage du volume, avec le grain partagé existant.
+
+**80** : les extrémités extérieures retrouvent un peu de volume. Le profil varie doucement de 0,75 à 1,15 fois le rayon 0,046, au lieu de 0,55 à 1,15. Les caps restent arrondis selon la distance le long de la courbe. Aucun sommet supplémentaire ni calcul géométrique par image : le profil est évalué à la construction seulement.
+
+Le comparatif affiche 80 et conserve 77–79. L'appréciation de ce rapprochement est visuelle, sans score automatique de ressemblance attribué aux sourcils. Leur raccord au front reste moins doux que la référence. Les yeux, le corps, les ventouses et le clignement conservent les versions précédentes.
+
+Debug et Release passent. Sur 39 fenêtres indépendantes de compilation/capture, dans l'aperçu animé du simulateur iPhone 16 iOS 18.5 : SceneKit min/médiane/max 59,5/60/60 FPS, cadence principale 59,8/60/60 (`rig-loop80-performance.json`). Pas de garantie pour un appareil physique ou le jeu complet. Les validations géométriques et vidéos précédentes restent historiques. Identité visuelle non atteinte.
+
+
+## Passes 81–82 — ventouses
+
+Matière plus crème, rugosité accrue et dépression centrale moins profonde, sans changement du nombre de sommets ni de leur implantation. Debug, Release et validation géométrique sur 97 poses passent. Comparatif et journal actualisés ; l’orientation des coussinets et les boucles des bras restent différents de la référence.
+
+Mesure indépendante de compilation et de capture : 42 fenêtres sur iPhone 16 simulateur iOS 18.5, aperçu animé Debug. SceneKit et cadence principale : minimum/médiane/maximum 60/60/60 FPS (`rig-loop82-performance.json`). Aucun résultat sur appareil physique ou jeu complet n’en est déduit. Les vidéos de 62 et 76 restent historiques et ne représentent pas les ventouses de 82.
+
+
+## Passe 83 — largeur des ventouses aux pointes avant
+
+Le profil transversal est réduit progressivement jusqu’à 22 % entre t=0,78 et t=0,885 sur les deux bras avant. Le fondu utilise la même interpolation douce que leur allongement existant. La longueur, le centre, les points d’attache, les poids et le nombre de sommets restent inchangés ; les normales tiennent compte de cette échelle anisotrope. La forme est calculée hors ligne.
+
+Le comparatif montre des coussinets plus ovales. Leur orientation reste différente de la référence, comme la courbure des bras qui les portent ; cette passe ne corrige pas ces autres écarts. La capture 83 remplace 82 par défaut, les deux restant accessibles. L’identité visuelle n’est pas atteinte.
+
+Le contrôle sur 97 poses passe : peau fermée et connexe (Euler 2), 40 ouvertures de base des ventouses, aucun triangle dégénéré ; aire double minimale des triangles de ventouses 0,00013946. L’étirement maximal reste 1,015 pour les ventouses et 1,839 pour la peau. La mesure FPS de 82 est historique : elle n’est pas présentée comme une mesure de 83.
+
+Validation de 83 : builds Debug simulateur et Release iOS réussis ; `git diff --check` passe.
+
+
+## Passes 85–89 — ouverture centrale des bras avant
+
+**85** : retour du point supérieur à x=0,25, point inférieur x=0,32 → 0,30. L’ouverture se resserre, mais son sommet reste trop bas.
+
+**86–88, intermédiaires** : réduction du lissage de l’union des bras avant au centre, sous le manteau. Le masque transversal est exp(−(x/0,15)⁴), le masque vertical progresse de y=−0,22 à −0,40. Les intensités 0,50 et 0,34 ouvrent trop haut ; 0,15 ouvre plus bas que la référence. Ces captures sont conservées pour documenter le réglage.
+
+**89, retenue** : intensité 0,23. Le raccord conserve son lissage hors de cette petite zone. L’ouverture centrale est visuellement plus proche en largeur et en hauteur ; ses ombres et sa courbure ne sont pas identiques. Les boucles latérales, les ouvertures des bras relevés et les matières restent différentes. Aucun calcul de sculpture n’est ajouté pendant l’animation.
+
+La validation sur 97 poses passe, ainsi que les builds Debug simulateur et Release iOS. Le contrôle du maillage ne constitue pas une preuve exhaustive d’absence d’auto-intersection. L’identité visuelle n’est pas atteinte.
+
+Le cycle animé de 89 dure 43,02 s. Les poses inspectées à 4, 12 et 20 s conservent une séparation centrale et des bras relevés distincts du visage. Cette inspection est échantillonnée, pas une validation exhaustive de toutes les images. Le cycle est disponible dans le comparatif ; la vidéo réencodée ne sert pas à mesurer les FPS.
+
+Mesure indépendante : 35 fenêtres sur iPhone 16 simulateur iOS 18.5, aperçu animé Debug. SceneKit et cadence principale donnent minimum/médiane/maximum 60/60/60 FPS (`rig-loop89-performance.json`). Cela ne mesure ni un appareil physique ni le jeu complet. `git diff --check` passe.
+
+
+## Passes 90–91 — reflets de peau
+
+**90, intermédiaire** : rugosité de la peau 0,82 → 0,62. Les volumes des bras sont plus visibles mais des reflets trop brillants apparaissent près des raccords.
+
+**91, retenue** : rugosité 0,70. Le modelé conserve des reflets plus doux. Le changement ne touche que cette constante du matériau : ni lumière supplémentaire, ni géométrie, texture ou calcul par image ajouté. La comparaison est visuelle ; aucun score global de ressemblance n’est attribué à cette passe.
+
+La vue entière montre encore des boucles latérales trop rondes, des ventouses relevées trop frontales et un relief violet au-dessus des yeux moins marqué que la référence. Les couleurs, les ombres et certains raccords restent différents. L’identité visuelle n’est pas atteinte.
+
+Debug et Release passent. La géométrie conserve la validation de 89 ; sa vidéo et ses mesures FPS restent datées de 89 et ne sont pas présentées comme des mesures de 91.
+
+
+## Passes 92–93 — relief supérieur des yeux
+
+**92, intermédiaire** : amplitude du relief orbital sculpté 0,022 → 0,032. Une teinte violette est ajoutée sur le haut de ce relief. La première largeur de masque (0,24) et sa couleur RGB 0,40/0,25/0,85, mélangée à 65 %, produisent un halo trop clair et trop large.
+
+La compilation partagée a temporairement échoué sur des appels `L10n` pendant un chantier parallèle de traduction. La capture 92 provient d’une copie dans `/tmp/lisa-mascot92-preview`, avec les mêmes fichiers de rendu et de mascotte, mais deux fichiers SudokuCore pris dans HEAD et un adaptateur de chaînes exclusivement dans cette copie. Elle sert au diagnostic visuel, pas à valider le projet partagé. Aucun fichier du chantier de traduction n’a été corrigé ou restauré par cette passe.
+
+**93, retenue** : masque de pigment réduit à 0,12, teinte RGB 0,25/0,15/0,65 mélangée à 45 %. Le halo est atténué. La capture 93 et la pose de paupières intermédiaire proviennent du projet partagé, dont Debug et Release passent après l’apparition des fichiers de traduction. La pose intermédiaire à 0,625 ne montre pas de débordement de l’iris ; ce contrôle fixe ne prouve pas chaque interpolation en mouvement.
+
+Le maillage reconstruit est validé sur 97 poses : 48 030 sommets / 96 056 triangles de peau, peau fermée et connexe, Euler 2, étirement maximal 1,891, marge minimale des bras relevés à la tête 0,251. Les ventouses restent à 5 800 sommets / 10 560 triangles. Les mesures FPS et la vidéo de 89 restent historiques ; aucune nouvelle cadence n’est attribuée à 93.
+
+Le bourrelet reste moins sculpté que dans la référence. Les paupières ont une matière plus uniforme et plus violette que la peau ; les boucles, l’orientation des ventouses et les ombres restent à rapprocher. L’identité visuelle n’est pas atteinte.
+
+
+## Passes 94–95 — matière des paupières
+
+**94, intermédiaire** : teinte diffuse RGB 0,41/0,25/0,80 → 0,30/0,23/0,70, rugosité 0,72 → 0,70. Le matériau partagé par les deux paupières reçoit le même grain filtré par dérivées que les petites surfaces du visage. L’intensité 1,25 paraît trop forte en fermeture complète. Les captures intermédiaire et fermée sont conservées.
+
+**95, retenue** : intensité du grain réduite à 0,65. La fermeture complète est visuellement moins rose et moins lisse que 93, avec un grain plus discret que 94. La forme des paupières, leurs 16 cibles de morphing et le pli de fermeture restent inchangés. Le changement se voit pendant le clignement ; la pose ouverte du comparatif conserve presque le même aspect que 93. Aucun sommet ni texture supplémentaire n’est ajouté ; le shader de grain est désormais évalué sur les deux petites surfaces des paupières également.
+
+Debug et Release passent. Les poses inspectées ne montrent pas de débordement des iris, mais ne constituent pas un contrôle exhaustif de toutes les images animées. La géométrie garde la validation de 92–93. Le raccord des paupières, les boucles latérales, les ventouses et le modelé restent différents de la référence ; identité visuelle non atteinte.
+
+Mesure de 95 après compilation et captures : 39 fenêtres dans l’aperçu animé Debug du simulateur iPhone 16 iOS 18.5. SceneKit min/médiane/max 59,5/60/60 FPS ; cadence principale 59,9/60/60 (`rig-loop95-performance.json`). Aucune garantie pour les appareils physiques ou le jeu complet. `git diff --check` passe.
+
+
+## Passes 97–99 — pointes latérales et contrôle des connexions
+
+**97, rejetée** : pointe à (0,91; −0,43; 1,08), avant facteur x de 0,90. La séparation accrue en profondeur ne résout pas la liaison supplémentaire (Euler 0).
+
+**98, rejetée** : réduction locale du lissage jusqu’à 65 % sur les parties extérieures et avancées des bras latéraux. Euler reste 0. Un diagnostic par étapes observe la liaison après le remeshing et avant la décimation finale ; il ne localise pas précisément la liaison et ne prouve pas la cause exacte. Cette réduction du lissage est retirée. Aucune capture 97 ou 98 n’est publiée.
+
+**99, retenue** : pointe à (0,97; −0,47; 0,96), contre (1,00; −0,52; 0,88) en 95, avant facteur x de 0,90. Les pointes sont un peu plus relevées et tournées vers le centre. Le nouveau zoom « Bras latéraux — côté gauche » montre mieux la limite restante : la référence a un crochet creusé, le modèle une extrémité encore trop frontale et bombée. Le déplacement est une étape, pas une restitution identique.
+
+La validation passe sur 97 poses : peau fermée et connexe, Euler 2, 48 478 sommets / 96 952 triangles, étirement maximal 1,892, marge minimale des bras relevés à la tête 0,251. Ventouses : 5 800 sommets / 10 560 triangles, étirement maximal 1,015. Debug et Release passent. Ce contrôle géométrique n’exclut pas toute collision pendant toute animation possible.
+
+Mesure de 99 : 35 fenêtres dans l’aperçu animé Debug, iPhone 16 simulateur iOS 18.5, après compilation et captures. SceneKit min/médiane/max 59,5/60/60 FPS, cadence principale 60/60/60 (`rig-loop99-performance.json`). Pas de garantie pour les appareils physiques ou une partie complète. Les vidéos antérieures restent historiques. `git diff --check` passe.

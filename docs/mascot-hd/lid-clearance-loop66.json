@@ -1,0 +1,29 @@
+{
+  "method": "Analytic iris and eyelid surfaces sampled at 97 gaze phases, 19 radial positions, 65 angles, both eyes. Only covered upper points y>0.003 with valid lid projection. This diagnostic excludes triangulation, morph interpolation and rasterization; actual captures supplement it.",
+  "gazeAmplitudeXY": [
+    0.014,
+    0.009
+  ],
+  "irisRadius": 0.125,
+  "irisVerticalRatio": 1.3,
+  "lidDepthTrials": [
+    {
+      "depth": 0.1,
+      "minimumSampledDepthClearance": -0.0005708961909860338
+    },
+    {
+      "depth": 0.112,
+      "minimumSampledDepthClearance": 0.0024151581405358336
+    },
+    {
+      "depth": 0.12,
+      "minimumSampledDepthClearance": 0.004283397856008821
+    }
+  ],
+  "selectedDepth": 0.112,
+  "rigSourceSHA256": "37cd8502fb89711e99018a89fbe115739e2c642832adb12483b4da953afebeea",
+  "visualChecks": [
+    "poulpi-loop65-paupieres-mi-course.png",
+    "poulpi-loop66-paupieres-fermees.png"
+  ]
+}
