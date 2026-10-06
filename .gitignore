@@ -9,3 +9,11 @@ build-device/
 *.xcresult/
 
 build-small/
+
+# Captures de contrôle trop lourdes pour GitHub (limite 100 Mo)
+docs/screenshots/poulpi-boucle-12-360.mp4
+docs/screenshots/poulpi-boucle-27-cycle.mp4
+docs/screenshots/poulpi-boucle-27-360.mp4
+docs/screenshots/poulpi-boucle-39-360.mp4
+docs/screenshots/poulpi-boucle-39-cycle.mp4
+docs/screenshots/poulpi-boucle-44-360.mp4
