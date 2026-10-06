@@ -1,0 +1,6 @@
+docs/screenshots/poulpi-boucle-12-360.mp4 filter=lfs diff=lfs merge=lfs -text
+docs/screenshots/poulpi-boucle-27-cycle.mp4 filter=lfs diff=lfs merge=lfs -text
+docs/screenshots/poulpi-boucle-27-360.mp4 filter=lfs diff=lfs merge=lfs -text
+docs/screenshots/poulpi-boucle-39-360.mp4 filter=lfs diff=lfs merge=lfs -text
+docs/screenshots/poulpi-boucle-39-cycle.mp4 filter=lfs diff=lfs merge=lfs -text
+docs/screenshots/poulpi-boucle-44-360.mp4 filter=lfs diff=lfs merge=lfs -text
