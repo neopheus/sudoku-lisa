@@ -1,3 +1,22 @@
+# Mise à jour du brouillon — build 5
+
+Le 7 octobre 2026, le brouillon iPhone enregistre **Interface sombre** et **Animations réduites**. Le thème Nuit dispose désormais des surfaces et encres adaptatives ; le parcours réglages → partie → indice est testé. [Preuve du brouillon](accessibility-proof/asc-build5-draft.png).
+
+La publication reste bloquée par Apple tant qu'une version n'est pas disponible dans l'App Store. Les autres capacités ne sont pas cochées par anticipation. Le texte maximal est désormais testé sur iPhone 16 et SE simulés ; cela ne suffit pas à certifier tous les contenus à 200 %, notamment les chiffres géométriques internes à la grille. Les essais vocaux, VoiceOver et clavier/braille réels restent à effectuer sur iPhone.
+
+## Contrôle physique restant
+
+Sur le build 5 installé depuis TestFlight :
+1. Activer VoiceOver dans Réglages iOS → Accessibilité. Reprendre une partie, trouver une case par ligne/colonne, saisir une valeur, des notes puis effacer/annuler. Vérifier les annonces et le retour du focus.
+2. Ouvrir un indice, parcourir ses étapes, ouvrir le tutoriel associé et revenir au jeu. Tester pause/reprise, annulation d'une génération, victoire et grille suivante.
+3. Activer Contrôle vocal. Utiliser les noms des cases/chiffres et les numéros superposés pour jouer, ouvrir/fermer les panneaux et incliner/zoomer Poulpi sans glissement tactile.
+4. Avec un clavier et l'Accès complet au clavier, vérifier Tab/Maj-Tab, activation des boutons et absence de piège de focus. Avec une plage braille, vérifier coordonnées, valeurs, notes et erreurs.
+5. Refaire les étapes utiles au texte maximal, en Nuit, avec Différencier sans couleur et Réduire les animations. Consigner modèle, iOS, langue, étape et résultat avant de compléter les déclarations ASC.
+
+Aucun appareil physique connecté n'était disponible durant la livraison. Les tests XCUI tactiles ne sont pas présentés comme ces essais physiques.
+
+---
+
 # Accessibilité — déclaration App Store
 
 Déclaration contrôlée le 7 octobre 2026 pour la version 1.0 (build 4). Les corrections locales ultérieures sont détaillées dans [accessibility-implementation.md](accessibility-implementation.md) et ne sont pas encore dans ce build TestFlight. La déclaration concerne l’iPhone. Elle ne constitue pas une certification de toutes les fonctions d’accessibilité.

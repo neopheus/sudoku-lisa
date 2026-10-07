@@ -75,3 +75,12 @@ La seconde commande Xcode **envoie le build à Apple**. Créer auparavant la fic
 - Envoi accepté le 7 octobre à 09 h 16 (Europe/Paris) : `Upload succeeded` et `EXPORT SUCCEEDED`. Journal : `/tmp/lisa-release-20261007-b4-upload.log`.
 - Traitement Apple terminé ; notes de test enregistrées. Build associé aux groupes **Lisa — Interne**, **Lisa — Externe** et **Liens à partager**, puis soumis à la vérification TestFlight. État final observé : **En cours de test** pour le build 4, trois groupes associés. Installation physique de ce build non vérifiée.
 - [Fiche du build 4](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/7533ad90-5ebb-4858-9bae-914d815d0dcd) · [preuve](screenshots/testflight-build-4.jpg).
+
+## Livraison 1.0 (5) — 7 octobre 2026
+
+- Sources : commit `ff3b794`. Accessibilité, disposition compacte au texte maximal, détail agrandi de case, focus de préparation, repères sans couleur, commandes accessibles de Poulpi et adaptations des surfaces. Inclut les ajustements de calcul et de rendu documentés dans `docs/performance-energy-2026-10-07.md`. Aucun push Git.
+- Validation : 55 tests moteur (78,419 s), 23 tests applicatifs ; parcours de jeu au texte maximal réussi sur simulateur iPhone SE (27,291 s), en complément de l'iPhone 16. Les rapports et limites figurent dans `docs/app-store/accessibility-implementation.md`.
+- Archive Release signée : `/tmp/lisa-release-20261007-b5.xcarchive`, `codesign --verify --deep --strict` réussi ; app et extension en 1.0 (5). Bundle local : 20 266 759 octets, distinct de la taille TestFlight.
+- Manifeste technique complété pour UserDefaults (`CA92.1`), utilisé par les préférences locales de langue ; fichier validé et présent dans l'archive. Référence : [Apple TN3183](https://developer.apple.com/documentation/technotes/tn3183-adding-required-reason-api-entries-to-your-privacy-manifest).
+- Envoi accepté à 14 h 39 (Europe/Paris) : `Upload succeeded` et `EXPORT SUCCEEDED`, log `/tmp/lisa-release-20261007-b5-upload.log`. App Store Connect affiche ensuite le build 5 en cours de traitement.
+- Brouillon accessibilité : **Interface sombre** et **Animations réduites**, sauvegardés. Publication de ces étiquettes indisponible tant que l'app n'est pas publique. Aucun appareil physique connecté ; parcours réels VoiceOver/vocal/clavier/braille et installation physique non validés.
