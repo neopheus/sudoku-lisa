@@ -334,7 +334,7 @@
 "Techniques avancées" = "Técnicas avanzadas";
 "Langue de l’iPhone" = "Idioma del iPhone";
 
-"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Mira la zona resaltada y busca las posibilidades que quedan.";
+"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Mira las casillas con borde discontinuo y busca las posibilidades que quedan.";
 "Les chiffres présents sur la ligne, la colonne et le bloc éliminent toutes les possibilités sauf une." = "Los números de su fila, columna y bloque descartan todas las posibilidades menos una.";
 "Dans la zone colorée, ce chiffre ne peut aller que dans une case. Les autres emplacements sont bloqués par leur ligne, colonne ou bloc." = "En la zona resaltada, este número solo cabe en una casilla. Su fila, columna o bloque descartan las demás.";
 "Dans le bloc coloré, ce chiffre reste sur une seule ligne ou colonne : élimine-le des autres cases de cette ligne ou colonne." = "En el bloque resaltado, este número solo puede estar en una fila o columna. Elimínalo de las demás casillas de esa fila o columna.";
@@ -460,3 +460,26 @@
 "Reprendre l’événement de %@" = "Retomar el evento de %@";
 "Une courte pause · %@" = "Una pausa breve · %@";
 "Voyage · étape %@" = "Viaje · etapa %@";
+
+"Verrouiller ce chiffre" = "Fijar este número";
+"Case %@ %@" = "Casilla %@ %@";
+"Sélectionnée" = "Seleccionada";
+", doublon" = ", duplicado";
+", case de l’indice" = ", casilla de la pista";
+"Tourner à gauche" = "Girar a la izquierda";
+"Tourner à droite" = "Girar a la derecha";
+"Pointillés : cases à comparer. Double bord : case à résoudre. Bord épais : sélection. Chiffres barrés : candidats retirés." = "Borde discontinuo: casillas a comparar. Borde doble: casilla a resolver. Borde grueso: selección. Números tachados: candidatos eliminados.";
+"Regarde les cases en pointillés. %@" = "Mira las casillas con borde discontinuo. %@";
+"Les cases en pointillés montrent la zone à comparer. Affiche la déduction pour voir le résultat." = "Las casillas con borde discontinuo muestran la zona a comparar. Muestra la deducción para ver el resultado.";
+"Cette technique ne permet pas de retirer ce candidat ici. Compare les positions du chiffre et les candidats des cases en pointillés." = "Esta técnica no permite eliminar ese candidato aquí. Compara las posiciones del número y los candidatos de las casillas con borde discontinuo.";
+"Retire les candidats barrés dans les cases entourées de pointillés (%@ éliminations). Aucun chiffre n’est placé à cette étape." = "Elimina los candidatos tachados en las casillas con borde discontinuo (%@ eliminaciones). No se coloca ningún número en este paso.";
+
+"La partie en détail" = "Detalles de la partida";
+
+"Incliner vers le haut" = "Inclinar hacia arriba";
+
+"Incliner vers le bas" = "Inclinar hacia abajo";
+
+", chiffre mis en évidence" = ", número resaltado";
+
+", même ligne, colonne ou carré que la sélection" = ", misma fila, columna o bloque que la selección";

@@ -334,7 +334,7 @@
 "Techniques avancées" = "Fortgeschrittene Techniken";
 "Langue de l’iPhone" = "iPhone-Sprache";
 
-"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Betrachte den markierten Bereich und suche nach den übrigen Möglichkeiten.";
+"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Betrachte die gestrichelt umrandeten Felder und suche nach den übrigen Möglichkeiten.";
 "Les chiffres présents sur la ligne, la colonne et le bloc éliminent toutes les possibilités sauf une." = "Die Zahlen in Zeile, Spalte und Block schließen alle Möglichkeiten bis auf eine aus.";
 "Dans la zone colorée, ce chiffre ne peut aller que dans une case. Les autres emplacements sont bloqués par leur ligne, colonne ou bloc." = "Im markierten Bereich passt diese Zahl nur in ein Feld. Die anderen Plätze sind durch Zeile, Spalte oder Block ausgeschlossen.";
 "Dans le bloc coloré, ce chiffre reste sur une seule ligne ou colonne : élimine-le des autres cases de cette ligne ou colonne." = "Im markierten Block bleibt diese Zahl in einer Zeile oder Spalte. Streiche sie aus den übrigen Feldern dieser Zeile oder Spalte.";
@@ -460,3 +460,26 @@
 "Reprendre l’événement de %@" = "Ereignis von %@ fortsetzen";
 "Une courte pause · %@" = "Eine kurze Pause · %@";
 "Voyage · étape %@" = "Reise · Etappe %@";
+
+"Verrouiller ce chiffre" = "Diese Zahl sperren";
+"Case %@ %@" = "Feld %@ %@";
+"Sélectionnée" = "Ausgewählt";
+", doublon" = ", doppelt";
+", case de l’indice" = ", Hinweisfeld";
+"Tourner à gauche" = "Nach links drehen";
+"Tourner à droite" = "Nach rechts drehen";
+"Pointillés : cases à comparer. Double bord : case à résoudre. Bord épais : sélection. Chiffres barrés : candidats retirés." = "Gestrichelter Rand: Felder vergleichen. Doppelter Rand: zu lösendes Feld. Dicker Rand: Auswahl. Durchgestrichene Zahlen: entfernte Kandidaten.";
+"Regarde les cases en pointillés. %@" = "Sieh dir die gestrichelt umrandeten Felder an. %@";
+"Les cases en pointillés montrent la zone à comparer. Affiche la déduction pour voir le résultat." = "Die gestrichelt umrandeten Felder zeigen den Vergleichsbereich. Zeige den Schluss an, um das Ergebnis zu sehen.";
+"Cette technique ne permet pas de retirer ce candidat ici. Compare les positions du chiffre et les candidats des cases en pointillés." = "Diese Technik kann diesen Kandidaten hier nicht entfernen. Vergleiche die Positionen der Zahl und die Kandidaten in den gestrichelt umrandeten Feldern.";
+"Retire les candidats barrés dans les cases entourées de pointillés (%@ éliminations). Aucun chiffre n’est placé à cette étape." = "Entferne die durchgestrichenen Kandidaten in den gestrichelt umrandeten Feldern (%@ Eliminierungen). In diesem Schritt wird keine Zahl gesetzt.";
+
+"La partie en détail" = "Spieldetails";
+
+"Incliner vers le haut" = "Nach oben neigen";
+
+"Incliner vers le bas" = "Nach unten neigen";
+
+", chiffre mis en évidence" = ", hervorgehobene Zahl";
+
+", même ligne, colonne ou carré que la sélection" = ", gleiche Zeile, Spalte oder gleicher Block wie die Auswahl";

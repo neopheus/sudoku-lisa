@@ -24,6 +24,7 @@ struct RootView: View {
         .saturation(store.settings.paperMode ? 0 : 1)
         .sheet(isPresented: $settings) { SettingsView() }
         .fullScreenCover(isPresented: $store.showGame) { GameView() }
+        .accessibilityHidden(store.isGenerating)
         .overlay { GenerationOverlay() }
         .alert(L10n.text("Préparation de la grille"), isPresented: Binding(get: { store.generationError != nil }, set: { if !$0 { store.generationError = nil } })) { Button(L10n.text("D’accord")) { store.generationError = nil } } message: { Text(L10n.text(store.generationError ?? "")) }
         .alert(L10n.text("Sauvegarde"), isPresented: Binding(get: { store.saveError != nil }, set: { if !$0 { store.saveError = nil } })) { Button(L10n.text("D’accord")) { store.saveError = nil } } message: { Text(L10n.text(store.saveError ?? "")) }
@@ -53,6 +54,7 @@ struct LisaWordmark: View {
 }
 
 struct HomeView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     var onRoute: (Int) -> Void = { _ in }
     var mascotAnimationEnabled = true
@@ -88,8 +90,8 @@ struct HomeView: View {
                     }
                     LisaCard {
                         VStack(spacing: 15) {
-                            HStack(spacing: 18) {
-                                MiniGrid().frame(width: 106, height: 106).rotationEffect(.degrees(-5)).lisaFloat(amplitude: 5, tilt: 4, period: 4.5).accessibilityHidden(true)
+                            (dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 18)) : AnyLayout(HStackLayout(spacing: 18))) {
+                                MiniGrid().dynamicTypeSize(.large).frame(width: 106, height: 106).rotationEffect(.degrees(-5)).lisaFloat(amplitude: 5, tilt: 4, period: 4.5).accessibilityHidden(true)
                                 VStack(alignment: .leading, spacing: 6) {
                                     if let session = store.session, !session.isComplete {
                                         Text(L10n.text("Votre aventure\ncontinue")).font(LisaTheme.heading(22))
@@ -110,7 +112,7 @@ struct HomeView: View {
                     }
                     .offset(y: appeared ? 0 : 20)
                     SavedGamesCard()
-                    HStack(spacing: 14) {
+                    (dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 14)) : AnyLayout(HStackLayout(spacing: 14))) {
                         shortcut(title: L10n.text("Défi du jour"), subtitle: store.completedDays.contains(LisaStore.dayKey(Date())) ? L10n.text("Défi accompli !") : L10n.text("Une étoile à décrocher"), icon: "sun.max.fill", color: LisaTheme.yellow) { onRoute(1) }
                         shortcut(title: L10n.text("Voyage gourmand"), subtitle: L10n.text("%@ / 25 étapes", String(describing: min(store.eventWins, 25))), icon: "map.fill", color: LisaTheme.mint) { onRoute(2) }
                     }
@@ -148,8 +150,8 @@ struct HomeView: View {
                     .overlay(RoundedRectangle(cornerRadius: 19).stroke(.white.opacity(0.9), lineWidth: 2))
                     .shadow(color: color.opacity(0.5), radius: 0, y: 4)
                     .lisaFloat(amplitude: 5, tilt: 6, period: 3.5, phase: icon == "sun.max.fill" ? 0 : 2)
-                Text(title).font(LisaTheme.heading(14)).foregroundStyle(LisaTheme.ink).lineLimit(1).minimumScaleFactor(0.8)
-                Text(subtitle).font(LisaTheme.body(10)).foregroundStyle(LisaTheme.muted).lineLimit(1).minimumScaleFactor(0.8)
+                Text(title).font(LisaTheme.heading(14)).foregroundStyle(LisaTheme.ink).fixedSize(horizontal: false, vertical: true)
+                Text(subtitle).font(LisaTheme.body(10)).foregroundStyle(LisaTheme.muted).fixedSize(horizontal: false, vertical: true)
             }.frame(maxWidth: .infinity).padding(.vertical, 17)
                 .background(CandySurface(tint: LisaTheme.paper, cornerRadius: 25, depth: 5))
                 .contentShape(RoundedRectangle(cornerRadius: 25))
@@ -164,7 +166,7 @@ struct MiniGrid: View {
             ForEach(0..<9) { i in
                 Text(numbers[i]).font(LisaTheme.heading(20)).frame(maxWidth: .infinity).frame(height: 30)
                     .foregroundStyle(i == 4 ? .white : LisaTheme.accentInk)
-                    .background(LinearGradient(colors: i == 4 ? [LisaTheme.coral, Color(red: 0.8, green: 0.12, blue: 0.43)] : [.white, LisaTheme.lavender.opacity(0.45)], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 8))
+                    .background(LinearGradient(colors: i == 4 ? [LisaTheme.coral, Color(red: 0.8, green: 0.12, blue: 0.43)] : [LisaTheme.paper, LisaTheme.lavender.opacity(0.45)], startPoint: .top, endPoint: .bottom), in: RoundedRectangle(cornerRadius: 8))
             }
         }.padding(5).background(CandySurface(tint: LisaTheme.lavender, cornerRadius: 14, depth: 4))
     }
@@ -186,6 +188,9 @@ struct DifficultyView: View {
                     Button { dismiss(); store.start(difficulty) } label: {
                         HStack { VStack(alignment: .leading, spacing: 5) { Text(difficulty.label).font(LisaTheme.heading(20)); Text(description(for: difficulty)).font(LisaTheme.body(13)).foregroundStyle(LisaTheme.muted) }; Spacer(); HStack(spacing: 3) { ForEach(0..<6) { dot in Circle().fill(dot <= index ? LisaTheme.coral : LisaTheme.line).frame(width: 6, height: 6) } }; Image(systemName: "chevron.right").font(.caption).padding(.leading, 5) }.padding(19).background(CandySurface(tint: LisaTheme.paper, cornerRadius: 23, depth: 4)).contentShape(RoundedRectangle(cornerRadius: 23))
                     }.buttonStyle(LisaPressStyle())
+                    .accessibilityLabel(difficulty.label)
+                    .accessibilityValue(description(for: difficulty))
+                    .accessibilityInputLabels([difficulty.label])
                 }
             }.frame(maxWidth: 640).padding(24).frame(maxWidth: .infinity) } }.navigationTitle(L10n.text("Nouvelle partie")).navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button(L10n.text("Fermer")) { dismiss() } } }
         }

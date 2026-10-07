@@ -26,6 +26,9 @@ final class PoulpiRig: @unchecked Sendable {
     private var eyelids: [SCNMorpher] = []
     private var lidCreases: [SCNNode] = []
     private var eyelidClosure: Float = -1
+    private var lastBodyScale: SIMD3<Float>?
+    private var lastGaze: SIMD2<Float>?
+    private var lastExpression: (activity: Float, mood: LisaMascotMood)?
     private let mouth = SCNNode()
     private let cupsNode = SCNNode()
 
@@ -515,6 +518,9 @@ final class PoulpiRig: @unchecked Sendable {
         #endif
         lock.lock(); self.mood = mood; lock.unlock()
         if !animated {
+            // Static poses write these nodes directly; the next animated frame
+            // must restore every channel, even when its cached value matches.
+            lastBodyScale = nil; lastGaze = nil; lastExpression = nil
             node.removeAction(forKey:"rig")
             activity = 0; swimWeight = 0; previousTime = 0
             bends = Array(repeating: 0, count: 24)
@@ -565,7 +571,7 @@ final class PoulpiRig: @unchecked Sendable {
             return (-0.18 - tip * 0.10, side * 0.08)
         }
     }
-    private func animate(_ time: CGFloat) {
+    func animate(_ time: CGFloat) {
         lock.lock(); let mood = self.mood; let swimming = self.swimming; lock.unlock()
         let dt = Float(time >= previousTime ? min(0.05,time-previousTime) : 1/60); previousTime=time
         let target: Float = mood == .idle || mood == .thinking || mood == .sleepy ? 0 : 1
@@ -592,7 +598,9 @@ final class PoulpiRig: @unchecked Sendable {
                 let paddle = (0.08 + power * (0.22 + joint * 0.085)) * (0.45 + effort * 0.55)
                 let fan = -braking * (0.14 + joint * 0.04)
                 let jointSteering = steering * (0.15 + joint * 0.04)
-                let gesture = armGesture(mood, arm: i, joint: j, time: gestureTime)
+                let gesture = mood == .idle || mood == .sleepy
+                    ? (bend: Float(0), twist: Float(0))
+                    : armGesture(mood, arm: i, joint: j, time: gestureTime)
                 let target = idle * (1 - swimWeight * 0.7) + swimWeight * (paddle + fan + jointSteering) + gesture.bend
                 let index = i * 3 + j
                 bends[index] += (target - bends[index]) * blend
@@ -606,22 +614,36 @@ final class PoulpiRig: @unchecked Sendable {
         }
         let breath = (mood == .sleepy ? Float(0.025) : 0.012) * sin(cycle * (mood == .sleepy ? 3 : 6))
         let contraction = swimWeight * Float(swimming?.propulsion ?? 0) * 0.045
-        bones[0].scale = SCNVector3(1 + breath - contraction,
-                                    1 + (mood == .sleepy ? breath * 1.2 : 0.015 * sin(cycle * 6)) + contraction * 0.7,
-                                    1 + breath - contraction)
+        let bodyScale = SIMD3<Float>(1 + breath - contraction,
+                                     1 + (mood == .sleepy ? breath * 1.2 : 0.015 * sin(cycle * 6)) + contraction * 0.7,
+                                     1 + breath - contraction)
+        if lastBodyScale != bodyScale {
+            bones[0].scale = SCNVector3(bodyScale.x, bodyScale.y, bodyScale.z)
+            lastBodyScale = bodyScale
+        }
         // Smooth blink every four seconds, with no sprite substitutions.
         let local=t.truncatingRemainder(dividingBy:4)
         let blink=local>3.65 ? pow(sin((local-3.65)/0.35 * .pi),2) : 0
         let closure=Self.inspectionBlink ?? (mood == .sleepy ? 1 : blink)
         closeEyelids(closure)
-        for (i,brow) in brows.enumerated() {
-            let side:Float=i==0 ? -1:1
-            let curious:Float=mood == .thinking && i==0 ? 0.022 : 0
-            brow.position.y=0.77+activity*0.012+curious
-            brow.position.z=0.435-activity*0.008-curious*0.7
-            brow.eulerAngles.z = -side*(0.34+activity*0.10)+curious*3
+        if lastExpression?.activity != activity || lastExpression?.mood != mood {
+            for (i,brow) in brows.enumerated() {
+                let side:Float=i==0 ? -1:1
+                let curious:Float=mood == .thinking && i==0 ? 0.022 : 0
+                brow.position = SCNVector3(brow.position.x, 0.77+activity*0.012+curious,
+                                          0.435-activity*0.008-curious*0.7)
+                brow.eulerAngles.z = -side*(0.34+activity*0.10)+curious*3
+            }
+            mouth.scale=SCNVector3(1+activity*0.08,1+activity*0.18,1)
+            lastExpression = (activity, mood)
         }
-        for (i,pupil) in pupils.enumerated() { let side:Float=i==0 ? -1:1;pupil.position.x = -side*0.096+sin(cycle*2)*0.014;pupil.position.y = -0.010+cos(cycle*3)*0.009 }
-        mouth.scale=SCNVector3(1+activity*0.08,1+activity*0.18,1)
+        let gaze = SIMD2<Float>(sin(cycle*2)*0.014, -0.010+cos(cycle*3)*0.009)
+        if lastGaze != gaze {
+            for (i,pupil) in pupils.enumerated() {
+                let side:Float=i==0 ? -1:1
+                pupil.position = SCNVector3(-side*0.096+gaze.x, gaze.y, 0.065)
+            }
+            lastGaze = gaze
+        }
     }
 }

@@ -104,12 +104,8 @@ struct LisaMagicHalo: View {
                 let size = min(geometry.size.width, geometry.size.height)
                 ZStack {
                     Circle().fill(RadialGradient(colors: [color.opacity(strong ? 0.5 : 0.28), color.opacity(0)], center: .center, startRadius: 0, endRadius: size * 0.5))
-                    ForEach(0..<12, id: \.self) { index in
-                        Capsule().fill(color.opacity(strong ? 0.26 : 0.14))
-                            .frame(width: size * 0.06, height: size * 0.22)
-                            .offset(y: -size * 0.34)
-                            .rotationEffect(.degrees(Double(index) * 30 + time.truncatingRemainder(dividingBy: 60) * 6))
-                    }
+                    LisaHaloRays(size: size, color: color, strong: strong).equatable()
+                        .rotationEffect(.degrees(time.truncatingRemainder(dividingBy: 60) * 6))
                     ForEach(0..<5, id: \.self) { index in
                         let angle = Double(index) * .pi * 0.4 + time * (strong ? 0.65 : 0.35)
                         Image(systemName: index.isMultiple(of: 2) ? "star.fill" : "sparkle")
@@ -123,6 +119,23 @@ struct LisaMagicHalo: View {
             }
         }
         .allowsHitTesting(false).accessibilityHidden(true)
+    }
+}
+
+/// Rotate the fixed fan once instead of updating twelve separate ray transforms.
+struct LisaHaloRays: View, Equatable {
+    let size: CGFloat
+    let color: Color
+    let strong: Bool
+    var body: some View {
+        ZStack {
+            ForEach(0..<12, id: \.self) { index in
+                Capsule().fill(color.opacity(strong ? 0.26 : 0.14))
+                    .frame(width: size * 0.06, height: size * 0.22)
+                    .offset(y: -size * 0.34)
+                    .rotationEffect(.degrees(Double(index) * 30))
+            }
+        }.frame(width: size, height: size)
     }
 }
 
@@ -213,11 +226,7 @@ struct LisaButterfly: View {
     var body: some View {
         ZStack {
             ForEach(0..<2, id: \.self) { wing in
-                ZStack {
-                    Ellipse().fill(color.gradient).frame(width: 15, height: 22).offset(y: -5)
-                    Ellipse().fill(color.opacity(0.8).gradient).frame(width: 11, height: 14).offset(y: 8)
-                    Ellipse().fill(.white.opacity(0.6)).frame(width: 4, height: 8).offset(y: -7)
-                }
+                LisaButterflyWing(color: color).equatable()
                 .rotationEffect(.degrees(wing == 0 ? -28 : 28))
                 .scaleEffect(x: time == 0 ? 0.8 : 0.35 + abs(sin(time * 7)) * 0.65, y: 1, anchor: wing == 0 ? .trailing : .leading)
                 .offset(x: wing == 0 ? -8 : 8)
@@ -231,6 +240,17 @@ struct LisaButterfly: View {
     }
 }
 
+private struct LisaButterflyWing: View, Equatable {
+    let color: Color
+    var body: some View {
+        ZStack {
+            Ellipse().fill(color.gradient).frame(width: 15, height: 22).offset(y: -5)
+            Ellipse().fill(color.opacity(0.8).gradient).frame(width: 11, height: 14).offset(y: 8)
+            Ellipse().fill(.white.opacity(0.6)).frame(width: 4, height: 8).offset(y: -7)
+        }
+    }
+}
+
 /// A glossy striped sweet, also used as a rotating lollipop crown on the map.
 struct LisaSweet: View {
     var color: Color = LisaTheme.coral
@@ -240,20 +260,28 @@ struct LisaSweet: View {
             let side = min(geometry.size.width, geometry.size.height)
             ZStack {
                 Circle().fill(color.gradient)
-                ZStack {
-                    ForEach(0..<6, id: \.self) { index in
-                        Ellipse().fill(.white.opacity(0.65))
-                            .frame(width: side * 0.23, height: side * 0.68)
-                            .offset(y: -side * 0.21)
-                            .rotationEffect(.degrees(Double(index) * 60))
-                    }
-                }.frame(width: side, height: side).rotationEffect(.degrees(rotation)).clipShape(Circle())
+                LisaSweetStripes(side: side).equatable()
+                    .rotationEffect(.degrees(rotation)).clipShape(Circle())
                 Circle().strokeBorder(.white.opacity(0.8), lineWidth: 3)
                 Ellipse().fill(.white.opacity(0.55)).frame(width: side * 0.35, height: side * 0.12)
                     .rotationEffect(.degrees(-25)).offset(x: -side * 0.13, y: -side * 0.25)
             }.frame(width: side, height: side)
                 .shadow(color: color.opacity(0.25), radius: 4, y: 5)
         }
+    }
+}
+
+private struct LisaSweetStripes: View, Equatable {
+    let side: CGFloat
+    var body: some View {
+        ZStack {
+            ForEach(0..<6, id: \.self) { index in
+                Ellipse().fill(.white.opacity(0.65))
+                    .frame(width: side * 0.23, height: side * 0.68)
+                    .offset(y: -side * 0.21)
+                    .rotationEffect(.degrees(Double(index) * 60))
+            }
+        }.frame(width: side, height: side)
     }
 }
 

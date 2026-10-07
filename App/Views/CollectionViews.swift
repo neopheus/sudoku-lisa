@@ -2,6 +2,7 @@ import SwiftUI
 import SudokuCore
 
 struct DailyView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     var motionEnabled = true
     @EnvironmentObject private var store: LisaStore
@@ -28,15 +29,17 @@ struct DailyView: View {
                         Button { monthOffset += 1 } label: { Image(systemName: "chevron.right").frame(width: 44, height: 44) }.disabled(monthOffset == 0).accessibilityLabel(L10n.text("Mois suivant"))
                     }
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 3), count: 7), spacing: 9) {
-                        ForEach(Array(L10n.weekdaySymbols.enumerated()), id: \.offset) { _, day in Text(day).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted) }
+                        ForEach(Array(L10n.weekdaySymbols.enumerated()), id: \.offset) { _, day in Text(day).font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(LisaTheme.muted).accessibilityHidden(true) }
                         ForEach(0..<leading, id: \.self) { _ in Color.clear.frame(height: 35) }
                         ForEach(days, id: \.self) { date in
                             let done = store.completedDays.contains(LisaStore.dayKey(date))
                             let isSelected = Calendar.current.isDate(date, inSameDayAs: selected)
                             let future = date > Date()
                             Button { selected = date } label: {
-                                ZStack { Circle().fill(isSelected ? LisaTheme.coral : done ? LisaTheme.mint : .clear); if done { Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)) } else { Text("\(Calendar.current.component(.day, from: date))").font(LisaTheme.body(14)) } }.frame(height: 35).foregroundStyle(future ? LisaTheme.muted.opacity(0.3) : (isSelected || done ? LisaTheme.accentInk : LisaTheme.ink))
+                                ZStack { Circle().fill(isSelected ? LisaTheme.coral : done ? LisaTheme.mint : .clear); if done { Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)) } else { Text("\(Calendar.current.component(.day, from: date))").font(.system(size: 14, weight: .medium, design: .rounded)) } }.frame(minHeight: 44).foregroundStyle(future ? LisaTheme.muted.opacity(0.3) : (isSelected ? .white : LisaTheme.ink))
+                                    .overlay { if isSelected { Circle().strokeBorder(LisaTheme.ink, lineWidth: 2) } }
                             }.buttonStyle(LisaPressStyle()).disabled(future).accessibilityLabel(date.formatted(Date.FormatStyle(date: .complete, time: .omitted).locale(L10n.locale)) + (done ? L10n.text(", terminé") : ""))
+                            .accessibilityAddTraits(isSelected ? .isSelected : [])
                         }
                     }
                     LisaButton(title: completed ? L10n.text("Défi accompli !") : store.hasSavedGame(mode: "Quotidien", date: selected) ? L10n.text("Reprendre le défi") : L10n.text("Jouer le défi"), icon: completed ? "checkmark.seal.fill" : "sun.max.fill") {
@@ -53,6 +56,7 @@ struct DailyView: View {
 }
 
 struct JourneyView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     var motionEnabled = true
     @EnvironmentObject private var store: LisaStore
@@ -128,7 +132,7 @@ struct JourneyView: View {
                     Image(systemName: "medal.fill").font(.system(size: 34, weight: .bold)).foregroundStyle(Color(red: 0.63, green: 0.31, blue: 0.09))
                 }.lisaFloat(amplitude: 4, tilt: 5, period: 3.5).accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(L10n.text("L’ÉVÉNEMENT DU MOIS")).font(.system(size: 10, weight: .heavy, design: .rounded)).tracking(1.2).foregroundStyle(LisaTheme.muted)
+                    Text(L10n.text("L’ÉVÉNEMENT DU MOIS")).font(LisaTheme.heading(10)).tracking(1.2).foregroundStyle(LisaTheme.muted)
                     Text(store.seasonTitle).font(LisaTheme.heading(22))
                     Text(L10n.text("10 grilles → 1 médaille à collectionner")).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
                 }
@@ -156,6 +160,7 @@ struct JourneyView: View {
 }
 
 private struct JourneyRegionView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     let title: String
     let icon: String
@@ -170,13 +175,26 @@ private struct JourneyRegionView: View {
             HStack(spacing: 10) {
                 Image(systemName: icon).font(.system(size: 20, weight: .bold)).foregroundStyle(color)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(L10n.text("MONDE %@", String(describing: region + 1))).font(.system(size: 9, weight: .heavy, design: .rounded)).tracking(2).foregroundStyle(LisaTheme.muted)
+                    Text(L10n.text("MONDE %@", String(describing: region + 1))).font(LisaTheme.heading(9)).tracking(2).foregroundStyle(LisaTheme.muted)
                     Text(title).font(LisaTheme.heading(22))
                 }
                 Spacer()
                 if completed >= (region + 1) * 5 { Image(systemName: "checkmark.seal.fill").foregroundStyle(color).font(.title2) }
             }.padding(.horizontal, 25).padding(.vertical, 16)
 
+            if dynamicTypeSize.isAccessibilitySize {
+                VStack(spacing: 12) {
+                    ForEach(0..<5) { step in
+                        let index = region * 5 + step
+                        let status = index < completed ? L10n.text("terminée") : index == completed ? L10n.text("à jouer") : L10n.text("verrouillée")
+                        Button(action: onPlay) {
+                            Label(L10n.text("Étape %@, %@", String(index + 1), status), systemImage: index < completed ? "checkmark.circle" : index == completed ? "play.circle" : "lock")
+                                .font(LisaTheme.heading(18)).frame(maxWidth: .infinity, alignment: .leading)
+                                .padding().background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 16))
+                        }.disabled(index != completed)
+                    }
+                }.padding(20)
+            } else {
             GeometryReader { geometry in
                 let width = max(1, geometry.size.width)
                 ZStack(alignment: .topLeading) {
@@ -199,6 +217,7 @@ private struct JourneyRegionView: View {
                 .frame(width: width, height: 544)
                 .clipped()
             }.frame(height: 544)
+            }
         }
         .background(LinearGradient(colors: [color.opacity(0.05), color.opacity(0.13), color.opacity(0.035)], startPoint: .topLeading, endPoint: .bottomTrailing))
     }
@@ -206,7 +225,7 @@ private struct JourneyRegionView: View {
     private func levelNode(_ index: Int) -> some View {
         let done = index < completed
         let current = index == completed
-        let tint = done ? Color(red: 0.98, green: 0.72, blue: 0.18) : current ? color : LisaTheme.line
+        let tint = done ? LisaTheme.yellow : current ? LisaTheme.coral : LisaTheme.line
         return Button(action: onPlay) {
             ZStack {
                 if current {
@@ -226,7 +245,7 @@ private struct JourneyRegionView: View {
                 if current {
                     Text(L10n.text("À VOUS !")).font(.system(size: 10, weight: .heavy, design: .rounded)).tracking(0.8)
                         .foregroundStyle(.white).padding(.horizontal, 13).padding(.vertical, 6)
-                        .background(color, in: Capsule()).overlay(Capsule().strokeBorder(.white, lineWidth: 2)).lisaFloat(amplitude: 4, tilt: 4, period: 2.5).offset(y: -56)
+                        .background(LisaTheme.coral, in: Capsule()).overlay(Capsule().strokeBorder(.white, lineWidth: 2)).lisaFloat(amplitude: 4, tilt: 4, period: 2.5).offset(y: -56)
                 }
             }.frame(width: 100, height: 110).contentShape(Rectangle())
                 .lisaFloat(amplitude: 3, tilt: 0, period: 3, enabled: current)
@@ -254,6 +273,7 @@ private struct JourneyWindingPath: Shape {
 }
 
 struct ProgressViewLisa: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     @EnvironmentObject private var store: LisaStore
     @State private var difficulty: Difficulty?
@@ -261,8 +281,8 @@ struct ProgressViewLisa: View {
     var body: some View {
         ZStack { LisaBackground(); ScrollView { VStack(alignment: .leading, spacing: 24) {
             Text(L10n.text("Les petits pas\nfont les grands esprits.")).font(LisaTheme.heading(32))
-            Picker(L10n.text("Niveau"), selection: $difficulty) { Text(L10n.text("Tous les niveaux")).tag(Optional<Difficulty>.none); ForEach(Difficulty.allCases, id: \.self) { Text($0.label).tag(Optional($0)) } }.pickerStyle(.menu).tint(LisaTheme.coral)
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 14) {
+            Picker(L10n.text("Niveau"), selection: $difficulty) { Text(L10n.text("Tous les niveaux")).tag(Optional<Difficulty>.none); ForEach(Difficulty.allCases, id: \.self) { Text($0.label).tag(Optional($0)) } }.pickerStyle(.menu).tint(LisaTheme.actionInk)
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: dynamicTypeSize.isAccessibilitySize ? 1 : 2), spacing: 14) {
                 stat("\(games.count)", L10n.text("grilles terminées"), "checkmark.seal.fill")
                 stat(games.map(\.seconds).min().map(LisaStore.time) ?? "—", L10n.text("meilleur temps"), "stopwatch")
                 stat(games.isEmpty ? "—" : LisaStore.time(games.reduce(0) { $0 + $1.seconds } / games.count), L10n.text("temps moyen"), "clock")
@@ -310,7 +330,7 @@ struct SettingsView: View {
                         Text(verbatim: L10n.nativeName(for: language)).tag(language)
                     }
                 }
-                .pickerStyle(.menu)
+                .modifier(AccessibleSettingsPickerStyle())
                 .accessibilityIdentifier("languagePicker")
             }
             Section(L10n.text("Votre ambiance")) {
@@ -318,7 +338,7 @@ struct SettingsView: View {
                     Text(L10n.text("Soleil")).tag(0)
                     Text(L10n.text("Nuit")).tag(1)
                     Text(L10n.text("Papier")).tag(2)
-                }.accessibilityIdentifier("themePicker")
+                }.modifier(AccessibleSettingsPickerStyle()).accessibilityIdentifier("themePicker")
                 Toggle(L10n.text("Sons"), isOn: $store.settings.sound)
                 Toggle(L10n.text("Musique douce"), isOn: $store.settings.music).accessibilityIdentifier("musicToggle")
                 Toggle(L10n.text("Décor animé"), isOn: $store.settings.animatedDecor).accessibilityIdentifier("decorToggle")
@@ -340,6 +360,18 @@ struct SettingsView: View {
                 Text(L10n.text("La réduction des animations suit le réglage d’accessibilité de votre iPhone.")).font(.footnote).foregroundStyle(.secondary)
             }
             Section { Text(L10n.text("Sudoku Lisa · 1.0\nConçu pour les petits moments à soi.")).font(.footnote).foregroundStyle(.secondary) }
-        }.preferredColorScheme(store.settings.darkMode ? .dark : .light).tint(LisaTheme.actionInk).navigationTitle(L10n.text("À votre goût")).toolbar { ToolbarItem(placement: .topBarTrailing) { Button(L10n.text("Terminé")) { dismiss() } } } }
+        }.preferredColorScheme(store.settings.darkMode ? .dark : .light).tint(LisaTheme.actionInk).navigationTitle(L10n.text("À votre goût")).navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button(L10n.text("Terminé")) { dismiss() } } } }
+    }
+}
+
+/// Inline choices keep complete option names readable at accessibility sizes.
+private struct AccessibleSettingsPickerStyle: ViewModifier {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ViewBuilder func body(content: Content) -> some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            content.pickerStyle(.inline).fixedSize(horizontal: false, vertical: true)
+        } else {
+            content.pickerStyle(.menu)
+        }
     }
 }

@@ -50,6 +50,7 @@ extension LisaMascotMood {
 }
 
 struct PoulpiView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     var active: Bool
     @EnvironmentObject private var store: LisaStore
@@ -67,7 +68,7 @@ struct PoulpiView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let wide = geometry.size.width >= 600
+            let wide = geometry.size.width >= 600 && !dynamicTypeSize.isAccessibilitySize
             let contentWidth = max(0, min(1040, geometry.size.width - 32))
             let panelWidth = wide ? min(340, contentWidth * 0.43) : contentWidth
             let stageHeight = wide
@@ -78,6 +79,7 @@ struct PoulpiView: View {
                 : AnyLayout(VStackLayout(spacing: 10))
             ZStack {
                 LisaBackground(motionEnabled: active, quiet: true)
+                ScrollView {
                 layout {
                     stage(height: stageHeight)
                         .frame(width: wide ? max(0, contentWidth - panelWidth - 20) : contentWidth)
@@ -87,6 +89,7 @@ struct PoulpiView: View {
                 }
                 .padding(.horizontal, 16).padding(.vertical, 6)
                 .frame(maxWidth: 1072).frame(maxWidth: .infinity)
+                }
             }
         }
         .navigationTitle("Poulpi").navigationBarTitleDisplayMode(.inline)
@@ -106,15 +109,25 @@ struct PoulpiView: View {
         .onChange(of: active) { _, value in if !value { automatic = false } }
     }
 
+    private func tilt(_ amount: Double) {
+        pitch = min(0.65, max(-0.65, pitch + amount))
+    }
+
     private var controls: some View {
         VStack(spacing: 10) {
             rewardControls
-            HStack(spacing: 8) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                control(L10n.text("Tourner à gauche"), icon: "arrow.turn.up.left") { yaw -= .pi / 4 }
+                control(L10n.text("Tourner à droite"), icon: "arrow.turn.up.right") { yaw += .pi / 4 }
+                control(L10n.text("Incliner vers le haut"), icon: "arrow.up") { tilt(-0.2) }
+                control(L10n.text("Incliner vers le bas"), icon: "arrow.down") { tilt(0.2) }
+            }
+            (dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 8))) {
                 control(L10n.text("Recentrer"), icon: "viewfinder") { yaw = 0; pitch = 0; zoom = 1 }
                 control(L10n.text("Éloigner"), icon: "minus.magnifyingglass") { zoom = max(0.75, zoom - 0.15) }
                 control(L10n.text("Rapprocher"), icon: "plus.magnifyingglass") { zoom = min(1.6, zoom + 0.15) }
             }
-            HStack(spacing: 10) {
+            (dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 10)) : AnyLayout(HStackLayout(spacing: 10))) {
                 control(L10n.text("Surprise !"), icon: "shuffle") {
                     choose(LisaMascotMood.allCases.filter { $0 != mood }.randomElement() ?? .happy)
                 }
@@ -126,25 +139,23 @@ struct PoulpiView: View {
                 Text(L10n.text("Les animations sont désactivées dans les réglages. Vous pouvez toujours tourner Poulpi et zoomer."))
                     .font(LisaTheme.body(11)).foregroundStyle(LisaTheme.muted)
             }
-            ScrollView {
-                LazyVGrid(columns: [GridItem(.adaptive(minimum: 100), spacing: 9)], spacing: 10) {
+            LazyVGrid(columns: [GridItem(.adaptive(minimum: dynamicTypeSize.isAccessibilitySize ? 180 : 100), spacing: 9)], spacing: 10) {
                     ForEach(LisaMascotMood.allCases) { animation in
                         Button { choose(animation) } label: {
                             VStack(spacing: 6) {
                                 Image(systemName: animation.icon).font(.system(size: 20, weight: .bold))
-                                Text(animation.title).font(LisaTheme.body(11)).lineLimit(1).minimumScaleFactor(0.8)
+                                Text(animation.title).font(LisaTheme.body(11)).fixedSize(horizontal: false, vertical: true)
                             }
                             .foregroundStyle(LisaTheme.ink)
-                            .frame(maxWidth: .infinity).frame(height: 63)
+                            .padding(8).frame(maxWidth: .infinity, minHeight: 63)
                             .background(CandySurface(tint: mood == animation ? LisaTheme.yellow : LisaTheme.paper, cornerRadius: 16, depth: 3))
+                            .overlay(alignment: .topTrailing) { if mood == animation { Image(systemName: "checkmark.circle.fill").font(.caption).padding(4).accessibilityHidden(true) } }
                         }
                         .buttonStyle(LisaPressStyle())
                         .accessibilityIdentifier("poulpiAnimation-" + animation.rawValue)
                         .accessibilityAddTraits(mood == animation ? .isSelected : [])
                     }
                 }.padding(.bottom, 12)
-            }
-            .frame(maxHeight: .infinity)
             .accessibilityIdentifier("poulpiAnimationList")
             .disabled(!running)
         }
@@ -196,6 +207,13 @@ struct PoulpiView: View {
                 .accessibilityValue(L10n.text("%@, rotation %@ degrés, zoom %@ pour cent", String(describing: mood.title), String(describing: Int(yaw * 180 / .pi)), String(describing: Int(zoom * 100))))
                 .accessibilityHint(L10n.text("Glissez pour tourner, pincez pour zoomer, touchez pour le faire rire."))
                 .accessibilityAdjustableAction { direction in yaw += direction == .increment ? .pi / 4 : -.pi / 4 }
+                .accessibilityAction { choose(.giggle) }
+                .accessibilityAction(named: Text(L10n.text("Tourner à gauche"))) { yaw -= .pi / 4 }
+                .accessibilityAction(named: Text(L10n.text("Tourner à droite"))) { yaw += .pi / 4 }
+                .accessibilityAction(named: Text(L10n.text("Incliner vers le haut"))) { tilt(-0.2) }
+                .accessibilityAction(named: Text(L10n.text("Incliner vers le bas"))) { tilt(0.2) }
+                .accessibilityAction(named: Text(L10n.text("Rapprocher"))) { zoom = min(1.6, zoom + 0.15) }
+                .accessibilityAction(named: Text(L10n.text("Éloigner"))) { zoom = max(0.75, zoom - 0.15) }
                 .accessibilityIdentifier("poulpiStage")
             if store.poulpiStarEquipped {
                 PoulpiStarBadge(size: 42)
@@ -218,8 +236,8 @@ struct PoulpiView: View {
     }
     private func control(_ title: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Label(title, systemImage: icon).font(LisaTheme.body(11)).lineLimit(1).minimumScaleFactor(0.7)
-                .foregroundStyle(LisaTheme.ink).frame(maxWidth: .infinity, minHeight: 42)
+            Label(title, systemImage: icon).font(LisaTheme.body(11)).fixedSize(horizontal: false, vertical: true)
+                .foregroundStyle(LisaTheme.ink).frame(maxWidth: .infinity, minHeight: 44).padding(.vertical, 6)
                 .background(CandySurface(tint: LisaTheme.paper, cornerRadius: 14, depth: 3))
         }.buttonStyle(LisaPressStyle()).accessibilityLabel(title)
     }

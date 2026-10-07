@@ -334,7 +334,7 @@
 "Techniques avancées" = "Advanced techniques";
 "Langue de l’iPhone" = "iPhone language";
 
-"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Look at the highlighted area and find the possibilities that remain.";
+"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Look at the cells with dashed borders and find the remaining possibilities.";
 "Les chiffres présents sur la ligne, la colonne et le bloc éliminent toutes les possibilités sauf une." = "The numbers in its row, column and box rule out every possibility but one.";
 "Dans la zone colorée, ce chiffre ne peut aller que dans une case. Les autres emplacements sont bloqués par leur ligne, colonne ou bloc." = "In the highlighted area, this number fits in only one cell. The other spots are ruled out by their row, column or box.";
 "Dans le bloc coloré, ce chiffre reste sur une seule ligne ou colonne : élimine-le des autres cases de cette ligne ou colonne." = "In the highlighted box, this number is confined to one row or column. Remove it from the other cells along that row or column.";
@@ -460,3 +460,26 @@
 "Reprendre l’événement de %@" = "Resume the event from %@";
 "Une courte pause · %@" = "A short break · %@";
 "Voyage · étape %@" = "Journey · stage %@";
+
+"Verrouiller ce chiffre" = "Lock this digit";
+"Case %@ %@" = "Cell %@ %@";
+"Sélectionnée" = "Selected";
+", doublon" = ", duplicate";
+", case de l’indice" = ", hint cell";
+"Tourner à gauche" = "Turn left";
+"Tourner à droite" = "Turn right";
+"Pointillés : cases à comparer. Double bord : case à résoudre. Bord épais : sélection. Chiffres barrés : candidats retirés." = "Dashed border: compare these cells. Double border: solve this cell. Thick border: selected. Crossed-out digits: removed candidates.";
+"Regarde les cases en pointillés. %@" = "Look at the cells with dashed borders. %@";
+"Les cases en pointillés montrent la zone à comparer. Affiche la déduction pour voir le résultat." = "The cells with dashed borders show the area to compare. Show the deduction to see the result.";
+"Cette technique ne permet pas de retirer ce candidat ici. Compare les positions du chiffre et les candidats des cases en pointillés." = "This technique cannot remove that candidate here. Compare the digit positions and candidates in cells with dashed borders.";
+"Retire les candidats barrés dans les cases entourées de pointillés (%@ éliminations). Aucun chiffre n’est placé à cette étape." = "Remove the crossed-out candidates in cells with dashed borders (%@ eliminations). No digit is placed at this step.";
+
+"La partie en détail" = "Game details";
+
+"Incliner vers le haut" = "Tilt up";
+
+"Incliner vers le bas" = "Tilt down";
+
+", chiffre mis en évidence" = ", highlighted digit";
+
+", même ligne, colonne ou carré que la sélection" = ", same row, column or box as the selection";

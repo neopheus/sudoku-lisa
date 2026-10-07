@@ -5,13 +5,13 @@ import UIKit
 enum LisaTheme {
     static let background = adaptive(light: (0.79, 0.94, 0.98), dark: (0.105, 0.07, 0.19))
     static let ink = adaptive(light: (0.27, 0.12, 0.37), dark: (0.98, 0.94, 1))
-    static let accentInk = Color(red: 0.27, green: 0.12, blue: 0.37)
-    static let muted = adaptive(light: (0.43, 0.28, 0.49), dark: (0.79, 0.70, 0.86))
+    static let accentInk = ink
+    static let muted = adaptive(light: (0.37, 0.21, 0.43), dark: (0.82, 0.74, 0.89))
     static let coral = Color(red: 0.79, green: 0.07, blue: 0.43)
-    static let actionInk = adaptive(light: (0.69, 0.04, 0.36), dark: (1, 0.57, 0.80))
-    static let lavender = Color(red: 0.79, green: 0.66, blue: 1)
-    static let mint = Color(red: 0.49, green: 0.88, blue: 0.77)
-    static let yellow = Color(red: 1, green: 0.82, blue: 0.28)
+    static let actionInk = adaptive(light: (0.57, 0.02, 0.29), dark: (1, 0.67, 0.86))
+    static let lavender = adaptive(light: (0.79, 0.66, 1), dark: (0.28, 0.19, 0.40))
+    static let mint = adaptive(light: (0.49, 0.88, 0.77), dark: (0.10, 0.29, 0.25))
+    static let yellow = adaptive(light: (1, 0.82, 0.28), dark: (0.33, 0.25, 0.08))
     static let line = adaptive(light: (0.78, 0.67, 0.84), dark: (0.39, 0.28, 0.48))
     static let paper = adaptive(light: (1, 0.985, 0.94), dark: (0.20, 0.14, 0.29))
     static let candyShadow = Color(red: 0.35, green: 0.10, blue: 0.43)
@@ -23,8 +23,18 @@ enum LisaTheme {
             return UIColor(red: value.0, green: value.1, blue: value.2, alpha: 1)
         })
     }
-    static func heading(_ size: CGFloat) -> Font { .system(size: size, weight: .heavy, design: .rounded) }
-    static func body(_ size: CGFloat = 16) -> Font { .system(size: size, weight: .medium, design: .rounded) }
+    private static let headingFace = roundedFace(weight: .heavy)
+    private static let bodyFace = roundedFace(weight: .medium)
+    static func heading(_ size: CGFloat) -> Font { .custom(headingFace, size: size, relativeTo: .title2) }
+    static func body(_ size: CGFloat = 16) -> Font { .custom(bodyFace, size: size, relativeTo: .body) }
+
+    /// SwiftUI scales this font using the view's Dynamic Type environment.
+    /// Resolve the installed rounded system face rather than hardcoding a private font name.
+    private static func roundedFace(weight: UIFont.Weight) -> String {
+        let system = UIFont.systemFont(ofSize: 16, weight: weight)
+        let descriptor = system.fontDescriptor.withDesign(.rounded) ?? system.fontDescriptor
+        return UIFont(descriptor: descriptor, size: 16).fontName
+    }
 }
 
 struct LisaBackground: View {
@@ -66,12 +76,14 @@ struct CandySurface: View {
     var cornerRadius: CGFloat = 25
     var depth: CGFloat = 5
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.colorSchemeContrast) private var contrast
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
         ZStack {
             shape.fill(tint).overlay(shape.fill(LisaTheme.candyShadow.opacity(0.35))).offset(y: depth)
-            shape.fill(tint).overlay(shape.fill(LinearGradient(colors: [.white.opacity(scheme == .dark ? 0.06 : 0.20), .clear], startPoint: .top, endPoint: .bottom)))
-            shape.strokeBorder(.white.opacity(scheme == .dark ? 0.2 : 0.9), lineWidth: 2.5)
+            shape.fill(tint).overlay(shape.fill(LinearGradient(colors: [.white.opacity(reduceTransparency || contrast == .increased ? 0 : scheme == .dark || tint == LisaTheme.coral ? 0.06 : 0.20), .clear], startPoint: .top, endPoint: .bottom)))
+            shape.strokeBorder(contrast == .increased ? (tint == LisaTheme.coral ? Color.white : LisaTheme.ink) : .white.opacity(scheme == .dark ? 0.2 : 0.9), lineWidth: 2.5)
             shape.inset(by: 5).strokeBorder(.white.opacity(scheme == .dark ? 0.035 : 0.32), lineWidth: 1)
         }
         .shadow(color: LisaTheme.candyShadow.opacity(scheme == .dark ? 0.2 : 0.13), radius: 9, x: 0, y: depth + 3)
@@ -100,11 +112,13 @@ struct LisaButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 10) {
-                Text(title).font(LisaTheme.heading(19))
+                Text(title).font(LisaTheme.heading(19)).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
                 if let icon { Image(systemName: icon).font(.system(size: 18, weight: .heavy)).lisaFloat(amplitude: 2, tilt: 8, period: 2.8) }
             }
             .foregroundStyle(labelColor)
             .shadow(color: tint == LisaTheme.coral ? LisaTheme.candyShadow.opacity(0.5) : .clear, radius: 0, y: 1)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 12)
             .frame(maxWidth: .infinity, minHeight: 58)
             .background(CandySurface(tint: tint, cornerRadius: 23, depth: 6))
             .overlay(alignment: .top) {
@@ -161,7 +175,8 @@ struct LisaPill: View {
             if let icon { Image(systemName: icon).lisaFloat(amplitude: 1.5, tilt: 9, period: 3.2) }
             Text(title)
         }
-        .font(.system(size: 12, weight: .heavy, design: .rounded))
+        .font(LisaTheme.heading(12))
+        .fixedSize(horizontal: false, vertical: true)
         .foregroundStyle(tint == LisaTheme.coral ? .white : LisaTheme.accentInk)
         .padding(.horizontal, 12).padding(.vertical, 8)
         .background(CandySurface(tint: tint, cornerRadius: 18, depth: 3))

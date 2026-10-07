@@ -11,7 +11,7 @@ struct LessonBoardView: View {
   var body: some View {
     VStack(alignment: .leading, spacing: 10) {
       Text(L10n.text("UNE VRAIE GRILLE DE 9 × 9")).font(
-        .system(size: 11, weight: .bold, design: .rounded)
+        LisaTheme.heading(11)
       ).tracking(1).foregroundStyle(LisaTheme.muted)
       .accessibilityIdentifier("lesson-board")
       GeometryReader { geometry in
@@ -20,13 +20,13 @@ struct LessonBoardView: View {
           HStack(spacing: 0) {
             Text(" ").frame(width: side, height: side)
             ForEach(1...9, id: \.self) { column in
-              Text(String(column)).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
+              Text(String(column)).font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(LisaTheme.muted)
                 .frame(width: side, height: side).accessibilityHidden(true)
             }
           }
           ForEach(0..<9, id: \.self) { row in
             HStack(spacing: 0) {
-              Text(String(row + 1)).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
+              Text(String(row + 1)).font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(LisaTheme.muted)
                 .frame(width: side, height: side).accessibilityHidden(true)
               ForEach(0..<9, id: \.self) { column in
                 let index = row * 9 + column
@@ -47,7 +47,7 @@ struct LessonBoardView: View {
       .aspectRatio(1, contentMode: .fit)
       Text(
         L10n.text(
-          "Violet : cases à comparer. Bord rose : ta sélection. Chiffres barrés : candidats retirés."
+          "Pointillés : cases à comparer. Double bord : case à résoudre. Bord épais : sélection. Chiffres barrés : candidats retirés."
         )
       )
       .font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted).fixedSize(
@@ -113,7 +113,9 @@ private struct LessonBoardCell: View {
           .padding(2)
         }
         Rectangle().strokeBorder(LisaTheme.line, lineWidth: 0.5)
-        if selected { Rectangle().strokeBorder(LisaTheme.coral, lineWidth: 2.5) }
+        if focused { Rectangle().inset(by: 2).stroke(LisaTheme.ink, style: StrokeStyle(lineWidth: 1, dash: [2, 2])) }
+        if target { Rectangle().inset(by: 3).strokeBorder(LisaTheme.ink, lineWidth: 1.5) }
+        if selected { Rectangle().strokeBorder(LisaTheme.actionInk, lineWidth: 3) }
       }
       .frame(width: side, height: side)
       .overlay(alignment: .leading) {
@@ -145,6 +147,8 @@ private struct LessonBoardCell: View {
         ? L10n.text("sélectionnée")
         : target ? L10n.text("à résoudre") : focused ? L10n.text("repère") : ""
     )
+    .accessibilityInputLabels([L10n.text("Ligne %@, colonne %@", String(index / 9 + 1), String(index % 9 + 1))])
+    .accessibilityAddTraits(selected ? .isSelected : [])
     .accessibilityHint(L10n.text("Afficher les candidats en grand"))
     .accessibilityIdentifier("lesson-cell-" + String(index))
   }

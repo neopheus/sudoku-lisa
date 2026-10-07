@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 import SudokuCore
 
 struct GameView: View {
@@ -6,6 +7,10 @@ struct GameView: View {
     @EnvironmentObject private var store: LisaStore
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiateWithoutColor
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @ScaledMetric(relativeTo: .title) private var keypadDigitSize = 28.0
+    @State private var gameDetailsPresented = false
     @State private var selected: Int?
     @State private var notesMode = false
     @State private var paused = false
@@ -36,9 +41,9 @@ struct GameView: View {
     @State private var celebrationMessage = ""
     @State private var victoryPresented = false
     @Environment(\.colorScheme) private var colorScheme
-    private var mascotUncovered: Bool { scenePhase == .active && !settings && !victoryPresented && !hintPresented && !errorPresented && !learning && !coach.isWorking && !store.isGenerating }
+    private var mascotUncovered: Bool { scenePhase == .active && !settings && !gameDetailsPresented && !victoryPresented && !hintPresented && !errorPresented && !learning && !coach.isWorking && !store.isGenerating }
     private var timerRunning: Bool {
-        scenePhase == .active && !paused && !hintPresented && !settings && !errorPresented && !learning
+        scenePhase == .active && !paused && !hintPresented && !settings && !gameDetailsPresented && !errorPresented && !learning
             && !coach.isWorking && !store.isGenerating && store.session?.isComplete == false
     }
 
@@ -54,13 +59,16 @@ struct GameView: View {
                 .opacity(!paused && mascotUncovered ? 1 : 0)
             if let game = store.session {
                 GeometryReader { geometry in
-                    let wide = geometry.size.width >= 600
-                    let compact = geometry.size.height < 820
+                    let wide = geometry.size.width >= 600 && !dynamicTypeSize.isAccessibilitySize
+                    let compact = geometry.size.height < 820 || dynamicTypeSize.isAccessibilitySize
                     let contentWidth = max(0, min(wide ? 1040 : 500, geometry.size.width - 32))
                     let controlsWidth = wide ? min(300, max(220, contentWidth * 0.32)) : contentWidth
+                    let accessibilityControlsHeight = 48.0 + 44.0 + 3 * (min(keypadDigitSize, 56) * 1.25 + 10) + 58
                     let boardWidth = wide
                         ? min(680, max(252, geometry.size.height - 94), max(9, contentWidth - controlsWidth - 24))
-                        : min(contentWidth, compact ? max(270, geometry.size.height - 330) : 480)
+                        : dynamicTypeSize.isAccessibilitySize
+                            ? min(contentWidth, max(225, geometry.size.height - accessibilityControlsHeight))
+                            : min(contentWidth, compact ? max(270, geometry.size.height - 330) : 480)
                     let layout = wide
                         ? AnyLayout(HStackLayout(alignment: .center, spacing: 24))
                         : AnyLayout(VStackLayout(spacing: compact ? 8 : 16))
@@ -69,7 +77,7 @@ struct GameView: View {
                             gameHeader(game, wide: wide)
                             layout {
                                 VStack(spacing: compact ? 8 : 16) {
-                                    if !wide && !hintPresented { gameStatus(game, wide: false) }
+                                    if !wide && !hintPresented && !dynamicTypeSize.isAccessibilitySize { gameStatus(game, wide: false) }
                                     board(game, width: boardWidth).disabled(hintPresented)
                                 }
                                 .frame(width: wide ? boardWidth : contentWidth)
@@ -86,6 +94,7 @@ struct GameView: View {
                         .frame(maxWidth: wide ? 1040 : 500)
                         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 15)
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height, alignment: .top)
+                        .accessibilityHidden(paused || store.isGenerating)
                     }
                     .onChange(of: wide, initial: true) { _, value in usesWideLayout = value }
                 }
@@ -95,6 +104,7 @@ struct GameView: View {
                 LisaPauseCard { paused = false }
                     .environment(\.lisaMotionAllowed, mascotUncovered)
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
+                    .accessibilityHidden(store.isGenerating)
             }
         }
         .animation(reduceMotion || !store.settings.animatedDecor ? nil : .easeInOut(duration: 0.25), value: paused)
@@ -102,7 +112,8 @@ struct GameView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if hintPresented, !usesWideLayout, let hint {
                 ScrollView { coaching(hint) }
-                    .frame(maxHeight: 260)
+                    .frame(maxHeight: dynamicTypeSize.isAccessibilitySize ? 420 : 260)
+                    .accessibilityHidden(store.isGenerating)
                     .background(LisaTheme.paper)
             }
         }
@@ -187,6 +198,7 @@ struct GameView: View {
             Button(L10n.text("D’accord")) { store.generationError = nil }
         } message: { Text(L10n.text(store.generationError ?? "")) }
         .sheet(isPresented: $settings) { SettingsView() }
+        .sheet(isPresented: $gameDetailsPresented) { gameDetails }
         .sheet(isPresented: $victoryPresented, onDismiss: {
             if continueRequested { continueRequested = false; store.continueAfterVictory() }
         }) {
@@ -215,6 +227,7 @@ struct GameView: View {
         learning = false
         lessonTechnique = nil
         settings = false
+        gameDetailsPresented = false
         errorPresented = false
         continueRequested = false
         victoryPresented = false
@@ -247,44 +260,100 @@ struct GameView: View {
         hintPresented = false
     }
 
+    @ViewBuilder
     private func gameHeader(_ game: GameSession, wide: Bool) -> some View {
-        HStack {
-            LisaIconButton(icon: "chevron.left", label: L10n.text("Sauvegarder et revenir à l’accueil")) { store.save(); store.showGame = false }
-            Spacer()
-            VStack(spacing: 0) {
-                Button { companionRequest += 1 } label: {
-                    Label("Lisa !", systemImage: "face.smiling")
-                        .font(LisaTheme.heading(23)).foregroundStyle(LisaTheme.ink)
-                        .frame(minHeight: 44)
-                }
-                .buttonStyle(LisaPressStyle()).accessibilityLabel(L10n.text("Faire rire Lisa"))
-                .accessibilityValue(companionMessage)
-                .disabled(paused || !mascotUncovered || reduceMotion || !store.settings.animatedDecor)
-                Text(wide && !celebrationMessage.isEmpty ? celebrationMessage : (wide ? L10n.text(store.mode) : "Lisa") + " · " + game.puzzle.difficulty.label)
-                    .font(.system(size: 10, weight: .heavy, design: .rounded))
-                    .lineLimit(1).minimumScaleFactor(0.8)
-                    .foregroundStyle(LisaTheme.ink).padding(.top, 4)
+        if dynamicTypeSize.isAccessibilitySize {
+            HStack(spacing: 4) {
+                LisaIconButton(icon: "chevron.left", label: L10n.text("Sauvegarder et revenir à l’accueil")) { store.save(); store.showGame = false }
+                Spacer(minLength: 0)
+                LisaIconButton(icon: "face.smiling", label: L10n.text("Faire rire Lisa")) { companionRequest += 1 }
+                    .accessibilityInputLabels(["Lisa"]).accessibilityValue(companionMessage)
+                    .disabled(paused || !mascotUncovered || reduceMotion || !store.settings.animatedDecor)
+                LisaIconButton(icon: "book", label: L10n.text("Apprendre")) { lessonTechnique = nil; learning = true }
+                    .accessibilityIdentifier("gameLearnButton")
+                LisaIconButton(icon: "info.circle", label: L10n.text("La partie en détail")) { gameDetailsPresented = true }
+                    .accessibilityIdentifier("gameDetailsButton")
+                LisaIconButton(icon: "pause.fill", label: L10n.text("Mettre en pause")) { paused = true }
+                LisaIconButton(icon: "gearshape", label: L10n.text("Réglages")) { settings = true }
+                    .accessibilityIdentifier("gameSettingsButton")
             }
-            Spacer()
-            LisaIconButton(icon: "book", label: L10n.text("Apprendre")) { lessonTechnique = nil; learning = true }
-                .accessibilityIdentifier("gameLearnButton")
-            LisaIconButton(icon: "gearshape", label: L10n.text("Réglages")) { settings = true }.accessibilityIdentifier("gameSettingsButton")
+        } else {
+            HStack(spacing: 8) {
+                LisaIconButton(icon: "chevron.left", label: L10n.text("Sauvegarder et revenir à l’accueil")) { store.save(); store.showGame = false }
+                Spacer()
+                VStack(spacing: 0) {
+                    Button { companionRequest += 1 } label: {
+                        Label("Lisa !", systemImage: "face.smiling")
+                            .font(LisaTheme.heading(23)).foregroundStyle(LisaTheme.ink)
+                            .frame(minHeight: 44)
+                    }
+                    .buttonStyle(LisaPressStyle()).accessibilityLabel(L10n.text("Faire rire Lisa"))
+                    .accessibilityValue(companionMessage)
+                    .accessibilityInputLabels(["Lisa"])
+                    .disabled(paused || !mascotUncovered || reduceMotion || !store.settings.animatedDecor)
+                    Text(wide && !celebrationMessage.isEmpty ? celebrationMessage : (wide ? L10n.text(store.mode) : "Lisa") + " · " + game.puzzle.difficulty.label)
+                        .font(.caption)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .foregroundStyle(LisaTheme.ink).padding(.top, 4)
+                }
+                Spacer()
+                LisaIconButton(icon: "book", label: L10n.text("Apprendre")) { lessonTechnique = nil; learning = true }
+                    .accessibilityIdentifier("gameLearnButton")
+                LisaIconButton(icon: "gearshape", label: L10n.text("Réglages")) { settings = true }.accessibilityIdentifier("gameSettingsButton")
+            }
         }
+    }
+
+    private var gameDetails: some View {
+        NavigationStack {
+            ScrollView {
+                if let game = store.session {
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text(L10n.text(store.mode) + " · " + game.puzzle.difficulty.label).font(LisaTheme.heading(23))
+                        Text(store.settings.autoCheck || store.settings.errorLimit
+                             ? L10n.text("Erreurs %@%@", String(game.mistakes), store.settings.errorLimit ? "/3" : "")
+                             : L10n.text("Mode zen")).font(LisaTheme.body())
+                        if store.settings.showTimer { LisaGameTimer(clock: store.clock) }
+                        if let selected {
+                            Text(cellLabel(game, index: selected)).font(LisaTheme.body(20))
+                                .accessibilityIdentifier("selectedCellDetail")
+                        }
+                        if notesMode {
+                            Label(L10n.text("Mode notes · Les petits chiffres sont des possibilités."), systemImage: "pencil.tip").font(LisaTheme.body())
+                        }
+                        if let digit = lockedDigit {
+                            Button { lockedDigit = nil } label: {
+                                Label(L10n.text("Chiffre %@ verrouillé · Libérer", String(digit)), systemImage: "lock.open")
+                                    .font(LisaTheme.body())
+                            }.accessibilityIdentifier("unlockDigit")
+                        }
+                    }
+                    .fixedSize(horizontal: false, vertical: true).frame(maxWidth: .infinity, alignment: .leading).padding(24)
+                }
+            }
+            .navigationTitle(L10n.text("La partie en détail")).navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .topBarTrailing) { Button(L10n.text("Terminé")) { gameDetailsPresented = false } } }
+            .background(LisaTheme.paper)
+        }
+        .preferredColorScheme(store.settings.darkMode ? .dark : .light)
     }
 
     private var modeLabel: some View {
         Label(celebrationMessage.isEmpty ? L10n.text(store.mode) : celebrationMessage,
               systemImage: celebrationMessage.isEmpty ? (store.mode == "Libre" ? "sparkles" : "sun.max") : "sparkles")
-            .font(.system(size: 11, weight: .bold, design: .rounded))
-            .lineLimit(1).minimumScaleFactor(0.8)
+            .font(.caption.weight(.bold))
+            .fixedSize(horizontal: false, vertical: true)
             .foregroundStyle(LisaTheme.ink).padding(.horizontal, 10).padding(.vertical, 6)
             .background(LisaTheme.paper.opacity(0.8), in: Capsule())
     }
 
     private func gameStatus(_ game: GameSession, wide: Bool) -> some View {
-        HStack {
+        let layout = dynamicTypeSize.isAccessibilitySize
+            ? AnyLayout(VStackLayout(alignment: .leading, spacing: 8))
+            : AnyLayout(HStackLayout(spacing: 8))
+        return layout {
             if !wide { modeLabel }
-            Spacer(minLength: 0)
+            if !dynamicTypeSize.isAccessibilitySize { Spacer(minLength: 0) }
             Text(store.settings.autoCheck || store.settings.errorLimit ? L10n.text("Erreurs %@%@", String(describing: game.mistakes), String(describing: store.settings.errorLimit ? "/3" : "")) : L10n.text("Mode zen"))
                 .font(LisaTheme.body(13)).foregroundStyle(game.mistakes > 0 ? LisaTheme.coral : LisaTheme.muted)
             if store.settings.showTimer {
@@ -309,7 +378,7 @@ struct GameView: View {
                 }
                 .accessibilityIdentifier("completedContinue")
             }
-            HStack(spacing: 8) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
                 tool(L10n.text("Annuler"), icon: "arrow.uturn.backward", enabled: game.canUndo) { store.session?.undo(); store.feedback(.erase); store.changed() }
                 tool(L10n.text("Gommer"), icon: "eraser", enabled: selected.map { game.isEditable($0) } ?? false) { if let selected { store.session?.erase(at: selected); store.feedback(.erase); store.changed() } }
                 tool(notesMode ? L10n.text("Notes oui") : L10n.text("Notes"), icon: "pencil.tip", active: notesMode) { notesMode.toggle(); store.feedback(.note) }
@@ -320,39 +389,45 @@ struct GameView: View {
                     let remaining = max(0, 9 - game.values.filter { $0 == value }.count)
                     Button { if store.settings.numberFirst || lockedDigit != nil { lockedDigit = value; store.feedback(.select) } else { enter(value) } } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 7) {
-                            Text("\(value)").font(.system(size: compact ? 27 : 30, weight: .black, design: .rounded))
+                            Text("\(value)").font(.system(size: min(keypadDigitSize, 56), weight: .black, design: .rounded))
                                 .shadow(color: .black.opacity(0.12), radius: 0, y: 1)
-                            Text("\(remaining)").font(.system(size: 10, weight: .bold, design: .rounded))
+                            if !dynamicTypeSize.isAccessibilitySize {
+                                Text("\(remaining)").font(.caption.weight(.bold))
+                            }
                         }
-                        .foregroundStyle(value == 5 || value == 8 ? Color(red: 0.27, green: 0.12, blue: 0.32) : .white)
-                        .frame(maxWidth: .infinity).frame(height: 47)
+                        .foregroundStyle(LisaTheme.ink)
+                        .frame(maxWidth: .infinity)
+                        .frame(height: dynamicTypeSize.isAccessibilitySize ? min(keypadDigitSize, 56) * 1.25 : nil)
+                        .frame(minHeight: 47).padding(.vertical, 5)
                         .background(CandySurface(tint: candyColor(value), cornerRadius: notesMode ? 10 : 16))
                         .contentShape(RoundedRectangle(cornerRadius: 16))
                         .overlay(RoundedRectangle(cornerRadius: notesMode ? 10 : 16).strokeBorder(lockedDigit == value ? LisaTheme.ink : .clear, lineWidth: 3))
                         .overlay(alignment: .topLeading) {
-                            if notesMode { Image(systemName: "pencil.tip").font(.system(size: 8, weight: .bold)).foregroundStyle(.white).padding(5) }
+                            if notesMode { Image(systemName: "pencil.tip").font(.caption2.weight(.bold)).foregroundStyle(LisaTheme.ink).padding(5) }
                         }
                     }
                     .buttonStyle(LisaPressStyle()).accessibilityLabel("\(value), " + L10n.count("remaining", remaining))
+                    .accessibilityInputLabels([String(value)])
+                    .accessibilityAction(named: Text(L10n.text("Verrouiller ce chiffre"))) { lockedDigit = value; store.feedback(.select) }
                     .accessibilityIdentifier("digit-\(value)")
                     .accessibilityAddTraits(lockedDigit == value ? .isSelected : [])
                     .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in lockedDigit = value; store.feedback(.select) })
                     .disabled(paused || game.isComplete)
                 }
             }
-            if let digit = lockedDigit {
+            if !dynamicTypeSize.isAccessibilitySize, let digit = lockedDigit {
                 Button { lockedDigit = nil } label: {
                     Label(L10n.text("Chiffre %@ verrouillé · Libérer", String(digit)), systemImage: "lock.open")
                         .font(LisaTheme.body(12))
                 }.accessibilityIdentifier("unlockDigit")
             }
-            if notesMode {
+            if notesMode && !dynamicTypeSize.isAccessibilitySize {
                 Label(L10n.text("Mode notes · Les petits chiffres sont des possibilités."), systemImage: "pencil.tip")
                     .font(LisaTheme.body(12)).foregroundStyle(LisaTheme.accentInk)
                     .padding(8).frame(maxWidth: .infinity).background(LisaTheme.lavender, in: RoundedRectangle(cornerRadius: 10))
                     .accessibilityIdentifier("notesModeBanner")
             }
-            if !compact {
+            if !compact && !dynamicTypeSize.isAccessibilitySize {
                 Text(!celebrationMessage.isEmpty ? celebrationMessage : notesMode ? L10n.text("Mode notes · Touchez une case puis un chiffre.") : L10n.text("Une case, un chiffre, un petit déclic."))
                     .font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
                     .multilineTextAlignment(.center)
@@ -382,6 +457,9 @@ struct GameView: View {
         }
         if !notesMode { store.feedback(.place) }
         store.changed()
+        if UIAccessibility.isVoiceOverRunning, let game = store.session {
+            UIAccessibility.post(notification: .announcement, argument: cellLabel(game, index: selected))
+        }
         if store.settings.errorLimit && (store.session?.mistakes ?? 0) >= 3 && store.session?.isComplete == false { errorPresented = true }
     }
 
@@ -407,6 +485,8 @@ struct GameView: View {
                             .buttonStyle(.plain)
                             .accessibilityIdentifier("cell-\(index)")
                             .accessibilityLabel(cellLabel(game, index: index))
+                            .accessibilityInputLabels([L10n.text("Case %@ %@", String(row + 1), String(col + 1))])
+                            .accessibilityValue(selected == index ? L10n.text("Sélectionnée") : "")
                             .accessibilityAddTraits(selected == index ? .isSelected : [])
                         }
                     }
@@ -458,7 +538,7 @@ struct GameView: View {
             peer: store.settings.highlightPeers && (selected.map { peers(index, $0) } ?? false),
             inHintFocus: hintPresented && coach.focusedCells.contains(index),
             marks: hintPresented && hintStage >= 1 ? coach.marksByCell[index] ?? [] : [],
-            side: side, colorScheme: colorScheme
+            side: side, colorScheme: colorScheme, differentiateWithoutColor: differentiateWithoutColor
         ).equatable()
     }
     private func peers(_ a: Int, _ b: Int) -> Bool { a / 9 == b / 9 || a % 9 == b % 9 || (a / 27 == b / 27 && a % 9 / 3 == b % 9 / 3) }
@@ -470,44 +550,56 @@ struct GameView: View {
         let value = game.values[index]
         let notes = displayedNotes(game, index: index).sorted().map(String.init).formatted(.list(type: .and).locale(L10n.locale))
         let base = L10n.text("Ligne %@, colonne %@, %@%@%@%@", String(describing: index / 9 + 1), String(describing: index % 9 + 1), String(describing: value == 0 ? L10n.text("vide") : String(value)), String(describing: game.puzzle.givens[index] != 0 ? L10n.text(", chiffre donné") : ""), String(describing: notes.isEmpty ? "" : L10n.text(", notes ") + notes), String(describing: store.settings.autoCheck && game.isIncorrect(at: index) ? L10n.text(", erreur") : ""))
-        guard hintPresented, hintStage >= 1 else { return base }
+        let duplicate = store.settings.highlightDuplicates && store.duplicateCells.contains(index)
+        let sameNumber = lockedDigit.map { value == $0 }
+            ?? selected.map { game.values[$0] != 0 && value == game.values[$0] } ?? false
+        let peer = store.settings.highlightPeers && (selected.map { peers(index, $0) && index != $0 } ?? false)
+        let description = base
+            + (sameNumber && index != selected ? L10n.text(", chiffre mis en évidence") : "")
+            + (peer ? L10n.text(", même ligne, colonne ou carré que la sélection") : "")
+            + (duplicate ? L10n.text(", doublon") : "")
+            + (hintPresented && coach.focusedCells.contains(index) ? L10n.text(", case de l’indice") : "")
+        guard hintPresented, hintStage >= 1 else { return description }
         let removals = (coach.marksByCell[index] ?? []).map {
             L10n.text("Ligne %@, colonne %@ : retirer le candidat %@.", String(index / 9 + 1), String(index % 9 + 1), String($0.value))
         }
-        return ([base] + removals).joined(separator: " ")
+        return ([description] + removals).joined(separator: " ")
     }
     private func candyColor(_ value: Int) -> Color {
-        let colors: [Color] = [
-            .init(red: 0.49, green: 0.22, blue: 0.77), .init(red: 0.08, green: 0.44, blue: 0.77),
-            .init(red: 0.81, green: 0.19, blue: 0.34), .init(red: 0.08, green: 0.47, blue: 0.29),
-            .init(red: 0.98, green: 0.76, blue: 0.19), .init(red: 0.04, green: 0.44, blue: 0.57),
-            .init(red: 0.75, green: 0.18, blue: 0.48), .init(red: 1, green: 0.61, blue: 0.25),
-            .init(red: 0.46, green: 0.28, blue: 0.73)
-        ]
+        let colors: [Color] = [LisaTheme.lavender, LisaTheme.sky, LisaTheme.paper,
+                               LisaTheme.mint, LisaTheme.yellow, LisaTheme.sky,
+                               LisaTheme.lavender, LisaTheme.yellow, LisaTheme.mint]
         return colors[value - 1]
     }
     private func tool(_ title: String, icon: String, active: Bool = false, enabled: Bool = true, action: @escaping () -> Void) -> some View {
-        let tint = active ? Color(red: 0.98, green: 0.74, blue: 0.17)
-            : icon == "lightbulb" ? Color(red: 0.81, green: 0.22, blue: 0.43)
-            : icon == "eraser" ? Color(red: 0.08, green: 0.47, blue: 0.63)
-            : Color(red: 0.51, green: 0.3, blue: 0.73)
+        let tint = active ? LisaTheme.yellow
+            : icon == "lightbulb" ? LisaTheme.paper
+            : icon == "eraser" ? LisaTheme.sky : LisaTheme.lavender
         return Button(action: action) {
             VStack(spacing: 4) {
                 Image(systemName: icon).font(.system(size: 22, weight: .bold))
                     .lisaFloat(amplitude: 1, tilt: 3, period: 3.8)
                     .shadow(color: .black.opacity(0.13), radius: 0, y: 2)
-                Text(title).font(.system(size: 10, weight: .heavy, design: .rounded)).lineLimit(1).minimumScaleFactor(0.8)
+                if !dynamicTypeSize.isAccessibilitySize {
+                    Text(title).font(.caption.weight(.heavy)).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                }
             }
-            .frame(maxWidth: .infinity).frame(height: 60)
-            .foregroundStyle(active ? Color(red: 0.3, green: 0.14, blue: 0.38) : .white)
+            .frame(maxWidth: .infinity).frame(minHeight: dynamicTypeSize.isAccessibilitySize ? 44 : 60)
+            .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 0 : 6)
+            .foregroundStyle(LisaTheme.ink)
             .background(CandySurface(tint: tint, cornerRadius: 17))
+            .overlay(RoundedRectangle(cornerRadius: 17).strokeBorder(active ? LisaTheme.ink : .clear, lineWidth: 2))
             .contentShape(RoundedRectangle(cornerRadius: 17))
             .opacity(enabled ? 1 : 0.42)
         }.buttonStyle(LisaPressStyle()).disabled(!enabled)
+            .accessibilityLabel(title)
+            .accessibilityInputLabels([icon == "pencil.tip" ? L10n.text("Notes") : icon == "lightbulb" ? L10n.text("Indice") : title])
+            .accessibilityAddTraits(active ? .isSelected : [])
     }
 }
 
 struct VictoryView: View {
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     var onContinue: () -> Void = {}
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     @EnvironmentObject private var store: LisaStore
@@ -542,15 +634,14 @@ struct VictoryView: View {
                     }
                     VStack(spacing: 8) {
                         Text(L10n.text("Bien joué, vous !"))
-                            .font(.system(size: 35, weight: .black, design: .rounded))
-                            .foregroundStyle(LisaTheme.coral)
-                            .shadow(color: .white.opacity(0.7), radius: 0, y: 2)
+                            .font(LisaTheme.heading(35))
+                            .foregroundStyle(LisaTheme.actionInk)
                             .multilineTextAlignment(.center)
                         Text(L10n.text("81 cases. Et ce petit plaisir\nd’avoir trouvé la dernière."))
                             .font(LisaTheme.body(17)).multilineTextAlignment(.center).foregroundStyle(LisaTheme.ink)
                     }
                     if let game = store.session {
-                        HStack(spacing: 9) {
+                        (dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 9)) : AnyLayout(HStackLayout(spacing: 9))) {
                             metric(LisaStore.time(game.elapsedSeconds), L10n.text("votre temps"), icon: "stopwatch.fill")
                             metric("\(game.mistakes)", L10n.text("erreurs"), icon: "heart.fill")
                             metric("\(game.hintsUsed)", L10n.text("indices"), icon: "lightbulb.fill")
@@ -676,7 +767,7 @@ private struct LisaGameTimer: View {
     @ObservedObject var clock: LisaGameClock
     var body: some View {
         Text(LisaStore.time(clock.seconds))
-            .font(.system(size: 14, weight: .medium, design: .monospaced))
+            .font(.body.monospacedDigit())
             .foregroundStyle(LisaTheme.muted)
             .accessibilityIdentifier("gameTimer")
     }
@@ -695,6 +786,7 @@ private struct SudokuCellContent: View, Equatable {
     let marks: [CandidateElimination]
     let side: CGFloat
     let colorScheme: ColorScheme
+    let differentiateWithoutColor: Bool
     var body: some View {
         let blue = Color(red: 0.18, green: 0.59, blue: 0.94)
         let background = inHintFocus ? LisaTheme.yellow.opacity(colorScheme == .dark ? 0.45 : 0.72)
@@ -707,10 +799,29 @@ private struct SudokuCellContent: View, Equatable {
             if isSelected {
                 RoundedRectangle(cornerRadius: 4).strokeBorder(blue, lineWidth: 2).padding(1)
             }
+            if inHintFocus {
+                RoundedRectangle(cornerRadius: 4).strokeBorder(LisaTheme.ink, style: StrokeStyle(lineWidth: 1.5, dash: [3, 2])).padding(2)
+            }
+            if differentiateWithoutColor && sameNumber && !isSelected {
+                Capsule().fill(LisaTheme.ink).frame(width: side * 0.38, height: 2)
+                    .frame(maxHeight: .infinity, alignment: .bottom).padding(.bottom, 3)
+            }
+            if differentiateWithoutColor && peer && !isSelected {
+                Circle().fill(LisaTheme.ink).frame(width: 3, height: 3)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).padding(3)
+            }
             if value != 0 {
                 Text("\(value)").contentTransition(.numericText()).font(.system(size: side * 0.54, weight: !given ? .medium : .semibold, design: .rounded)).foregroundStyle(wrong || duplicate ? (colorScheme == .dark ? Color(red: 1, green: 0.55, blue: 0.6) : Color(red: 0.76, green: 0.12, blue: 0.22)) : !given ? (colorScheme == .dark ? Color(red: 0.62, green: 0.84, blue: 1) : Color(red: 0.13, green: 0.39, blue: 0.72)) : LisaTheme.ink)
             } else {
                 VStack(spacing: 0) { ForEach(0..<3) { row in HStack(spacing: 0) { ForEach(1...3, id: \.self) { col in let note = row * 3 + col; Text(notes.contains(note) ? "\(note)" : " ").font(.system(size: side * 0.23, weight: .medium, design: .rounded)).foregroundStyle(LisaTheme.muted).frame(width: side / 3, height: side / 3) } } } }
+            }
+        }
+        .overlay(alignment: .bottomTrailing) {
+            if wrong || duplicate {
+                Image(systemName: "exclamationmark.circle.fill")
+                    .font(.system(size: max(8, side * 0.24), weight: .bold))
+                    .foregroundStyle(LisaTheme.ink).background(LisaTheme.paper, in: Circle())
+                    .padding(2).accessibilityHidden(true)
             }
         }
         .overlay(alignment: .topTrailing) {

@@ -14,6 +14,8 @@ private enum LessonStage: Int, CaseIterable, Identifiable {
 }
 
 struct InteractiveLessonView: View {
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+  @AccessibilityFocusState private var feedbackFocused: Bool
   let lesson: SudokuLesson
   @State private var stage = LessonStage.observe
   @State private var selectedCell: Int?
@@ -38,9 +40,9 @@ struct InteractiveLessonView: View {
     VStack(alignment: .leading, spacing: 20) {
       Text(lesson.id.title).font(LisaTheme.heading(25))
         .accessibilityIdentifier("interactive-lesson-" + lesson.id.rawValue)
-      HStack(spacing: 6) {
+      (dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 6)) : AnyLayout(HStackLayout(spacing: 6))) {
         ForEach(LessonStage.allCases) { item in
-          Text(item.title).font(LisaTheme.body(13)).frame(maxWidth: .infinity)
+          Label(item.title, systemImage: stage == item ? "circle.inset.filled" : "circle").font(LisaTheme.body(13)).frame(maxWidth: .infinity)
             .padding(.vertical, 9)
             .background(stage == item ? LisaTheme.yellow : LisaTheme.paper, in: Capsule())
             .foregroundStyle(stage == item ? LisaTheme.accentInk : LisaTheme.muted)
@@ -87,6 +89,7 @@ struct InteractiveLessonView: View {
         ) { submit($0) }
         if let feedback {
           LessonFeedback(message: feedback, success: successfulAction != nil)
+            .accessibilityFocused($feedbackFocused)
         }
         if successfulAction != nil {
           if stage == .guided {
@@ -99,7 +102,7 @@ struct InteractiveLessonView: View {
         } else if stage == .practice {
           Button {
             practiceFocusShown = true
-            feedback = L10n.text("Regarde les cases colorées. %@", lesson.id.explanation)
+            feedback = L10n.text("Regarde les cases en pointillés. %@", lesson.id.explanation)
           } label: {
             Label(L10n.text("Un repère"), systemImage: "lightbulb").font(LisaTheme.heading(15))
           }
@@ -143,6 +146,7 @@ struct InteractiveLessonView: View {
   }
 
   private func submit(_ digit: Int) {
+    defer { feedbackFocused = true }
     guard let index = selectedCell, exercise.board[index] == 0 else { return }
     // Guided work asks for a specific cell; independent work accepts every
     // deduction of this technique returned by the shared logical engine.
@@ -167,7 +171,7 @@ struct InteractiveLessonView: View {
       feedback =
         exercise.removesCandidates
         ? L10n.text(
-          "Cette technique ne permet pas de retirer ce candidat ici. Compare les positions du chiffre et les candidats des cases colorées."
+          "Cette technique ne permet pas de retirer ce candidat ici. Compare les positions du chiffre et les candidats des cases en pointillés."
         )
         : L10n.text(
           "Ce chiffre est possible, mais cette technique ne prouve pas sa place ici. Cherche une déduction certaine."
@@ -188,7 +192,7 @@ private struct LessonInstruction: View {
         if stage == .observe {
           Text(
             L10n.text(
-              "Les cases colorées montrent la zone à comparer. Affiche la déduction pour voir le résultat."
+              "Les cases en pointillés montrent la zone à comparer. Affiche la déduction pour voir le résultat."
             )
           )
           .font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted)
@@ -244,6 +248,7 @@ private struct LessonFeedback: View {
 }
 
 private struct LessonNumberPad: View {
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   let removesCandidates: Bool
   let enabled: Bool
   let solved: Bool
@@ -252,7 +257,7 @@ private struct LessonNumberPad: View {
     VStack(alignment: .leading, spacing: 10) {
       Text(L10n.text(removesCandidates ? "Retirer un candidat" : "Placer un chiffre")).font(
         LisaTheme.heading(17))
-      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 5), spacing: 8)
+      LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: dynamicTypeSize.isAccessibilitySize ? 3 : 5), spacing: 8)
       {
         ForEach(1...9, id: \.self) { digit in
           Button {
@@ -267,6 +272,7 @@ private struct LessonNumberPad: View {
           .accessibilityLabel(
             L10n.text(removesCandidates ? "Retirer le candidat %@" : "Placer le %@", String(digit))
           )
+          .accessibilityInputLabels([String(digit), L10n.text(removesCandidates ? "Retirer le candidat %@" : "Placer le %@", String(digit))])
           .accessibilityIdentifier("lesson-digit-" + String(digit))
         }
       }
@@ -277,6 +283,7 @@ private struct LessonNumberPad: View {
 }
 
 private struct LessonCellDetail: View {
+  @Environment(\.dynamicTypeSize) private var dynamicTypeSize
   let index: Int
   let boardValue: Int
   let candidates: Set<Int>
@@ -291,14 +298,14 @@ private struct LessonCellDetail: View {
       } else {
         Text(L10n.text("Candidats de la case")).font(LisaTheme.body(14)).foregroundStyle(
           LisaTheme.muted)
-        HStack(spacing: 5) {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 5), count: dynamicTypeSize.isAccessibilitySize ? 3 : 9), spacing: 5) {
           ForEach(1...9, id: \.self) { digit in
             let possible = candidates.contains(digit)
             let removed =
               removesCandidates
               && results.contains(CandidateElimination(index: index, value: digit))
             Text(String(digit)).font(LisaTheme.heading(18))
-              .strikethrough(removed, color: LisaTheme.coral)
+              .strikethrough(removed || !possible, color: LisaTheme.actionInk)
               .frame(maxWidth: .infinity, minHeight: 34)
               .background(
                 possible ? LisaTheme.yellow.opacity(0.5) : LisaTheme.line.opacity(0.15),

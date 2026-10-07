@@ -11,7 +11,9 @@ entry = re.compile(rf'^({literal})\s*=\s*({literal});$')
 
 def read(path):
     values = {}
-    for line in path.read_text().splitlines():
+    # .strings files permit C-style section comments as well as // comments.
+    contents = re.sub(r'/\*.*?\*/', '', path.read_text(), flags=re.DOTALL)
+    for line in contents.splitlines():
         if not line.strip() or line.startswith('//'):
             continue
         match = entry.fullmatch(line)

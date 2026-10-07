@@ -21,14 +21,14 @@ final class LisaUITests: XCTestCase {
     }
 
     private func button(_ title: String, in app: XCUIApplication) -> XCUIElement {
-        app.buttons.containing(.staticText, identifier: title).firstMatch
+        app.buttons[title].firstMatch
     }
 
     func testPoulpiAnimationsRotationZoomAndAutoplay() {
         let app = launchFresh()
         app.tabBars.buttons["Poulpi"].tap()
-        let stage = app.otherElements["poulpiStage"]
-        XCTAssertTrue(stage.waitForExistence(timeout: 10))
+        let stage = app.descendants(matching: .any)["poulpiStage"].firstMatch
+        XCTAssertTrue(stage.waitForExistence(timeout: 10), app.debugDescription)
         app.buttons["poulpiAnimation-happy"].tap()
         XCTAssertTrue((stage.value as? String)?.contains("Coucou") == true)
         let before = stage.value as? String
@@ -50,7 +50,8 @@ final class LisaUITests: XCTestCase {
         let superhero = app.buttons["poulpiAnimation-superhero"]
         for _ in 0..<6 {
             if superhero.isHittable { break }
-            let list = app.scrollViews["poulpiAnimationList"]
+            let animationList = app.scrollViews["poulpiAnimationList"]
+            let list = animationList.exists ? animationList : app.scrollViews.firstMatch
             let visible = list.frame.intersection(app.frame)
             print("Poulpi list frame: \(list.frame), visible: \(visible)")
             let start = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: visible.midX, dy: min(visible.maxY - 55, app.frame.maxY - 100)))
@@ -59,6 +60,11 @@ final class LisaUITests: XCTestCase {
         }
         XCTAssertTrue(superhero.isHittable)
         superhero.tap()
+        // The accessible layout scrolls the whole page, including the stage.
+        for _ in 0..<6 {
+            if stage.isHittable && auto.isHittable { break }
+            app.scrollViews.firstMatch.swipeDown()
+        }
         XCTAssertTrue((stage.value as? String)?.contains("Super Poulpi") == true)
         attach(app, name: "Poulpi-interactif")
         auto.tap()
@@ -76,7 +82,7 @@ final class LisaUITests: XCTestCase {
         XCTAssertEqual(decor.value as? String, "0")
         app.buttons["Terminé"].tap()
         app.tabBars.buttons["Poulpi"].tap()
-        let stage = app.otherElements["poulpiStage"]
+        let stage = app.descendants(matching: .any)["poulpiStage"].firstMatch
         XCTAssertTrue(stage.waitForExistence(timeout: 10))
         XCTAssertFalse(app.buttons["poulpiAutoplay"].isEnabled)
         XCTAssertFalse(app.buttons["poulpiAnimation-happy"].isEnabled)
@@ -152,17 +158,33 @@ final class LisaUITests: XCTestCase {
         let initial = timer.label
         expectation(for: NSPredicate(format: "label != %@", initial), evaluatedWith: timer)
         waitForExpectations(timeout: 5)
+        func seconds(_ label: String) -> Int {
+            let parts = label.split(separator: ":").compactMap { Int($0) }
+            XCTAssertEqual(parts.count, 2)
+            return parts.count == 2 ? parts[0] * 60 + parts[1] : 0
+        }
+        let beforePause = seconds(timer.label)
+        let pausingAt = Date()
         app.buttons["Mettre en pause"].tap()
-        let pausedTime = timer.label
+        XCTAssertTrue(app.staticTexts["Votre grille vous attend."].waitForExistence(timeout: 5))
+        let pausedAt = Date()
+        // Covered game content is deliberately absent from the accessibility tree.
+        XCTAssertFalse(timer.exists)
         let pause = expectation(description: "Time while paused")
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { pause.fulfill() }
-        waitForExpectations(timeout: 4)
-        XCTAssertEqual(timer.label, pausedTime)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 8) { pause.fulfill() }
+        waitForExpectations(timeout: 10)
         XCUIDevice.shared.press(.home)
         app.activate()
         XCTAssertTrue(app.staticTexts["Votre grille vous attend."].waitForExistence(timeout: 5))
-        XCTAssertEqual(timer.label, pausedTime)
+        XCTAssertFalse(timer.exists)
+        let resumingAt = Date()
         button("Reprendre", in: app).tap()
+        XCTAssertTrue(timer.waitForExistence(timeout: 5))
+        let pausedTime = timer.label
+        let activeAllowance = Int(ceil(pausedAt.timeIntervalSince(pausingAt) + Date().timeIntervalSince(resumingAt))) + 2
+        XCTAssertGreaterThanOrEqual(seconds(pausedTime), beforePause)
+        XCTAssertLessThanOrEqual(seconds(pausedTime) - beforePause, activeAllowance,
+                                "The eight paused seconds and background time must not advance the clock")
         app.buttons["Sauvegarder et revenir à l’accueil"].tap()
         XCTAssertTrue(button("Reprendre ma partie", in: app).waitForExistence(timeout: 5))
         app.terminate()
@@ -333,9 +355,16 @@ final class LisaUITests: XCTestCase {
         XCTAssertTrue(reward.waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["Prochaine étape · La forêt des sucettes"].exists)
         attach(app, name: "08-Victoire-récompense")
-        let next = button("Continuer l’aventure", in: app)
-        if !next.isHittable { app.swipeUp() }
+        let next = app.buttons["victoryContinue"]
+        for _ in 0..<4 {
+            if next.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertEqual(next.label, "Prochaine étape")
         next.tap()
+        XCTAssertTrue(app.buttons["cell-0"].waitForExistence(timeout: 15))
+        XCTAssertFalse(app.staticTexts["Bien joué, vous !"].exists)
+        app.buttons["Sauvegarder et revenir à l’accueil"].tap()
         XCTAssertTrue(app.tabBars.buttons["Voyage"].waitForExistence(timeout: 5))
         app.tabBars.buttons["Voyage"].tap()
         XCTAssertTrue(app.staticTexts["5 / 25 étoiles"].waitForExistence(timeout: 5))

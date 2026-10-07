@@ -103,7 +103,7 @@ private struct LessonLibraryHeader: View {
   var body: some View {
     HStack(alignment: .top, spacing: 12) {
       VStack(alignment: .leading, spacing: 8) {
-        Text(L10n.text("UN PETIT DÉCLIC")).font(.system(size: 11, weight: .heavy, design: .rounded))
+        Text(L10n.text("UN PETIT DÉCLIC")).font(LisaTheme.heading(11))
           .tracking(2).foregroundStyle(LisaTheme.muted)
         Text(L10n.text("Apprendre")).font(LisaTheme.heading(36))
         Text(L10n.text("La logique, ça se cultive.")).font(LisaTheme.body()).foregroundStyle(
@@ -125,7 +125,7 @@ private struct LessonLibraryPicker: View {
         } label: {
           HStack(spacing: 12) {
             Text(String(lesson.ordinal)).font(LisaTheme.heading(17))
-              .frame(width: 32, height: 32).background(LisaTheme.yellow, in: Circle())
+              .padding(8).frame(minWidth: 32, minHeight: 32).background(LisaTheme.yellow, in: Circle())
               .foregroundStyle(LisaTheme.accentInk)
             Text(lesson.title).font(LisaTheme.heading(16)).multilineTextAlignment(.leading)
             Spacer(minLength: 4)
@@ -139,6 +139,7 @@ private struct LessonLibraryPicker: View {
           .foregroundStyle(LisaTheme.ink)
         }
         .buttonStyle(LisaPressStyle())
+        .accessibilityInputLabels([lesson.title])
         .accessibilityIdentifier("lesson-" + lesson.rawValue)
         .accessibilityAddTraits(selection == lesson ? .isSelected : [])
       }

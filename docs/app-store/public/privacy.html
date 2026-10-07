@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Confidentialité de Lisa Sudoku : progression locale, jeu hors ligne et partage volontaire sur iPhone.">
+  <title>Confidentialité — Lisa Sudoku</title>
+  <style>
+    :root { color-scheme: light; --ink: #342448; --muted: #62546e; --accent: #8c2863; --paper: #fffcf6; --line: #e6dce9; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 17px; line-height: 1.65; }
+    header, main, footer { max-width: 780px; margin: auto; padding: 28px 24px; }
+    header { padding-top: 48px; border-bottom: 1px solid var(--line); }
+    .brand { color: var(--accent); font-weight: 750; letter-spacing: .02em; margin: 0 0 12px; }
+    h1 { font-size: clamp(2rem, 7vw, 3rem); line-height: 1.15; margin: 0 0 16px; }
+    h2 { font-size: 1.4rem; line-height: 1.3; margin: 0 0 12px; }
+    p { margin: 0 0 16px; }
+    section { padding: 12px 0 24px; }
+    ul { padding-left: 24px; margin: 12px 0 20px; }
+    li { margin: 7px 0; }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    a:focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }
+    .note { border-left: 4px solid var(--accent); background: #f6edf4; padding: 16px 20px; border-radius: 0 12px 12px 0; }
+    footer { color: var(--muted); font-size: .9rem; border-top: 1px solid var(--line); padding-bottom: 40px; }
+    @media (max-width: 420px) { header, main, footer { padding-left: 20px; padding-right: 20px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="brand">Lisa Sudoku</p>
+    <h1>Votre progression, sur votre iPhone</h1>
+    <p>Cette page décrit le fonctionnement de Lisa Sudoku 1.0 et les données utilisées par le jeu.</p>
+  </header>
+  <main>
+    <section aria-labelledby="local">
+      <h2 id="local">Les données conservées localement</h2>
+      <p>Lisa Sudoku enregistre dans son espace sur votre iPhone les informations nécessaires pour reprendre vos parties et afficher vos progrès :</p>
+      <ul>
+        <li>grilles en cours, chiffres placés, notes, actions annulables, temps, erreurs et indices consultés ;</li>
+        <li>historique des parties, défis terminés, progression du Voyage et récompenses ;</li>
+        <li>préférences de jeu, thème, langue, sons, musique et animations.</li>
+      </ul>
+      <p>La version 1.0 n’envoie pas ces sauvegardes à un serveur du développeur et ne propose pas de synchronisation de progression entre appareils.</p>
+    </section>
+    <section aria-labelledby="offline">
+      <h2 id="offline">Jouer hors ligne</h2>
+      <p>Les parties, les indices, les leçons, les défis quotidiens, le Voyage et les événements mensuels fonctionnent sur l’appareil. Aucun compte propre à Lisa Sudoku n’est nécessaire.</p>
+      <p>Cette version ne contient ni publicité, ni achat intégré, ni outil tiers de suivi publicitaire ou d’analyse d’usage identifié dans le jeu.</p>
+    </section>
+    <section aria-labelledby="partage">
+      <h2 id="partage">Le partage reste votre choix</h2>
+      <p>Si vous choisissez de partager un résultat, Lisa Sudoku prépare un texte contenant la difficulté et la durée de la partie. La feuille de partage d’iOS vous laisse choisir le destinataire ou l’application. Le contenu est alors traité par le service que vous sélectionnez.</p>
+      <p>L’extension Lisa Stickers fournit quatre images pour Messages. Leur placement et leur envoi sont gérés par Messages. L’extension n’accède pas au contenu de vos conversations dans son fonctionnement actuel.</p>
+    </section>
+    <section aria-labelledby="gamecenter">
+      <h2 id="gamecenter">Game Center</h2>
+      <p>Les tournois Game Center ne sont pas activés dans la version 1.0. Le jeu ne transmet donc pas de score de tournoi par cette fonctionnalité.</p>
+      <p>Si une version future active les classements, cette page sera mise à jour pour décrire l’authentification Apple et les informations de score concernées.</p>
+    </section>
+    <section aria-labelledby="suppression">
+      <h2 id="suppression">Supprimer les données</h2>
+      <p>Supprimer Lisa Sudoku de votre iPhone efface les données de son installation locale, notamment les parties et la progression.</p>
+      <p class="note">Cela ne supprime pas nécessairement les copies éventuellement présentes dans les sauvegardes système de votre iPhone. Leur conservation et leur restauration dépendent de vos réglages et des services Apple. Les contenus que vous avez volontairement partagés dans une autre application ou envoyés dans Messages sont également gérés par ces services.</p>
+    </section>
+    <section aria-labelledby="page">
+      <h2 id="page">Cette page et vos questions</h2>
+      <p>Cette page est un document statique : elle n’intègre aucun script, publicité, formulaire, ressource distante ou outil de suivi. Les conditions de son hébergement ne sont pas décrites ici tant que l’hébergement public n’a pas été défini.</p>
+      <p>Pour comprendre les sauvegardes et les réglages du jeu, consultez la <a href="support.html">page d’assistance</a>.</p>
+      <!-- À compléter avant publication : identité et contact de confidentialité/assistance confirmés ; préciser les éventuels traitements propres à l’hébergement retenu. Aucune adresse ni URL ne doit être inventée. -->
+    </section>
+  </main>
+  <footer>
+    <p>Informations pour Lisa Sudoku 1.0 · Mise à jour le 7 octobre 2026.</p>
+    <p><a href="support.html">Assistance</a></p>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,150 @@
+{
+  "reference_commit": "0ad7bfa",
+  "production_files": [
+    "App/Design/LisaMotion.swift",
+    "App/Design/PoulpiRig.swift",
+    "Sources/SudokuCore/CompanionFlight.swift"
+  ],
+  "route_microbenchmark": {
+    "samples": [
+      {
+        "version": "before",
+        "cpu_seconds": 0.172806,
+        "checksum": 52362742921.5772
+      },
+      {
+        "version": "after",
+        "cpu_seconds": 0.153256,
+        "checksum": 52362742921.5772
+      },
+      {
+        "version": "after",
+        "cpu_seconds": 0.147375,
+        "checksum": 52362742921.5772
+      },
+      {
+        "version": "before",
+        "cpu_seconds": 0.17449599999999998,
+        "checksum": 52362742921.5772
+      },
+      {
+        "version": "before",
+        "cpu_seconds": 0.184146,
+        "checksum": 52362742921.5772
+      },
+      {
+        "version": "after",
+        "cpu_seconds": 0.15604300000000002,
+        "checksum": 52362742921.5772
+      },
+      {
+        "version": "after",
+        "cpu_seconds": 0.164482,
+        "checksum": 52362742921.5772
+      },
+      {
+        "version": "before",
+        "cpu_seconds": 0.183207,
+        "checksum": 52362742921.5772
+      }
+    ],
+    "iterations": 2000000,
+    "scope": "macOS optimized route microbenchmark, process CPU time; not app energy",
+    "before_median_cpu_seconds": 0.1788515,
+    "after_median_cpu_seconds": 0.1546495
+  },
+  "unchanged_pose_notifications": {
+    "evaluations": 120,
+    "before": 2880,
+    "after": 0
+  },
+  "scope_limits": [
+    "No physical iPhone measurements",
+    "No claimed battery, GPU or thermal gain",
+    "Other development and simulators active on the host"
+  ],
+  "home_release_comparison": [
+    {
+      "version": "before",
+      "pid": 39028,
+      "seconds": 30.013960041920654,
+      "cpu_percent_of_core": 22.92266662043485,
+      "rss_bytes": 295288832,
+      "scene_fps_range": null,
+      "detail_levels": [],
+      "cadence_note": "First log observed at 60 fps/detail 0, then overwritten by the discarded experiment; no archived range."
+    },
+    {
+      "version": "after",
+      "pid": 39305,
+      "seconds": 30.009576666983776,
+      "cpu_percent_of_core": 22.99266023166301,
+      "rss_bytes": 296452096,
+      "scene_fps_range": [
+        55.5,
+        60.0
+      ],
+      "detail_levels": [
+        0
+      ]
+    },
+    {
+      "version": "after",
+      "pid": 39573,
+      "seconds": 30.011339875054546,
+      "cpu_percent_of_core": 22.258253139682118,
+      "rss_bytes": 294649856,
+      "scene_fps_range": [
+        53.5,
+        60.0
+      ],
+      "detail_levels": [
+        0
+      ]
+    },
+    {
+      "version": "before",
+      "pid": 39808,
+      "seconds": 30.013677624985576,
+      "cpu_percent_of_core": 23.42265445720559,
+      "rss_bytes": 297304064,
+      "scene_fps_range": [
+        53.6,
+        60.0
+      ],
+      "detail_levels": [
+        0
+      ]
+    }
+  ],
+  "discarded_canvas_experiment": {
+    "measurement": [
+      {
+        "version": "after",
+        "pid": 42023,
+        "seconds": 30.015038582962006,
+        "cpu_percent_of_core": 22.75525977127026,
+        "rss_bytes": 295485440
+      }
+    ],
+    "reason": "No further CPU benefit; native pixel comparison exceeded the retained visual tolerance. Production and tests restored."
+  },
+  "before_mean_cpu_percent_of_core": 23.172660538820217,
+  "after_mean_cpu_percent_of_core": 22.625456685672564,
+  "observed_relative_cpu_change_percent": -2.361420054598151,
+  "retained_source_sha256": {
+    "App/Design/LisaMotion.swift": "28d84c47c6c52e22e59019a7c1fd0f4d46852e37b216729fbd522b9de4e912b9",
+    "App/Design/PoulpiRig.swift": "48b7fd77a3eb0b0af3725d806c2c5869a4c0348dab743be9826e3812e4a6df4e",
+    "Sources/SudokuCore/CompanionFlight.swift": "e4d1b7257a660eb88685bbc39bd20a3f5b70abeb411ce4417a088af87bb00f01"
+  },
+  "validation": {
+    "core_tests_passed": 55,
+    "app_tests_passed": 23,
+    "ui_scenarios_passed_across_runs": 6,
+    "final_ui_cases_passed": 2,
+    "ios_release_build": "passed",
+    "simulator_release_build": "passed",
+    "final_xcode_test_report": "XCTest cases and suites passed; xcodebuild terminated while stuck finalizing the result bundle",
+    "physical_device": "unavailable"
+  }
+}

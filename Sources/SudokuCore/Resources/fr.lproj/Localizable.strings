@@ -334,7 +334,7 @@
 "Techniques avancées" = "Techniques avancées";
 "Langue de l’iPhone" = "Langue de l’iPhone";
 
-"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Repère la zone colorée et cherche les possibilités encore ouvertes.";
+"Repère la zone colorée et cherche les possibilités encore ouvertes." = "Repère les cases en pointillés et cherche les possibilités encore ouvertes.";
 "Les chiffres présents sur la ligne, la colonne et le bloc éliminent toutes les possibilités sauf une." = "Les chiffres présents sur la ligne, la colonne et le bloc éliminent toutes les possibilités sauf une.";
 "Dans la zone colorée, ce chiffre ne peut aller que dans une case. Les autres emplacements sont bloqués par leur ligne, colonne ou bloc." = "Dans la zone colorée, ce chiffre ne peut aller que dans une case. Les autres emplacements sont bloqués par leur ligne, colonne ou bloc.";
 "Dans le bloc coloré, ce chiffre reste sur une seule ligne ou colonne : élimine-le des autres cases de cette ligne ou colonne." = "Dans le bloc coloré, ce chiffre reste sur une seule ligne ou colonne : élimine-le des autres cases de cette ligne ou colonne.";
@@ -460,3 +460,26 @@
 "Reprendre l’événement de %@" = "Reprendre l’événement de %@";
 "Une courte pause · %@" = "Une courte pause · %@";
 "Voyage · étape %@" = "Voyage · étape %@";
+
+"Verrouiller ce chiffre" = "Verrouiller ce chiffre";
+"Case %@ %@" = "Case %@ %@";
+"Sélectionnée" = "Sélectionnée";
+", doublon" = ", doublon";
+", case de l’indice" = ", case de l’indice";
+"Tourner à gauche" = "Tourner à gauche";
+"Tourner à droite" = "Tourner à droite";
+"Pointillés : cases à comparer. Double bord : case à résoudre. Bord épais : sélection. Chiffres barrés : candidats retirés." = "Pointillés : cases à comparer. Double bord : case à résoudre. Bord épais : sélection. Chiffres barrés : candidats retirés.";
+"Regarde les cases en pointillés. %@" = "Regarde les cases en pointillés. %@";
+"Les cases en pointillés montrent la zone à comparer. Affiche la déduction pour voir le résultat." = "Les cases en pointillés montrent la zone à comparer. Affiche la déduction pour voir le résultat.";
+"Cette technique ne permet pas de retirer ce candidat ici. Compare les positions du chiffre et les candidats des cases en pointillés." = "Cette technique ne permet pas de retirer ce candidat ici. Compare les positions du chiffre et les candidats des cases en pointillés.";
+"Retire les candidats barrés dans les cases entourées de pointillés (%@ éliminations). Aucun chiffre n’est placé à cette étape." = "Retire les candidats barrés dans les cases entourées de pointillés (%@ éliminations). Aucun chiffre n’est placé à cette étape.";
+
+"La partie en détail" = "La partie en détail";
+
+"Incliner vers le haut" = "Incliner vers le haut";
+
+"Incliner vers le bas" = "Incliner vers le bas";
+
+", chiffre mis en évidence" = ", chiffre mis en évidence";
+
+", même ligne, colonne ou carré que la sélection" = ", même ligne, colonne ou carré que la sélection";

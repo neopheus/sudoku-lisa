@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Aide Lisa Sudoku : règles, modes de jeu, indices, notes, sauvegardes et dépannage sur iPhone.">
+  <title>Assistance — Lisa Sudoku</title>
+  <style>
+    :root { color-scheme: light; --ink: #342448; --muted: #62546e; --accent: #8c2863; --paper: #fffcf6; --line: #e6dce9; }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--paper); color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 17px; line-height: 1.65; }
+    header, main, footer { max-width: 780px; margin: auto; padding: 28px 24px; }
+    header { padding-top: 48px; border-bottom: 1px solid var(--line); }
+    .brand { color: var(--accent); font-weight: 750; letter-spacing: .02em; margin: 0 0 12px; }
+    h1 { font-size: clamp(2rem, 7vw, 3rem); line-height: 1.15; margin: 0 0 16px; }
+    h2 { font-size: 1.4rem; line-height: 1.3; margin: 0 0 12px; }
+    h3 { font-size: 1.08rem; margin: 24px 0 8px; }
+    p { margin: 0 0 16px; }
+    section { padding: 12px 0 24px; }
+    ul, ol { padding-left: 24px; margin: 12px 0 20px; }
+    li { margin: 7px 0; }
+    a { color: var(--accent); text-underline-offset: 3px; }
+    a:focus-visible { outline: 3px solid var(--accent); outline-offset: 5px; }
+    .note { border-left: 4px solid var(--accent); background: #f6edf4; padding: 16px 20px; border-radius: 0 12px 12px 0; }
+    footer { color: var(--muted); font-size: .9rem; border-top: 1px solid var(--line); padding-bottom: 40px; }
+    @media (max-width: 420px) { header, main, footer { padding-left: 20px; padding-right: 20px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <p class="brand">Lisa Sudoku</p>
+    <h1>Un petit coup de pouce</h1>
+    <p>Les règles, les outils et quelques repères pour jouer tranquillement avec Poulpi sur votre iPhone.</p>
+  </header>
+  <main>
+    <section aria-labelledby="regles">
+      <h2 id="regles">Les règles du sudoku</h2>
+      <p>Complétez la grille avec les chiffres de 1 à 9. Chaque ligne, chaque colonne et chaque bloc de 3 × 3 doit contenir chaque chiffre une seule fois. Les chiffres déjà présents au départ servent de repères et ne peuvent pas être modifiés.</p>
+      <p>Commencez par une ligne, une colonne ou un bloc presque rempli. Comparez les chiffres manquants avec ceux des zones qui se croisent.</p>
+    </section>
+    <section aria-labelledby="modes">
+      <h2 id="modes">Choisir votre aventure</h2>
+      <ul>
+        <li><strong>Partie libre :</strong> choisissez votre niveau pour une nouvelle grille.</li>
+        <li><strong>Chaque jour :</strong> relevez le défi quotidien et retrouvez les défis passés dans le calendrier.</li>
+        <li><strong>Voyage :</strong> avancez à travers 25 étapes et collectionnez les récompenses.</li>
+        <li><strong>Événement du mois :</strong> découvrez une série de 10 grilles avec une médaille à collectionner.</li>
+      </ul>
+      <p>Ces modes et votre progression fonctionnent hors ligne. Les événements suivent le calendrier de votre iPhone. Les tournois Game Center ne sont pas activés dans la version 1.0.</p>
+      <h3>Six niveaux, à votre rythme</h3>
+      <p>Express, Facile, Moyen, Difficile, Expert et Maître proposent des techniques de résolution de plus en plus avancées. Express privilégie les déductions simples ; il ne garantit pas une durée de partie.</p>
+    </section>
+    <section aria-labelledby="outils">
+      <h2 id="outils">Saisir, noter et comprendre</h2>
+      <p>Touchez une case vide, puis un chiffre. Le réglage de saisie par chiffre permet aussi de choisir un chiffre avant de toucher plusieurs cases.</p>
+      <ul>
+        <li><strong>Notes :</strong> inscrivez de petits candidats dans une case. Touchez à nouveau un candidat pour le retirer. Les notes restent distinctes des chiffres placés.</li>
+        <li><strong>Gommer :</strong> retirez votre saisie dans la case sélectionnée.</li>
+        <li><strong>Annuler :</strong> revenez sur une action précédente.</li>
+        <li><strong>Indice :</strong> observez d’abord une zone, puis découvrez l’explication avant de choisir d’appliquer l’étape. Vous pouvez aussi continuer seul.</li>
+      </ul>
+      <p>La bibliothèque Apprendre propose cinq leçons interactives : observation, candidat unique, position unique, candidats verrouillés et paire nue. Observez une démonstration, essayez avec Lisa, puis entraînez-vous sur un autre exemple.</p>
+      <p>Pour certaines anciennes grilles, si les techniques prises en charge ne permettent plus de déduction, l’app indique explicitement qu’une valeur vient de la solution vérifiée.</p>
+    </section>
+    <section aria-labelledby="reprise">
+      <h2 id="reprise">Faire une pause et reprendre</h2>
+      <p>La progression se sauvegarde automatiquement sur votre iPhone. Utilisez la pause ou revenez à l’accueil, puis choisissez de reprendre votre partie. Une partie en cours est conservée par mode, avec ses notes et son contexte.</p>
+      <p>Il n’y a pas de synchronisation de progression entre appareils dans la version 1.0. Une nouvelle partie du même mode peut remplacer la précédente après confirmation.</p>
+      <p class="note">Supprimer l’app efface les données de son installation locale. D’éventuelles copies dans les sauvegardes système de l’iPhone dépendent de vos réglages Apple. Évitez de désinstaller l’app pour résoudre un problème si vous souhaitez conserver votre progression.</p>
+    </section>
+    <section aria-labelledby="ambiance">
+      <h2 id="ambiance">Votre ambiance de jeu</h2>
+      <p>Les réglages permettent de choisir les thèmes Soleil, Nuit ou Papier, la langue, les sons, la musique douce, les retours haptiques et le décor animé. La musique est désactivée par défaut.</p>
+      <p>Vous pouvez masquer le chronomètre et adapter les aides de jeu. Le réglage iOS Réduire les animations limite les mouvements et les effets. L’audio est suspendu en pause et en arrière-plan ; le mode silencieux de l’iPhone est respecté.</p>
+    </section>
+    <section aria-labelledby="depannage">
+      <h2 id="depannage">Quelques vérifications utiles</h2>
+      <h3>Un chiffre ne se place pas</h3>
+      <p>Vérifiez que la case est modifiable et sélectionnée, que la partie n’est pas en pause et que le mode Notes est désactivé si vous voulez placer un chiffre définitif. Fermez un indice ouvert pour retrouver les commandes de la grille.</p>
+      <h3>Les sons ou la musique sont absents</h3>
+      <p>Vérifiez les réglages de l’app, le volume, le mode silencieux et les écouteurs. La musique peut se taire lorsqu’une autre app diffuse de l’audio.</p>
+      <h3>La mascotte ou le décor reste immobile</h3>
+      <p>Vérifiez Décor animé et le réglage iOS Réduire les animations. Les mouvements se suspendent aussi lorsque l’écran n’est plus actif ou lorsqu’une fenêtre couvre le jeu.</p>
+      <h3>Une sauvegarde ne se charge pas</h3>
+      <p>L’app conserve une sauvegarde illisible et suspend son enregistrement pour protéger la progression. Ne supprimez pas l’app. Relevez le message exact et les circonstances avant de demander de l’aide.</p>
+      <h3>Signaler un problème</h3>
+      <p>Préparez le modèle d’iPhone, la version d’iOS, la version de Lisa Sudoku, le mode de jeu, le message éventuel et les étapes permettant de reproduire le problème. Pour une version bêta TestFlight, utilisez les retours intégrés à TestFlight.</p>
+      <!-- À compléter avant publication : contact d’assistance confirmé et moyen de contact réel. Aucune adresse ni URL ne doit être inventée. -->
+    </section>
+  </main>
+  <footer>
+    <p>Informations pour Lisa Sudoku 1.0 · Mise à jour le 7 octobre 2026.</p>
+    <p><a href="privacy.html">Confidentialité</a></p>
+  </footer>
+</body>
+</html>
