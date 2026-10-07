@@ -5,6 +5,7 @@ import UIKit
 struct LisaSettings: Codable, Sendable {
     var sound = true
     var music = false
+    var musicTrack = LisaMusicTrack.bubbleGum.rawValue
     var animatedDecor = true
     var haptics = true
     var autoCheck = true
@@ -18,11 +19,12 @@ struct LisaSettings: Codable, Sendable {
     var poulpiStarEquipped = false
 
     init() {}
-    private enum CodingKeys: String, CodingKey { case sound, music, animatedDecor, haptics, autoCheck, highlightPeers, highlightDuplicates, errorLimit, darkMode, paperMode, showTimer, numberFirst, poulpiStarEquipped }
+    private enum CodingKeys: String, CodingKey { case sound, music, musicTrack, animatedDecor, haptics, autoCheck, highlightPeers, highlightDuplicates, errorLimit, darkMode, paperMode, showTimer, numberFirst, poulpiStarEquipped }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         sound = try c.decodeIfPresent(Bool.self, forKey: .sound) ?? true
         music = try c.decodeIfPresent(Bool.self, forKey: .music) ?? false
+        musicTrack = try c.decodeIfPresent(String.self, forKey: .musicTrack) ?? LisaMusicTrack.bubbleGum.rawValue
         animatedDecor = try c.decodeIfPresent(Bool.self, forKey: .animatedDecor) ?? true
         haptics = try c.decodeIfPresent(Bool.self, forKey: .haptics) ?? true
         autoCheck = try c.decodeIfPresent(Bool.self, forKey: .autoCheck) ?? true
@@ -86,7 +88,7 @@ final class LisaStore: ObservableObject {
     let clock = LisaGameClock()
     private(set) var duplicateCells: Set<Int> = []
     @Published var settings = LisaSettings() { didSet {
-        LisaAudio.shared.configure(music: settings.music, effectsEnabled: settings.sound)
+        LisaAudio.shared.configure(music: settings.music, musicTrack: LisaMusicTrack(rawValue: settings.musicTrack) ?? .bubbleGum, effectsEnabled: settings.sound)
         save()
     } }
     @Published var history: [FinishedGame] = []

@@ -1,7 +1,24 @@
 import AVFoundation
+import SudokuCore
 
 enum LisaSound: String, CaseIterable {
     case select, place, note, erase, hint, milestone, hello, victory
+}
+
+enum LisaMusicTrack: String, CaseIterable, Identifiable {
+    case bubbleGum = "bubble-gum"
+    case bubbleGumTwo = "bubble-gum-2"
+    case lightPuzzles = "light-puzzles-12"
+
+    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .bubbleGum: L10n.text("Bubble Gum Puzzler")
+        case .bubbleGumTwo: L10n.text("Bubble Gum Puzzler 2")
+        case .lightPuzzles: L10n.text("Light Puzzles 12")
+        }
+    }
+    var resourceName: String { "lisa-music-" + rawValue }
 }
 
 /// Bounded player pool, bundled original sounds, and an optional quiet loop.
@@ -11,6 +28,7 @@ final class LisaAudio: NSObject {
     static let shared = LisaAudio()
     private var effects: [LisaSound: AVAudioPlayer] = [:]
     private var music: AVAudioPlayer?
+    private var currentMusicTrack: LisaMusicTrack = .bubbleGum
     private var active = false
     private var interrupted = false
     private var musicWanted = false
@@ -25,11 +43,16 @@ final class LisaAudio: NSObject {
         NotificationCenter.default.addObserver(self, selector: #selector(secondaryAudioChanged(_:)), name: AVAudioSession.silenceSecondaryAudioHintNotification, object: nil)
     }
 
-    func configure(active: Bool? = nil, music: Bool? = nil, paused: Bool? = nil, effectsEnabled: Bool? = nil) {
+    func configure(active: Bool? = nil, music: Bool? = nil, musicTrack: LisaMusicTrack? = nil, paused: Bool? = nil, effectsEnabled: Bool? = nil) {
         if let active { self.active = active }
         if let music {
             if music != musicWanted { routeSuspended = false }
             musicWanted = music
+        }
+        if let musicTrack, currentMusicTrack != musicTrack {
+            currentMusicTrack = musicTrack
+            self.music?.stop()
+            self.music = nil
         }
         if let paused { self.paused = paused; if !paused { routeSuspended = false } }
         if effectsEnabled == false || !self.active || self.paused {
@@ -62,7 +85,7 @@ final class LisaAudio: NSObject {
         guard active, musicWanted, !paused, !interrupted, !routeSuspended,
               !AVAudioSession.sharedInstance().isOtherAudioPlaying else { music?.pause(); return }
         if music == nil {
-            music = player(named: "ambience")
+            music = player(named: currentMusicTrack.resourceName, extension: "mp3")
             music?.numberOfLoops = -1
             music?.volume = 0.38
         }
@@ -70,7 +93,11 @@ final class LisaAudio: NSObject {
     }
 
     private func player(named name: String) -> AVAudioPlayer? {
-        guard let url = Bundle.main.url(forResource: "lisa-" + name, withExtension: "wav") else { return nil }
+        player(named: "lisa-" + name, extension: "wav")
+    }
+
+    private func player(named name: String, extension fileExtension: String) -> AVAudioPlayer? {
+        guard let url = Bundle.main.url(forResource: name, withExtension: fileExtension) else { return nil }
         guard let player = try? AVAudioPlayer(contentsOf: url) else { return nil }
         player.prepareToPlay()
         return player

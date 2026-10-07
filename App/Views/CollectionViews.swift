@@ -340,7 +340,14 @@ struct SettingsView: View {
                     Text(L10n.text("Papier")).tag(2)
                 }.modifier(AccessibleSettingsPickerStyle()).accessibilityIdentifier("themePicker")
                 Toggle(L10n.text("Sons"), isOn: $store.settings.sound)
-                Toggle(L10n.text("Musique douce"), isOn: $store.settings.music).accessibilityIdentifier("musicToggle")
+                Toggle(L10n.text("Musique de jeu"), isOn: $store.settings.music).accessibilityIdentifier("musicToggle")
+                if store.settings.music {
+                    Picker(L10n.text("Morceau"), selection: $store.settings.musicTrack) {
+                        ForEach(LisaMusicTrack.allCases) { track in Text(track.title).tag(track.rawValue) }
+                    }
+                    .modifier(AccessibleSettingsPickerStyle())
+                    .accessibilityIdentifier("musicTrackPicker")
+                }
                 Toggle(L10n.text("Décor animé"), isOn: $store.settings.animatedDecor).accessibilityIdentifier("decorToggle")
                 Toggle(L10n.text("Retours haptiques"), isOn: $store.settings.haptics)
             }
@@ -360,6 +367,9 @@ struct SettingsView: View {
                 Text(L10n.text("La réduction des animations suit le réglage d’accessibilité de votre iPhone.")).font(.footnote).foregroundStyle(.secondary)
             }
             Section { Text(L10n.text("Sudoku Lisa · 1.0\nConçu pour les petits moments à soi.")).font(.footnote).foregroundStyle(.secondary) }
+            Section(L10n.text("Musique")) {
+                Text(L10n.text("Musiques de %@ — %@", "Eric Matyas", "soundimage.org")).font(.footnote).foregroundStyle(.secondary)
+            }
         }.preferredColorScheme(store.settings.darkMode ? .dark : .light).tint(LisaTheme.actionInk).navigationTitle(L10n.text("À votre goût")).navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button(L10n.text("Terminé")) { dismiss() } } } }
     }
 }
