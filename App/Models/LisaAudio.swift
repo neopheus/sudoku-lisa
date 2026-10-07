@@ -6,19 +6,18 @@ enum LisaSound: String, CaseIterable {
 }
 
 enum LisaMusicTrack: String, CaseIterable, Identifiable {
-    case bubbleGum = "bubble-gum"
-    case bubbleGumTwo = "bubble-gum-2"
-    case lightPuzzles = "light-puzzles-12"
+    case marimbaPuzzle = "marimba-puzzle"
+    case fishbowlAcrobatics = "fishbowl-acrobatics"
 
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .bubbleGum: L10n.text("Bubble Gum Puzzler")
-        case .bubbleGumTwo: L10n.text("Bubble Gum Puzzler 2")
-        case .lightPuzzles: L10n.text("Light Puzzles 12")
+        case .marimbaPuzzle: L10n.text("Marimba Game Music")
+        case .fishbowlAcrobatics: L10n.text("Fishbowl Acrobatics")
         }
     }
     var resourceName: String { "lisa-music-" + rawValue }
+    var fileExtension: String { "mp3" }
 }
 
 /// Bounded player pool, bundled original sounds, and an optional quiet loop.
@@ -28,7 +27,7 @@ final class LisaAudio: NSObject {
     static let shared = LisaAudio()
     private var effects: [LisaSound: AVAudioPlayer] = [:]
     private var music: AVAudioPlayer?
-    private var currentMusicTrack: LisaMusicTrack = .bubbleGum
+    private var currentMusicTrack: LisaMusicTrack = .marimbaPuzzle
     private var active = false
     private var interrupted = false
     private var musicWanted = false
@@ -85,7 +84,7 @@ final class LisaAudio: NSObject {
         guard active, musicWanted, !paused, !interrupted, !routeSuspended,
               !AVAudioSession.sharedInstance().isOtherAudioPlaying else { music?.pause(); return }
         if music == nil {
-            music = player(named: currentMusicTrack.resourceName, extension: "mp3")
+            music = player(named: currentMusicTrack.resourceName, extension: currentMusicTrack.fileExtension)
             music?.numberOfLoops = -1
             music?.volume = 0.38
         }

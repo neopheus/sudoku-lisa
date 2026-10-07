@@ -368,7 +368,8 @@ struct SettingsView: View {
             }
             Section { Text(L10n.text("Sudoku Lisa · 1.0\nConçu pour les petits moments à soi.")).font(.footnote).foregroundStyle(.secondary) }
             Section(L10n.text("Musique")) {
-                Text(L10n.text("Musiques de %@ — %@", "Eric Matyas", "soundimage.org")).font(.footnote).foregroundStyle(.secondary)
+                Text(L10n.text("Marimba Game Music — Denis-Pavlov-Music, Pixabay")).font(.footnote).foregroundStyle(.secondary)
+                Text(L10n.text("Fishbowl Acrobatics by Eric Matyas — soundimage.org (MP3 converted)")).font(.footnote).foregroundStyle(.secondary)
             }
         }.preferredColorScheme(store.settings.darkMode ? .dark : .light).tint(LisaTheme.actionInk).navigationTitle(L10n.text("À votre goût")).navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button(L10n.text("Terminé")) { dismiss() } } } }
     }

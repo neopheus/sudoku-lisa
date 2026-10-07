@@ -1,11 +1,8 @@
 # Game music credits
 
-The following looping music tracks are bundled in the iOS app:
+The iOS app includes two selectable looping tracks:
 
-- “Bubble Gum Puzzler” by Eric Matyas — https://soundimage.org/wp-content/uploads/2017/08/Bubble-Gum-Puzzler.mp3
-- “Bubble Gum Puzzler 2” by Eric Matyas — https://soundimage.org/wp-content/uploads/2017/08/Bubble-Gum-Puzzler-2.mp3
-- “Light Puzzles 12” by Eric Matyas — https://soundimage.org/wp-content/uploads/2024/09/Light-Puzzles-12.mp3
+- “Marimba Game Music Playful Tropical Jungle Puzzle” by Denis-Pavlov-Music, downloaded from [Pixabay](https://pixabay.com/music/video-games-marimba-game-music-playful-tropical-jungle-puzzle-399759/). Pixabay Content License: https://pixabay.com/service/license-summary/
+- “Fishbowl Acrobatics” by Eric Matyas, downloaded from [OpenGameArt](https://opengameart.org/content/fishbowl-acrobatics-looping). Licensed CC BY 3.0: https://creativecommons.org/licenses/by/3.0/. The supplied OGG file was converted to MP3 for iOS playback.
 
-Source: https://soundimage.org/puzzle-music/ and https://soundimage.org/puzzle-music-7/
-
-The author requires an in-app credit. The Settings screen displays “Music by Eric Matyas — soundimage.org”.
+The Settings screen credits both sources. Eric Matyas requests the in-game credit “Fishbowl Acrobatics” by Eric Matyas, www.soundimage.org.

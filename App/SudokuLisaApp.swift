@@ -45,7 +45,7 @@ struct SudokuLisaApp: App {
                 .background(LisaDisplayObserver().allowsHitTesting(false).accessibilityHidden(true))
                 .preferredColorScheme(store.settings.darkMode ? .dark : .light)
                 .onChange(of: scenePhase, initial: true) { _, phase in
-                    LisaAudio.shared.configure(active: phase == .active, music: store.settings.music, musicTrack: LisaMusicTrack(rawValue: store.settings.musicTrack) ?? .bubbleGum)
+                    LisaAudio.shared.configure(active: phase == .active, music: store.settings.music, musicTrack: LisaMusicTrack(rawValue: store.settings.musicTrack) ?? .marimbaPuzzle)
                     if phase != .active { store.saveForBackground() }
                 }
                 .onAppear {
