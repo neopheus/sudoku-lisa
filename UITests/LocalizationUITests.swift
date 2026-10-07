@@ -14,6 +14,7 @@ final class LocalizationUITests: XCTestCase {
         for (language, locale, play, daily, journey, progress, settings, settingsTitle, languageTitle, done, start, easy, erase) in cases {
             let app = XCUIApplication()
             app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(\(language))", "-AppleLocale", locale]
+            app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
             app.launch()
             for title in [play, daily, journey, progress] {
                 XCTAssertTrue(app.tabBars.buttons[title].waitForExistence(timeout: 15), "\(language): \(title)")
@@ -25,8 +26,8 @@ final class LocalizationUITests: XCTestCase {
             screenshot(app, "\(language)-settings")
             app.buttons[done].tap()
             app.buttons.containing(.staticText, identifier: start).firstMatch.tap()
-            app.buttons.containing(.staticText, identifier: easy).firstMatch.tap()
-            XCTAssertTrue(app.buttons.containing(.staticText, identifier: erase).firstMatch.waitForExistence(timeout: 20))
+            app.buttons[easy].tap()
+            XCTAssertTrue(app.buttons[erase].waitForExistence(timeout: 20))
             screenshot(app, "\(language)-game")
             app.terminate()
         }
@@ -35,6 +36,7 @@ final class LocalizationUITests: XCTestCase {
     func testGermanSettingsTitle() {
         let app = XCUIApplication()
         app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(de)", "-AppleLocale", "de_DE"]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         XCTAssertTrue(app.buttons["Einstellungen"].waitForExistence(timeout: 15))
         app.buttons["Einstellungen"].tap()
@@ -47,6 +49,7 @@ final class LocalizationUITests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         XCTAssertTrue(app.buttons["Réglages"].waitForExistence(timeout: 15))
         app.buttons["Réglages"].tap()
@@ -59,20 +62,21 @@ final class LocalizationUITests: XCTestCase {
         app.buttons["Done"].tap()
         XCTAssertTrue(app.tabBars.buttons["Play"].waitForExistence(timeout: 5))
         app.buttons.containing(.staticText, identifier: "Let's play!").firstMatch.tap()
-        app.buttons.containing(.staticText, identifier: "Easy").firstMatch.tap()
+        app.buttons["Easy"].tap()
         XCTAssertTrue(app.buttons["gameSettingsButton"].waitForExistence(timeout: 20))
         app.buttons["gameSettingsButton"].tap()
         app.buttons["languagePicker"].tap()
         app.buttons["Русский"].tap()
         XCTAssertTrue(app.buttons["Готово"].waitForExistence(timeout: 5))
         app.buttons["Готово"].tap()
-        XCTAssertTrue(app.buttons.containing(.staticText, identifier: "Стереть").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Стереть"].waitForExistence(timeout: 5))
         let firstCell = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Строка 1, столбец 1,")).firstMatch
         XCTAssertTrue(firstCell.exists)
         let savedCell = firstCell.label
         screenshot(app, "manual-language-active-game")
         app.terminate()
         app.launchArguments = ["-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         XCTAssertTrue(app.tabBars.buttons["Играть"].waitForExistence(timeout: 15))
         app.buttons.containing(.staticText, identifier: "Продолжить игру").firstMatch.tap()
@@ -83,7 +87,7 @@ final class LocalizationUITests: XCTestCase {
         app.buttons["Язык iPhone"].tap()
         XCTAssertTrue(app.navigationBars["À votre goût"].waitForExistence(timeout: 5))
         app.buttons["Terminé"].tap()
-        XCTAssertTrue(app.buttons.containing(.staticText, identifier: "Gommer").firstMatch.waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["Gommer"].waitForExistence(timeout: 5))
         app.terminate()
     }
 

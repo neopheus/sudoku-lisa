@@ -8,6 +8,7 @@ final class LisaUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
         if metrics { app.launchEnvironment["LISA_RENDER_METRICS"] = "1" }
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         XCTAssertTrue(app.tabBars.buttons["Jouer"].waitForExistence(timeout: 10))
         return app
@@ -29,8 +30,17 @@ final class LisaUITests: XCTestCase {
         app.tabBars.buttons["Poulpi"].tap()
         let stage = app.descendants(matching: .any)["poulpiStage"].firstMatch
         XCTAssertTrue(stage.waitForExistence(timeout: 10), app.debugDescription)
-        app.buttons["poulpiAnimation-happy"].tap()
-        XCTAssertTrue((stage.value as? String)?.contains("Coucou") == true)
+        let happy = app.buttons["poulpiAnimation-happy"]
+        for _ in 0..<6 {
+            if happy.isHittable && app.frame.contains(happy.frame) { break }
+            app.scrollViews.firstMatch.swipeUp()
+        }
+        happy.tap()
+        for _ in 0..<6 {
+            if stage.isHittable { break }
+            app.scrollViews.firstMatch.swipeDown()
+        }
+        XCTAssertTrue((stage.value as? String)?.contains("Coucou") == true, "Stage value: \(String(describing: stage.value)); \(app.debugDescription)")
         let before = stage.value as? String
         stage.swipeLeft()
         XCTAssertNotEqual(stage.value as? String, before)
@@ -101,7 +111,7 @@ final class LisaUITests: XCTestCase {
         let start = button("C’est parti !", in: app)
         XCTAssertTrue(start.waitForExistence(timeout: 5))
         start.tap()
-        let easy = app.buttons.containing(.staticText, identifier: "Facile").firstMatch
+        let easy = app.buttons["Facile"]
         XCTAssertTrue(easy.waitForExistence(timeout: 5))
         easy.tap()
 
@@ -111,7 +121,7 @@ final class LisaUITests: XCTestCase {
         XCTAssertTrue(nine.isHittable, "All nine digits must be reachable without scrolling away from the board")
         let coordinate = empty.label.components(separatedBy: ", vide")[0]
         empty.tap()
-        let notes = button("Notes", in: app)
+        let notes = app.buttons["Notes"]
         XCTAssertTrue(notes.exists)
         notes.tap()
         let one = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "1, ")).firstMatch
@@ -119,10 +129,10 @@ final class LisaUITests: XCTestCase {
         one.tap()
         let notedCell = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", coordinate, "notes 1")).firstMatch
         XCTAssertTrue(notedCell.waitForExistence(timeout: 5), "Adding a candidate must update the actual board cell")
-        button("Annuler", in: app).tap()
+        app.buttons["Annuler"].tap()
         XCTAssertFalse(notedCell.exists, "Undo must remove the candidate")
 
-        button("Notes oui", in: app).tap()
+        app.buttons["Notes oui"].tap()
         one.tap()
         let filledCell = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", coordinate + ", 1")).firstMatch
         XCTAssertTrue(filledCell.waitForExistence(timeout: 5), "A number input must change the selected cell")
@@ -142,6 +152,7 @@ final class LisaUITests: XCTestCase {
         // Relaunch without resetting: prove persistence across process termination.
         app.terminate()
         app.launchArguments = ["-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         XCTAssertTrue(resume.waitForExistence(timeout: 10))
         resume.tap()
@@ -152,7 +163,7 @@ final class LisaUITests: XCTestCase {
     func testTimerPauseAndPersistence() {
         let app = launchFresh()
         button("C’est parti !", in: app).tap()
-        app.buttons.containing(.staticText, identifier: "Facile").firstMatch.tap()
+        app.buttons["Facile"].tap()
         let timer = app.staticTexts["gameTimer"]
         XCTAssertTrue(timer.waitForExistence(timeout: 15))
         let initial = timer.label
@@ -189,6 +200,7 @@ final class LisaUITests: XCTestCase {
         XCTAssertTrue(button("Reprendre ma partie", in: app).waitForExistence(timeout: 5))
         app.terminate()
         app.launchArguments = ["-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         button("Reprendre ma partie", in: app).tap()
         XCTAssertTrue(timer.waitForExistence(timeout: 10))
@@ -199,7 +211,7 @@ final class LisaUITests: XCTestCase {
     func testSpatialCompanionDoesNotBlockBoard() {
         let app = launchFresh()
         button("C’est parti !", in: app).tap()
-        app.buttons.containing(.staticText, identifier: "Facile").firstMatch.tap()
+        app.buttons["Facile"].tap()
         let empty = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Ligne ", ", vide")).firstMatch
         XCTAssertTrue(empty.waitForExistence(timeout: 15))
         let coordinate = empty.label.components(separatedBy: ", vide")[0]
@@ -220,7 +232,7 @@ final class LisaUITests: XCTestCase {
     func testAdaptiveEffectsAndPause() {
         let app = launchFresh(metrics: true)
         button("C’est parti !", in: app).tap()
-        app.buttons.containing(.staticText, identifier: "Facile").firstMatch.tap()
+        app.buttons["Facile"].tap()
         let companion = app.buttons["Faire rire Lisa"]
         XCTAssertTrue(companion.waitForExistence(timeout: 15))
         if UIAccessibility.isReduceMotionEnabled {
@@ -251,7 +263,7 @@ final class LisaUITests: XCTestCase {
     func testPlayfulCompanion() {
         let app = launchFresh()
         button("C’est parti !", in: app).tap()
-        app.buttons.containing(.staticText, identifier: "Facile").firstMatch.tap()
+        app.buttons["Facile"].tap()
         let companion = app.buttons["Faire rire Lisa"]
         XCTAssertTrue(companion.waitForExistence(timeout: 15))
         if UIAccessibility.isReduceMotionEnabled {
@@ -322,6 +334,7 @@ final class LisaUITests: XCTestCase {
         app.buttons["Terminé"].tap()
         app.terminate()
         app.launchArguments = ["-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         app.buttons["Réglages"].tap()
         XCTAssertTrue(music.waitForExistence(timeout: 5))
@@ -335,6 +348,7 @@ final class LisaUITests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--uitest-reset", "--uitest-finale", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         let resume = button("Reprendre ma partie", in: app)
         XCTAssertTrue(resume.waitForExistence(timeout: 10))
@@ -381,6 +395,7 @@ final class LisaUITests: XCTestCase {
         motion.name = "System accessibility setting"
         motion.lifetime = .keepAlways
         add(motion)
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         let resume = button("Reprendre ma partie", in: app)
         XCTAssertTrue(resume.waitForExistence(timeout: 10))

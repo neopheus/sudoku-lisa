@@ -33,6 +33,7 @@ final class AppStoreScreenshotTests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         XCTAssertTrue(app.tabBars.buttons["Jouer"].waitForExistence(timeout: 15))
         XCTAssertTrue(button("C’est parti !", in: app).exists)
@@ -48,7 +49,7 @@ final class AppStoreScreenshotTests: XCTestCase {
         XCTAssertFalse(app.buttons["cancelGeneration"].exists)
         capture("02-Grille-quotidienne")
 
-        let hint = button("Indice", in: app)
+        let hint = app.buttons["Indice"]
         XCTAssertTrue(hint.isHittable)
         hint.tap()
         XCTAssertTrue(app.staticTexts["hintExplanation"].waitForExistence(timeout: 10))
@@ -73,7 +74,7 @@ final class AppStoreScreenshotTests: XCTestCase {
         capture("05-Voyage")
 
         app.tabBars.buttons["Poulpi"].tap()
-        XCTAssertTrue(app.otherElements["poulpiStage"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.descendants(matching: .any)["poulpiStage"].firstMatch.waitForExistence(timeout: 10))
         capture("06-Poulpi")
         app.terminate()
     }

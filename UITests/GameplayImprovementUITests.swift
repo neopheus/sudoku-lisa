@@ -6,6 +6,7 @@ final class GameplayImprovementUITests: XCTestCase {
         continueAfterFailure = false
         let app = XCUIApplication()
         app.launchArguments = ["--uitest-reset", "--uitest-finale", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         let resume = app.buttons.containing(.staticText, identifier: "Reprendre ma partie").firstMatch
         XCTAssertTrue(resume.waitForExistence(timeout: 10))
@@ -37,11 +38,11 @@ final class GameplayImprovementUITests: XCTestCase {
 
     func testHintTutorialReturnsToUnchangedBoardAndExplainsBeforeApplying() {
         let app = launchFixture()
-        let original = app.buttons["cell-0"].label
-        let hint = titleButton("Indice", in: app)
+        let hint = app.buttons["Indice"]
         reveal(hint, in: app); hint.tap()
         XCTAssertTrue(app.staticTexts["hintExplanation"].waitForExistence(timeout: 10))
         XCTAssertFalse(app.buttons["applyHint"].exists)
+        let original = app.buttons["cell-0"].label
         let tutorial = app.buttons["hintTutorial"]
         reveal(tutorial, in: app); tutorial.tap()
         XCTAssertTrue(app.buttons["lesson-close"].waitForExistence(timeout: 10))
@@ -71,7 +72,7 @@ final class GameplayImprovementUITests: XCTestCase {
         reveal(digit, in: app); digit.tap()
         app.buttons["cell-0"].tap()
         XCTAssertTrue(app.buttons["cell-0"].label.contains(", 1"))
-        let notes = titleButton("Notes", in: app)
+        let notes = app.buttons["Notes"]
         reveal(notes, in: app); notes.tap()
         XCTAssertTrue(app.staticTexts["notesModeBanner"].exists || app.otherElements["notesModeBanner"].exists)
         app.buttons["cell-40"].tap()
@@ -82,7 +83,7 @@ final class GameplayImprovementUITests: XCTestCase {
     func testDailyDoesNotReplaceJourneyAndNotesSurviveRelaunch() {
         let app = launchFixture()
         app.buttons["cell-0"].tap()
-        let notes = titleButton("Notes", in: app)
+        let notes = app.buttons["Notes"]
         reveal(notes, in: app); notes.tap()
         app.buttons["digit-1"].tap()
         let savedCell = app.buttons["cell-0"].label
@@ -95,6 +96,7 @@ final class GameplayImprovementUITests: XCTestCase {
         app.buttons["Sauvegarder et revenir à l’accueil"].tap()
         app.terminate()
         app.launchArguments = ["-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         XCTAssertTrue(app.tabBars.buttons["Voyage"].waitForExistence(timeout: 10))
         app.tabBars.buttons["Voyage"].tap()

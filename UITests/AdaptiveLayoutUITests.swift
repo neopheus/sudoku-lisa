@@ -12,7 +12,7 @@ final class AdaptiveLayoutUITests: XCTestCase {
         continueAfterFailure = false
         XCUIDevice.shared.orientation = .portrait
         let app = XCUIApplication()
-        app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         XCTAssertTrue(button("C’est parti !", in: app).waitForExistence(timeout: 10))
         return app
@@ -43,12 +43,12 @@ final class AdaptiveLayoutUITests: XCTestCase {
     func testGameResizesWithoutLosingSelectionNotesOrUndo() {
         let app = launchFresh()
         button("C’est parti !", in: app).tap()
-        button("Facile", in: app).tap()
+        app.buttons["Facile"].tap()
         let empty = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Ligne ", ", vide")).firstMatch
         XCTAssertTrue(empty.waitForExistence(timeout: 15))
         let coordinate = empty.label.components(separatedBy: ", vide")[0]
         empty.tap()
-        button("Notes", in: app).tap()
+        app.buttons["Notes"].tap()
         let one = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "1, ")).firstMatch
         one.tap()
         let noted = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", coordinate, "notes 1")).firstMatch
@@ -57,14 +57,14 @@ final class AdaptiveLayoutUITests: XCTestCase {
 
         rotate(.landscapeLeft, app: app)
         XCTAssertTrue(noted.isSelected, "Resizing must preserve the selected cell")
-        XCTAssertTrue(button("Notes oui", in: app).exists, "Resizing must preserve input mode")
+        XCTAssertTrue(app.buttons["Notes oui"].exists, "Resizing must preserve input mode")
         let topRight = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Ligne 1, colonne 9,")).firstMatch
         XCTAssertLessThan(topRight.frame.maxX, one.frame.minX, "On a wide viewport the keypad belongs beside the board")
         for value in 1...9 {
             XCTAssertTrue(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "\(value), ")).firstMatch.isHittable)
         }
         capture(app, "Disposition-deux-colonnes")
-        button("Annuler", in: app).tap()
+        app.buttons["Annuler"].tap()
         XCTAssertFalse(noted.exists)
         one.tap()
         XCTAssertTrue(noted.exists, "The same selected cell must still accept input")
@@ -76,7 +76,7 @@ final class AdaptiveLayoutUITests: XCTestCase {
         XCTAssertTrue(noted.isSelected)
         rotate(.portrait, app: app)
         XCTAssertTrue(noted.isSelected)
-        XCTAssertTrue(button("Notes oui", in: app).exists)
+        XCTAssertTrue(app.buttons["Notes oui"].exists)
         app.buttons["Mettre en pause"].tap()
         rotate(.landscapeLeft, app: app)
         XCTAssertTrue(button("Reprendre", in: app).isHittable, "Pause must remain dismissible on a short viewport")
@@ -93,11 +93,24 @@ final class AdaptiveLayoutUITests: XCTestCase {
         if !start.isHittable { app.swipeUp() }
         XCTAssertTrue(start.isHittable)
         app.tabBars.buttons["Poulpi"].tap()
-        let stage = app.otherElements["poulpiStage"]
+        let stage = app.descendants(matching: .any)["poulpiStage"].firstMatch
         XCTAssertTrue(stage.waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["Recentrer"].isHittable)
-        XCTAssertTrue(app.buttons["poulpiAnimation-happy"].isHittable)
-        app.buttons["poulpiAnimation-happy"].tap()
+        let happy = app.buttons["poulpiAnimation-happy"]
+        for _ in 0..<6 {
+            if happy.isHittable { break }
+            let scroll = app.scrollViews.firstMatch
+            scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.85))
+                .press(forDuration: 0.05, thenDragTo: scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.2)))
+        }
+        XCTAssertTrue(happy.isHittable)
+        happy.tap()
+        for _ in 0..<6 {
+            if app.buttons["Rapprocher"].isHittable { break }
+            let scroll = app.scrollViews.firstMatch
+            scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.2))
+                .press(forDuration: 0.05, thenDragTo: scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: 0.85)))
+        }
         app.buttons["Rapprocher"].tap()
         let camera = stage.value as? String
         capture(app, "Poulpi-large")
@@ -114,7 +127,7 @@ final class AdaptiveLayoutUITests: XCTestCase {
         try XCTSkipIf(app.frame.width < 600, "Requires an expanded viewport")
         capture(app, "Accueil-format-etendu")
         button("C’est parti !", in: app).tap()
-        button("Facile", in: app).tap()
+        app.buttons["Facile"].tap()
         let topLeft = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Ligne 1, colonne 1,")).firstMatch
         XCTAssertTrue(topLeft.waitForExistence(timeout: 15))
         let bottomRight = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Ligne 9, colonne 9,")).firstMatch
@@ -133,7 +146,7 @@ final class AdaptiveLayoutUITests: XCTestCase {
         // expose the last tab without depending on platform-specific overflow.
         rotate(.landscapeLeft, app: app)
         app.buttons["Poulpi"].firstMatch.tap()
-        XCTAssertTrue(app.otherElements["poulpiStage"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.descendants(matching: .any)["poulpiStage"].firstMatch.waitForExistence(timeout: 5))
         XCTAssertTrue(app.buttons["poulpiAnimation-happy"].isHittable)
         capture(app, "Poulpi-format-etendu")
     }
