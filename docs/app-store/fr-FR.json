@@ -1,0 +1,27 @@
+{
+  "name": "Lisa Sudoku",
+  "subtitle": "Apprenez, jouez avec Poulpi",
+  "category": "Jeux / Casse-tête",
+  "fields": [
+    {
+      "id": "promotionalText",
+      "value": "Une pause sudoku avec Poulpi : six niveaux, des indices expliqués, cinq leçons interactives et un voyage de 25 étapes. Jouez hors ligne, à votre rythme."
+    },
+    {
+      "id": "description",
+      "value": "Prenez une pause, observez la grille et savourez le plaisir de trouver la prochaine case. Lisa Sudoku vous accompagne dans un univers coloré avec Poulpi, votre petit compagnon de jeu.\n\nUN DÉFI À VOTRE RYTHME\nChoisissez parmi six niveaux, d’Express à Maître. Retrouvez les plaisirs du sudoku classique, du premier candidat unique aux techniques plus avancées.\n\nUNE AIDE QUI EXPLIQUE\nLes indices vous guident progressivement : observer les cases utiles, comprendre le raisonnement, puis appliquer la déduction. Apprenez avec cinq tutoriels interactifs, accessibles directement depuis votre partie.\n\nVOTRE PROGRESSION CONTINUE\nRelevez le défi quotidien ou parcourez les 25 étapes du Voyage. Vos parties sont sauvegardées séparément par mode : changez de défi, puis reprenez votre grille avec ses notes. Après une victoire, passez directement à la suite.\n\nDES COMMANDES À VOTRE FAÇON\nPrenez des notes, annulez un coup, faites une pause et choisissez de sélectionner le chiffre avant la case. Personnalisez votre ambiance avec les thèmes disponibles et les réglages de son et d’animations.\n\nUN COMPAGNON À RETROUVER\nProgressez dans le Voyage pour débloquer un premier souvenir étoilé à équiper sur Poulpi.\n\nJouez hors ligne, sans compte obligatoire. Lisa Sudoku est disponible en français, anglais, allemand, espagnol et russe."
+    },
+    {
+      "id": "keywords",
+      "value": "logique,réflexion,chiffres,énigme,casse-tête,détente,hors ligne,notes,quotidien,apprendre"
+    },
+    {
+      "id": "copyright",
+      "value": "2026 Xavier Valentin"
+    },
+    {
+      "id": "notes",
+      "value": "Aucun compte ni identifiant de démonstration n’est nécessaire. Les parties et la progression sont sauvegardées localement. Le jeu fonctionne hors ligne. Les indices progressifs et les cinq tutoriels sont accessibles depuis une partie. Le souvenir étoilé de Poulpi se débloque après cinq étapes du Voyage. Aucun achat intégré ni publicité. Aucun classement Game Center de production n’est activé. L’extension Lisa Stickers fournit quatre stickers pour Messages."
+    }
+  ]
+}

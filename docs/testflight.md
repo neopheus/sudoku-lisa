@@ -66,3 +66,12 @@ La seconde commande Xcode **envoie le build à Apple**. Créer auparavant la fic
 - Traitement Apple terminé et build ajouté au groupe **Lisa — Interne**, qui compte deux testeurs. Notes de test enregistrées. L’installation du build 3 sur un appareil physique n’a pas été vérifiée.
 - [Fiche du build](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/b535580f-7326-424f-b588-8fbe1048196c) · [preuve](screenshots/testflight-build-3.jpg).
 - Des retouches du modèle et de ses fichiers de sculpture sont apparues en parallèle après le commit de livraison. Elles sont conservées dans le dossier de travail et ne font pas partie du build 3.
+
+## Livraison 1.0 (4) — 7 octobre 2026
+
+- Sources : commit `7724ba5`, difficultés fiabilisées, moteur partagé, indices progressifs, cinq tutoriels, sauvegardes par mode, continuation et récompense Poulpi. Aucun push Git.
+- Validation préalable : 53 tests moteur, 18 tests applicatifs, parcours UI sur iPhone 16 et SE simulés ; compilation Release finale réussie.
+- Archive Release signée : `/tmp/lisa-release-20261007-b4.xcarchive`. Vérification `codesign --verify --deep --strict` réussie ; application et extension en 1.0 (4). Bundle local : 20 115 892 octets, distinct de la taille TestFlight.
+- Envoi accepté le 7 octobre à 09 h 16 (Europe/Paris) : `Upload succeeded` et `EXPORT SUCCEEDED`. Journal : `/tmp/lisa-release-20261007-b4-upload.log`.
+- Traitement Apple terminé ; notes de test enregistrées. Build associé aux groupes **Lisa — Interne**, **Lisa — Externe** et **Liens à partager**, puis soumis à la vérification TestFlight. État final observé : **En cours de test** pour le build 4, trois groupes associés. Installation physique de ce build non vérifiée.
+- [Fiche du build 4](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/7533ad90-5ebb-4858-9bae-914d815d0dcd) · [preuve](screenshots/testflight-build-4.jpg).
