@@ -129,6 +129,56 @@ struct LisaMagicHalo: View {
 /// Soft, asymmetric cumulus: shaded cloud mass, sunlit lobes and wispy base.
 struct LisaCloud: View {
     @Environment(\.colorScheme) private var scheme
+    @Environment(\.displayScale) private var scale
+    var body: some View {
+        GeometryReader { proxy in
+            LisaCloudImage(size: proxy.size, scheme: scheme, scale: scale).equatable()
+        }
+    }
+}
+
+/// Keep the original Canvas at native resolution, but rasterize only on a
+/// size/theme/scale change. Animated parents only composite this image.
+private struct LisaCloudImage: View, Equatable {
+    let size: CGSize
+    let scheme: ColorScheme
+    let scale: CGFloat
+    var body: some View {
+        if let image = LisaCloudCache.image(size: size, scheme: scheme, scale: scale) {
+            Image(uiImage: image).resizable().frame(width: size.width, height: size.height)
+        } else {
+            LisaCloudDrawing(scheme: scheme)
+        }
+    }
+}
+
+@MainActor
+private enum LisaCloudCache {
+    private static let images: NSCache<NSString, UIImage> = {
+        let cache = NSCache<NSString, UIImage>()
+        cache.totalCostLimit = 16 * 1024 * 1024
+        cache.countLimit = 32
+        return cache
+    }()
+    static func image(size: CGSize, scheme: ColorScheme, scale: CGFloat) -> UIImage? {
+        guard size.width > 0, size.height > 0, scale > 0,
+              size.width.isFinite, size.height.isFinite else { return nil }
+        let key = "\(size.width):\(size.height):\(scale):\(scheme == .dark)" as NSString
+        if let image = images.object(forKey: key) { return image }
+        // Avoid a transient oversized allocation during unusual window layouts.
+        guard size.width * size.height * scale * scale <= 4_000_000 else { return nil }
+        let renderer = ImageRenderer(content: LisaCloudDrawing(scheme: scheme)
+            .frame(width: size.width, height: size.height))
+        renderer.scale = scale
+        guard let image = renderer.uiImage else { return nil }
+        let cost = image.cgImage.map { $0.bytesPerRow * $0.height } ?? 0
+        images.setObject(image, forKey: key, cost: cost)
+        return image
+    }
+}
+
+private struct LisaCloudDrawing: View {
+    let scheme: ColorScheme
     var body: some View {
         Canvas { context, size in
             let w = size.width

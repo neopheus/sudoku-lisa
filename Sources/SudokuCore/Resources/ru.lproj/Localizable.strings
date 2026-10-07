@@ -111,7 +111,7 @@
 "La partie en cours sera remplacée après le choix du niveau." = "Текущая игра будет заменена после выбора уровня.";
 "La règle d’or" = "Золотое правило";
 "La réduction des animations suit le réglage d’accessibilité de votre iPhone." = "Уменьшение движения следует настройкам универсального доступа iPhone.";
-"La sauvegarde n’a pas pu être chargée. Vos nouvelles parties pourront être enregistrées." = "Не удалось загрузить сохранение. Новые игры можно будет сохранять.";
+"La sauvegarde n’a pas pu être chargée. Elle est conservée et l’enregistrement est suspendu pour protéger votre progression." = "Не удалось загрузить сохранение. Оно сохранено, а запись приостановлена, чтобы защитить ваш прогресс.";
 "La seule place" = "Единственное место";
 "La suite" = "Далее";
 "La valeur en ligne %@, colonne %@ empêche de terminer la grille. La valeur correcte est %@." = "Значение в строке %@, столбце %@ мешает решить головоломку. Правильное значение — %@.";

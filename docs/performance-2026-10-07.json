@@ -1,0 +1,374 @@
+{
+  "date": "2026-10-07",
+  "baseline_commit": "9f33023",
+  "environment": "iPhone 16 simulator, iOS 18.5, Release arm64",
+  "method": "20 s warmup, 15 samples every 2 s, CPU time delta / wall time; order before/after/after/before",
+  "before_cpu_percent_one_core_mean": 25.062116062080975,
+  "after_cpu_percent_one_core_mean": 20.957078357479247,
+  "observed_reduction_percent": 16.3794537318126,
+  "limitations": [
+    "Not a physical-device energy/GPU/thermal measurement",
+    "Other host applications remained running",
+    "Adaptive detail is unchanged in code, but baseline second run reached levels 1/2 while optimized second run stayed at 0; this is not a fixed-quality microbenchmark",
+    "RSS varied between runs; no memory reduction established",
+    "Time Profiler attachment failed"
+  ],
+  "runs": [
+    {
+      "label": "before",
+      "pid": "61216",
+      "duration_seconds": 30.15105041593779,
+      "cpu_percent_one_core": 26.035577174619775,
+      "rss_kib_final": 258432,
+      "samples": [
+        {
+          "time": 924345.01646525,
+          "cpu_seconds": 6.85,
+          "rss_kib": 286896
+        },
+        {
+          "time": 924347.02628775,
+          "cpu_seconds": 7.36,
+          "rss_kib": 286832
+        },
+        {
+          "time": 924349.037570208,
+          "cpu_seconds": 7.87,
+          "rss_kib": 286832
+        },
+        {
+          "time": 924351.047470833,
+          "cpu_seconds": 8.4,
+          "rss_kib": 286848
+        },
+        {
+          "time": 924353.057790541,
+          "cpu_seconds": 8.9,
+          "rss_kib": 286848
+        },
+        {
+          "time": 924355.063821041,
+          "cpu_seconds": 9.41,
+          "rss_kib": 286864
+        },
+        {
+          "time": 924357.073849291,
+          "cpu_seconds": 9.92,
+          "rss_kib": 286864
+        },
+        {
+          "time": 924359.083639291,
+          "cpu_seconds": 10.41,
+          "rss_kib": 286880
+        },
+        {
+          "time": 924361.09365025,
+          "cpu_seconds": 10.95,
+          "rss_kib": 286912
+        },
+        {
+          "time": 924363.104099208,
+          "cpu_seconds": 11.49,
+          "rss_kib": 286912
+        },
+        {
+          "time": 924365.114678875,
+          "cpu_seconds": 12.0,
+          "rss_kib": 286912
+        },
+        {
+          "time": 924367.126595625,
+          "cpu_seconds": 12.53,
+          "rss_kib": 286960
+        },
+        {
+          "time": 924369.136958708,
+          "cpu_seconds": 13.05,
+          "rss_kib": 286960
+        },
+        {
+          "time": 924371.147175208,
+          "cpu_seconds": 13.59,
+          "rss_kib": 286976
+        },
+        {
+          "time": 924373.157116916,
+          "cpu_seconds": 14.14,
+          "rss_kib": 286992
+        },
+        {
+          "time": 924375.167515666,
+          "cpu_seconds": 14.7,
+          "rss_kib": 258432
+        }
+      ]
+    },
+    {
+      "label": "after",
+      "pid": "61422",
+      "duration_seconds": 30.16773779108189,
+      "cpu_percent_one_core": 19.39157665885495,
+      "rss_kib_final": 247328,
+      "samples": [
+        {
+          "time": 924396.857793,
+          "cpu_seconds": 6.28,
+          "rss_kib": 249280
+        },
+        {
+          "time": 924398.866059,
+          "cpu_seconds": 6.68,
+          "rss_kib": 249232
+        },
+        {
+          "time": 924400.896198166,
+          "cpu_seconds": 7.1,
+          "rss_kib": 246688
+        },
+        {
+          "time": 924402.910258666,
+          "cpu_seconds": 7.55,
+          "rss_kib": 246624
+        },
+        {
+          "time": 924404.919888541,
+          "cpu_seconds": 7.94,
+          "rss_kib": 246848
+        },
+        {
+          "time": 924406.930955083,
+          "cpu_seconds": 8.31,
+          "rss_kib": 246848
+        },
+        {
+          "time": 924408.940096958,
+          "cpu_seconds": 8.66,
+          "rss_kib": 246848
+        },
+        {
+          "time": 924410.949456083,
+          "cpu_seconds": 9.02,
+          "rss_kib": 246848
+        },
+        {
+          "time": 924412.960088916,
+          "cpu_seconds": 9.41,
+          "rss_kib": 246848
+        },
+        {
+          "time": 924414.969721041,
+          "cpu_seconds": 9.8,
+          "rss_kib": 246768
+        },
+        {
+          "time": 924416.974167458,
+          "cpu_seconds": 10.19,
+          "rss_kib": 246784
+        },
+        {
+          "time": 924418.983030291,
+          "cpu_seconds": 10.55,
+          "rss_kib": 246784
+        },
+        {
+          "time": 924420.993888625,
+          "cpu_seconds": 10.94,
+          "rss_kib": 247296
+        },
+        {
+          "time": 924423.005107375,
+          "cpu_seconds": 11.34,
+          "rss_kib": 247328
+        },
+        {
+          "time": 924425.016268291,
+          "cpu_seconds": 11.73,
+          "rss_kib": 247328
+        },
+        {
+          "time": 924427.025530791,
+          "cpu_seconds": 12.13,
+          "rss_kib": 247328
+        }
+      ]
+    },
+    {
+      "label": "after",
+      "pid": "61654",
+      "duration_seconds": 30.19192287500482,
+      "cpu_percent_one_core": 22.522580056103546,
+      "rss_kib_final": 283968,
+      "samples": [
+        {
+          "time": 924448.389108,
+          "cpu_seconds": 6.21,
+          "rss_kib": 283728
+        },
+        {
+          "time": 924450.397882916,
+          "cpu_seconds": 6.65,
+          "rss_kib": 283776
+        },
+        {
+          "time": 924452.408044625,
+          "cpu_seconds": 7.08,
+          "rss_kib": 283792
+        },
+        {
+          "time": 924454.419273541,
+          "cpu_seconds": 7.52,
+          "rss_kib": 283808
+        },
+        {
+          "time": 924456.466431625,
+          "cpu_seconds": 7.97,
+          "rss_kib": 283824
+        },
+        {
+          "time": 924458.476294,
+          "cpu_seconds": 8.41,
+          "rss_kib": 283840
+        },
+        {
+          "time": 924460.488384833,
+          "cpu_seconds": 8.87,
+          "rss_kib": 283872
+        },
+        {
+          "time": 924462.499610708,
+          "cpu_seconds": 9.32,
+          "rss_kib": 283888
+        },
+        {
+          "time": 924464.507614208,
+          "cpu_seconds": 9.76,
+          "rss_kib": 283920
+        },
+        {
+          "time": 924466.515056041,
+          "cpu_seconds": 10.21,
+          "rss_kib": 283936
+        },
+        {
+          "time": 924468.525662291,
+          "cpu_seconds": 10.68,
+          "rss_kib": 283936
+        },
+        {
+          "time": 924470.537701,
+          "cpu_seconds": 11.13,
+          "rss_kib": 283936
+        },
+        {
+          "time": 924472.546947166,
+          "cpu_seconds": 11.61,
+          "rss_kib": 283936
+        },
+        {
+          "time": 924474.560197666,
+          "cpu_seconds": 12.09,
+          "rss_kib": 283968
+        },
+        {
+          "time": 924476.570639125,
+          "cpu_seconds": 12.55,
+          "rss_kib": 283968
+        },
+        {
+          "time": 924478.581030875,
+          "cpu_seconds": 13.01,
+          "rss_kib": 283968
+        }
+      ]
+    },
+    {
+      "label": "before",
+      "pid": "61799",
+      "duration_seconds": 30.346235667006113,
+      "cpu_percent_one_core": 24.08865494954217,
+      "rss_kib_final": 259872,
+      "samples": [
+        {
+          "time": 924501.145923708,
+          "cpu_seconds": 7.49,
+          "rss_kib": 259584
+        },
+        {
+          "time": 924503.161228541,
+          "cpu_seconds": 8.0,
+          "rss_kib": 259504
+        },
+        {
+          "time": 924505.213985791,
+          "cpu_seconds": 8.6,
+          "rss_kib": 259792
+        },
+        {
+          "time": 924507.23058125,
+          "cpu_seconds": 9.12,
+          "rss_kib": 259872
+        },
+        {
+          "time": 924509.239735041,
+          "cpu_seconds": 9.57,
+          "rss_kib": 259872
+        },
+        {
+          "time": 924511.2535155,
+          "cpu_seconds": 10.06,
+          "rss_kib": 259824
+        },
+        {
+          "time": 924513.295981583,
+          "cpu_seconds": 10.57,
+          "rss_kib": 259792
+        },
+        {
+          "time": 924515.361021166,
+          "cpu_seconds": 11.07,
+          "rss_kib": 259824
+        },
+        {
+          "time": 924517.3709775,
+          "cpu_seconds": 11.56,
+          "rss_kib": 259824
+        },
+        {
+          "time": 924519.388156041,
+          "cpu_seconds": 12.03,
+          "rss_kib": 259840
+        },
+        {
+          "time": 924521.398258375,
+          "cpu_seconds": 12.49,
+          "rss_kib": 259840
+        },
+        {
+          "time": 924523.446068458,
+          "cpu_seconds": 12.97,
+          "rss_kib": 259856
+        },
+        {
+          "time": 924525.462165791,
+          "cpu_seconds": 13.45,
+          "rss_kib": 259856
+        },
+        {
+          "time": 924527.471272875,
+          "cpu_seconds": 13.91,
+          "rss_kib": 259856
+        },
+        {
+          "time": 924529.486727041,
+          "cpu_seconds": 14.35,
+          "rss_kib": 259856
+        },
+        {
+          "time": 924531.492159375,
+          "cpu_seconds": 14.8,
+          "rss_kib": 259872
+        }
+      ]
+    }
+  ]
+}

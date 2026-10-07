@@ -52,7 +52,7 @@
                ReferencedContainer = "container:SudokuLisa.xcodeproj">
             </BuildableReference>
          </TestableReference>
-      </Testables>
+      <TestableReference skipped="NO" parallelizable="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="D00000000000000000000001" BuildableName="LisaStoreTests.xctest" BlueprintName="LisaStoreTests" ReferencedContainer="container:SudokuLisa.xcodeproj"/></TestableReference></Testables>
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"

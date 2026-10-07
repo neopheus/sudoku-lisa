@@ -2,7 +2,7 @@ import SwiftUI
 import SudokuCore
 import UIKit
 
-struct LisaSettings: Codable {
+struct LisaSettings: Codable, Sendable {
     var sound = true
     var music = false
     var animatedDecor = true
@@ -33,7 +33,7 @@ struct LisaSettings: Codable {
     }
 }
 
-struct FinishedGame: Codable, Identifiable {
+struct FinishedGame: Codable, Identifiable, Sendable {
     var id = UUID()
     let date: Date
     let difficulty: Difficulty
@@ -43,7 +43,7 @@ struct FinishedGame: Codable, Identifiable {
     let mode: String
 }
 
-private struct SaveData: Codable {
+private struct SaveData: Codable, Sendable {
     var session: GameSession?
     var settings: LisaSettings
     var history: [FinishedGame]
@@ -58,7 +58,16 @@ private struct SaveData: Codable {
 
 @MainActor
 final class LisaStore: ObservableObject {
-    @Published var session: GameSession?
+    @Published var session: GameSession? {
+        didSet {
+            if oldValue?.puzzle != session?.puzzle { clock.seconds = session?.elapsedSeconds ?? 0 }
+            if oldValue?.values != session?.values {
+                duplicateCells = session.map { BoardConflicts.indices(in: $0.values) } ?? []
+            }
+        }
+    }
+    let clock = LisaGameClock()
+    private(set) var duplicateCells: Set<Int> = []
     @Published var settings = LisaSettings() { didSet {
         LisaAudio.shared.configure(music: settings.music, effectsEnabled: settings.sound)
         save()
@@ -77,11 +86,26 @@ final class LisaStore: ObservableObject {
     @Published var saveError: String?
     var milestones = GameMilestones()
     private var recorded = false
+    // @Published observers run during init: never persist a partially restored store.
+    // A failed load keeps this gate closed, even after the error alert is dismissed.
+    private var canPersist = false
+    private static let loadFailureMessage = "La sauvegarde n’a pas pu être chargée. Elle est conservée et l’enregistrement est suspendu pour protéger votre progression."
     private let saveURL: URL
+    private var backgroundSave = UIBackgroundTaskIdentifier.invalid
+    private var backgroundSaveGeneration = 0
+    private lazy var writer: SnapshotWriter<SaveData> = {
+        let writer = SnapshotWriter<SaveData>(url: saveURL)
+        writer.onResult = { [weak self] result in
+            if case .failure = result { self?.saveError = "Votre progression n’a pas pu être enregistrée." }
+        }
+        return writer
+    }()
 
-    init() {
-        let dir = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        saveURL = dir.appendingPathComponent("sudoku-lisa-v1.json")
+    init(saveURL: URL? = nil) {
+        let defaultDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
+        self.saveURL = saveURL ?? defaultDirectory.appendingPathComponent("sudoku-lisa-v1.json")
+        let saveURL = self.saveURL
+        let dir = saveURL.deletingLastPathComponent()
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--uitest-reset") {
             try? FileManager.default.removeItem(at: saveURL)
@@ -104,7 +128,9 @@ final class LisaStore: ObservableObject {
                 activeDay = data.activeDay
                 recorded = session?.isComplete ?? false
             }
-        } catch { saveError = "La sauvegarde n’a pas pu être chargée. Vos nouvelles parties pourront être enregistrées." }
+            clock.seconds = session?.elapsedSeconds ?? 0
+            canPersist = true
+        } catch { saveError = Self.loadFailureMessage }
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--uitest-reset"),
            ProcessInfo.processInfo.arguments.contains("--uitest-reduce-motion") {
@@ -127,6 +153,8 @@ final class LisaStore: ObservableObject {
             save()
         }
         #endif
+        clock.seconds = session?.elapsedSeconds ?? 0
+        duplicateCells = session.map { BoardConflicts.indices(in: $0.values) } ?? []
         if let session {
             _ = milestones.record(before: Array(repeating: 0, count: 81), after: session.values,
                                   solution: session.puzzle.solution, revealsCorrectness: false)
@@ -134,9 +162,44 @@ final class LisaStore: ObservableObject {
     }
 
     func save() {
-        let data = SaveData(session: session, settings: settings, history: history, completedDays: completedDays, eventWins: eventWins, mode: mode, activeDay: activeDay, eventMedals: eventMedals, activeEvent: activeEvent, activeTournament: activeTournament)
-        do { try JSONEncoder().encode(data).write(to: saveURL, options: .atomic) }
-        catch { saveError = "Votre progression n’a pas pu être enregistrée." }
+        guard canPersist else { return }
+        var snapshot = session
+        snapshot?.elapsedSeconds = clock.seconds
+        let data = SaveData(session: snapshot, settings: settings, history: history, completedDays: completedDays, eventWins: eventWins, mode: mode, activeDay: activeDay, eventMedals: eventMedals, activeEvent: activeEvent, activeTournament: activeTournament)
+        writer.submit(data)
+    }
+
+    func tick() {
+        guard session?.isComplete == false else { return }
+        clock.seconds += 1
+        if clock.seconds.isMultiple(of: 5) { save() }
+    }
+
+    func synchronizeElapsedTime() {
+        guard let session, session.elapsedSeconds != clock.seconds else { return }
+        self.session?.elapsedSeconds = clock.seconds
+    }
+
+    func saveForBackground() {
+        save()
+        guard backgroundSave == .invalid else { return }
+        backgroundSaveGeneration += 1
+        let generation = backgroundSaveGeneration
+        backgroundSave = UIApplication.shared.beginBackgroundTask(withName: "Save Sudoku") { [weak self] in
+            Task { @MainActor in self?.endBackgroundSave(generation: generation) }
+        }
+        Task {
+            await flushPendingSaves()
+            endBackgroundSave(generation: generation)
+        }
+    }
+
+    func flushPendingSaves() async { await writer.flush() }
+
+    private func endBackgroundSave(generation: Int) {
+        guard generation == backgroundSaveGeneration, backgroundSave != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(backgroundSave)
+        backgroundSave = .invalid
     }
 
     static func dayKey(_ date: Date) -> String {
@@ -160,6 +223,7 @@ final class LisaStore: ObservableObject {
     }
 
     func start(_ difficulty: Difficulty, mode: String = "Libre", date: Date? = nil, seedOverride: UInt64? = nil, eventID: String? = nil, tournamentID: String? = nil) {
+        guard canPersist else { saveError = Self.loadFailureMessage; return }
         guard !isGenerating else { return }
         isGenerating = true
         self.mode = mode
@@ -174,6 +238,7 @@ final class LisaStore: ObservableObject {
         Task {
             let puzzle = await Task.detached(priority: .userInitiated) { SudokuGenerator.generate(difficulty: difficulty, seed: seed) }.value
             session = GameSession(puzzle: puzzle)
+            clock.seconds = 0
             milestones = GameMilestones()
             recorded = false
             showVictory = false
@@ -184,6 +249,7 @@ final class LisaStore: ObservableObject {
     }
 
     func changed() {
+        if session?.isComplete == true { synchronizeElapsedTime() }
         if session?.isComplete == true && !recorded, let game = session {
             recorded = true
             history.append(FinishedGame(date: Date(), difficulty: game.puzzle.difficulty, seconds: game.elapsedSeconds, mistakes: game.mistakes, hints: game.hintsUsed, mode: mode))
@@ -277,4 +343,10 @@ final class LisaStore: ObservableObject {
     var bestTime: Int? { history.map(\.seconds).min() }
     var totalMinutes: Int { history.reduce(0) { $0 + $1.seconds } / 60 }
     static func time(_ seconds: Int) -> String { String(format: "%02d:%02d", seconds / 60, seconds % 60) }
+}
+
+/// Only the small timer label subscribes to these once-per-second updates.
+@MainActor
+final class LisaGameClock: ObservableObject {
+    @Published var seconds = 0
 }

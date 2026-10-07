@@ -32,6 +32,7 @@ struct GameView: View {
     private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
 
     var body: some View {
+        let _ = LisaRenderBudget.shared.recordGameBody()
         ZStack {
             LisaBackground(motionEnabled: !paused && mascotUncovered, quiet: true, chapter: store.mode == "Voyage" ? LisaJourneyAtmosphere.chapter(store.eventWins - (store.showVictory ? 1 : 0)) : nil)
             // Keep the entire companion scene behind the opaque board at every flight depth.
@@ -95,11 +96,10 @@ struct GameView: View {
         .environment(\.lisaMotionAllowed, !paused && mascotUncovered)
         .onReceive(timer) { _ in
             guard scenePhase == .active, !paused, !hintPresented, !settings, !errorPresented, store.session?.isComplete == false else { return }
-            store.session?.tick()
-            if (store.session?.elapsedSeconds ?? 0) % 5 == 0 { store.save() }
+            store.tick()
         }
-        .onChange(of: scenePhase) { _, phase in if phase != .active { paused = true; store.save() } }
-        .onDisappear { store.save(); LisaAudio.shared.configure(paused: false) }
+        .onChange(of: scenePhase) { _, phase in if phase != .active { paused = true; store.saveForBackground() } }
+        .onDisappear { store.synchronizeElapsedTime(); store.save(); LisaAudio.shared.configure(paused: false) }
         .onChange(of: paused, initial: true) { _, value in LisaAudio.shared.configure(paused: value) }
         .onChange(of: store.session?.values) { before, after in
             guard let before, let after, let game = store.session else { return }
@@ -246,8 +246,7 @@ struct GameView: View {
             Text(store.settings.autoCheck || store.settings.errorLimit ? L10n.text("Erreurs %@%@", String(describing: game.mistakes), String(describing: store.settings.errorLimit ? "/3" : "")) : L10n.text("Mode zen"))
                 .font(LisaTheme.body(13)).foregroundStyle(game.mistakes > 0 ? LisaTheme.coral : LisaTheme.muted)
             if store.settings.showTimer {
-                Text(LisaStore.time(game.elapsedSeconds))
-                    .font(.system(size: 14, weight: .medium, design: .monospaced)).foregroundStyle(LisaTheme.muted)
+                LisaGameTimer(clock: store.clock)
             }
             Button { paused = true } label: {
                 Image(systemName: "pause.fill").frame(width: 44, height: 44)
@@ -384,42 +383,17 @@ struct GameView: View {
     }
 
     private func cell(_ game: GameSession, index: Int, side: CGFloat) -> some View {
-        let value = game.values[index]
-        let wrong = store.settings.autoCheck && game.isIncorrect(at: index)
-        let duplicate = store.settings.highlightDuplicates && value != 0 && (0..<81).contains { other in other != index && game.values[other] == value && peers(index, other) }
-        let sameNumber = selected.map { game.values[$0] != 0 && game.values[$0] == value } ?? false
-        let peer = selected.map { peers(index, $0) } ?? false
-        let blue = Color(red: 0.18, green: 0.59, blue: 0.94)
-        let inHintFocus = hintPresented && (hint?.focusCells.contains(index) ?? false)
-        let background = inHintFocus ? LisaTheme.yellow.opacity(colorScheme == .dark ? 0.45 : 0.72)
-            : (wrong || duplicate) ? Color.red.opacity(colorScheme == .dark ? 0.27 : 0.12)
-            : selected == index ? blue.opacity(colorScheme == .dark ? 0.42 : 0.26)
-            : sameNumber ? LisaTheme.yellow.opacity(colorScheme == .dark ? 0.27 : 0.45)
-            : (peer && store.settings.highlightPeers) ? LisaTheme.lavender.opacity(colorScheme == .dark ? 0.12 : 0.22) : LisaTheme.paper
-        return ZStack {
-            RoundedRectangle(cornerRadius: 4).fill(background).padding(0.7)
-            if selected == index {
-                RoundedRectangle(cornerRadius: 4).strokeBorder(blue, lineWidth: 2).padding(1)
-            }
-            if value != 0 {
-                Text("\(value)").contentTransition(.numericText()).font(.system(size: side * 0.54, weight: game.puzzle.givens[index] == 0 ? .medium : .semibold, design: .rounded)).foregroundStyle(wrong || duplicate ? (colorScheme == .dark ? Color(red: 1, green: 0.55, blue: 0.6) : Color(red: 0.76, green: 0.12, blue: 0.22)) : game.puzzle.givens[index] == 0 ? (colorScheme == .dark ? Color(red: 0.62, green: 0.84, blue: 1) : Color(red: 0.13, green: 0.39, blue: 0.72)) : LisaTheme.ink)
-            } else {
-                VStack(spacing: 0) { ForEach(0..<3) { row in HStack(spacing: 0) { ForEach(1...3, id: \.self) { col in let note = row * 3 + col; Text(game.notes[index].contains(note) ? "\(note)" : " ").font(.system(size: side * 0.23, weight: .medium, design: .rounded)).foregroundStyle(LisaTheme.muted).frame(width: side / 3, height: side / 3) } } } }
-            }
-        }
-        .overlay(alignment: .topTrailing) {
-            if hintPresented, hintStage >= 1,
-               let marks = hint?.eliminationMarks.filter({ $0.index == index }), !marks.isEmpty {
-                HStack(spacing: 0) {
-                    ForEach(marks, id: \.self) { mark in
-                        Text("\(mark.value)").font(.system(size: max(7, side * 0.22), weight: .bold, design: .rounded))
-                            .strikethrough().foregroundStyle(LisaTheme.coral)
-                            .padding(.horizontal, 1).background(LisaTheme.paper.opacity(0.85), in: Capsule())
-                    }
-                }.padding(1).allowsHitTesting(false)
-            }
-        }
-        .frame(width: side, height: side).contentShape(Rectangle())
+        SudokuCellContent(
+            value: game.values[index], notes: game.notes[index], given: game.puzzle.givens[index] != 0,
+            wrong: store.settings.autoCheck && game.isIncorrect(at: index),
+            duplicate: store.settings.highlightDuplicates && store.duplicateCells.contains(index),
+            isSelected: selected == index,
+            sameNumber: selected.map { game.values[$0] != 0 && game.values[$0] == game.values[index] } ?? false,
+            peer: store.settings.highlightPeers && (selected.map { peers(index, $0) } ?? false),
+            inHintFocus: hintPresented && (hint?.focusCells.contains(index) ?? false),
+            marks: hintPresented && hintStage >= 1 ? hint?.eliminationMarks.filter { $0.index == index } ?? [] : [],
+            side: side, colorScheme: colorScheme
+        ).equatable()
     }
     private func peers(_ a: Int, _ b: Int) -> Bool { a / 9 == b / 9 || a % 9 == b % 9 || (a / 27 == b / 27 && a % 9 / 3 == b % 9 / 3) }
     private func cellLabel(_ game: GameSession, index: Int) -> String {
@@ -602,5 +576,61 @@ private struct LisaBoardFrameKey: PreferenceKey {
     static func reduce(value: inout CGRect, nextValue: () -> CGRect) {
         let frame = nextValue()
         if !frame.isEmpty { value = frame }
+    }
+}
+
+private struct LisaGameTimer: View {
+    @ObservedObject var clock: LisaGameClock
+    var body: some View {
+        Text(LisaStore.time(clock.seconds))
+            .font(.system(size: 14, weight: .medium, design: .monospaced))
+            .foregroundStyle(LisaTheme.muted)
+            .accessibilityIdentifier("gameTimer")
+    }
+}
+
+private struct SudokuCellContent: View, Equatable {
+    let value: Int
+    let notes: Set<Int>
+    let given: Bool
+    let wrong: Bool
+    let duplicate: Bool
+    let isSelected: Bool
+    let sameNumber: Bool
+    let peer: Bool
+    let inHintFocus: Bool
+    let marks: [CandidateElimination]
+    let side: CGFloat
+    let colorScheme: ColorScheme
+    var body: some View {
+        let blue = Color(red: 0.18, green: 0.59, blue: 0.94)
+        let background = inHintFocus ? LisaTheme.yellow.opacity(colorScheme == .dark ? 0.45 : 0.72)
+            : (wrong || duplicate) ? Color.red.opacity(colorScheme == .dark ? 0.27 : 0.12)
+            : isSelected ? blue.opacity(colorScheme == .dark ? 0.42 : 0.26)
+            : sameNumber ? LisaTheme.yellow.opacity(colorScheme == .dark ? 0.27 : 0.45)
+            : (peer) ? LisaTheme.lavender.opacity(colorScheme == .dark ? 0.12 : 0.22) : LisaTheme.paper
+        return ZStack {
+            RoundedRectangle(cornerRadius: 4).fill(background).padding(0.7)
+            if isSelected {
+                RoundedRectangle(cornerRadius: 4).strokeBorder(blue, lineWidth: 2).padding(1)
+            }
+            if value != 0 {
+                Text("\(value)").contentTransition(.numericText()).font(.system(size: side * 0.54, weight: !given ? .medium : .semibold, design: .rounded)).foregroundStyle(wrong || duplicate ? (colorScheme == .dark ? Color(red: 1, green: 0.55, blue: 0.6) : Color(red: 0.76, green: 0.12, blue: 0.22)) : !given ? (colorScheme == .dark ? Color(red: 0.62, green: 0.84, blue: 1) : Color(red: 0.13, green: 0.39, blue: 0.72)) : LisaTheme.ink)
+            } else {
+                VStack(spacing: 0) { ForEach(0..<3) { row in HStack(spacing: 0) { ForEach(1...3, id: \.self) { col in let note = row * 3 + col; Text(notes.contains(note) ? "\(note)" : " ").font(.system(size: side * 0.23, weight: .medium, design: .rounded)).foregroundStyle(LisaTheme.muted).frame(width: side / 3, height: side / 3) } } } }
+            }
+        }
+        .overlay(alignment: .topTrailing) {
+            if !marks.isEmpty {
+                HStack(spacing: 0) {
+                    ForEach(marks, id: \.self) { mark in
+                        Text("\(mark.value)").font(.system(size: max(7, side * 0.22), weight: .bold, design: .rounded))
+                            .strikethrough().foregroundStyle(LisaTheme.coral)
+                            .padding(.horizontal, 1).background(LisaTheme.paper.opacity(0.85), in: Capsule())
+                    }
+                }.padding(1).allowsHitTesting(false)
+            }
+        }
+        .frame(width: side, height: side).contentShape(Rectangle())
     }
 }

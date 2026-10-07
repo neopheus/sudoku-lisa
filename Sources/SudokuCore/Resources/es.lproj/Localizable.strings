@@ -111,7 +111,7 @@
 "La partie en cours sera remplacée après le choix du niveau." = "La partida actual se reemplazará cuando elijas el nivel.";
 "La règle d’or" = "La regla de oro";
 "La réduction des animations suit le réglage d’accessibilité de votre iPhone." = "La reducción de movimiento sigue el ajuste de accesibilidad de tu iPhone.";
-"La sauvegarde n’a pas pu être chargée. Vos nouvelles parties pourront être enregistrées." = "No se ha podido cargar la partida guardada. Podrás guardar las nuevas partidas.";
+"La sauvegarde n’a pas pu être chargée. Elle est conservée et l’enregistrement est suspendu pour protéger votre progression." = "No se ha podido cargar la partida guardada. Se ha conservado y el guardado está suspendido para proteger tu progreso.";
 "La seule place" = "El único lugar";
 "La suite" = "Siguiente";
 "La valeur en ligne %@, colonne %@ empêche de terminer la grille. La valeur correcte est %@." = "El valor de la fila %@, columna %@ impide completar el sudoku. El valor correcto es %@.";

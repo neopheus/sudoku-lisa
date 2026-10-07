@@ -8,23 +8,33 @@ struct SudokuLisaApp: App {
     @Environment(\.scenePhase) private var scenePhase
     var body: some Scene {
         WindowGroup {
-            #if DEBUG
-            if ProcessInfo.processInfo.arguments.contains("--octopus-preview") {
-                if ProcessInfo.processInfo.arguments.contains("--octopus-motion-preview") {
-                    OctopusMotionPreview()
-                } else {
-                    VStack {
-                        Text("Lisa, le petit poulpe").font(.title.bold())
-                        LisaMascot(size: 280, mood: .happy)
-                    }.frame(maxWidth: .infinity, maxHeight: .infinity).background(Color.cyan.opacity(0.15))
-                }
-            } else {
-                game
-            }
+            #if DEBUG || LISA_PERFORMANCE_DIAGNOSTICS
+            if ProcessInfo.processInfo.arguments.contains("--profile-rendering") {
+                LisaRenderingProbeView()
+            } else { appContent }
             #else
-            game
+            appContent
             #endif
         }
+    }
+
+    @ViewBuilder private var appContent: some View {
+        #if DEBUG
+        if ProcessInfo.processInfo.arguments.contains("--octopus-preview") {
+            if ProcessInfo.processInfo.arguments.contains("--octopus-motion-preview") {
+                OctopusMotionPreview()
+            } else {
+                VStack {
+                    Text("Lisa, le petit poulpe").font(.title.bold())
+                    LisaMascot(size: 280, mood: .happy)
+                }.frame(maxWidth: .infinity, maxHeight: .infinity).background(Color.cyan.opacity(0.15))
+            }
+        } else {
+            game
+        }
+        #else
+        game
+        #endif
     }
 
     private var game: some View {
@@ -36,6 +46,7 @@ struct SudokuLisaApp: App {
                 .preferredColorScheme(store.settings.darkMode ? .dark : .light)
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     LisaAudio.shared.configure(active: phase == .active, music: store.settings.music)
+                    if phase != .active { store.saveForBackground() }
                 }
                 .onAppear {
                     #if DEBUG

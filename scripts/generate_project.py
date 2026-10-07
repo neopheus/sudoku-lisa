@@ -61,6 +61,25 @@ EXTRA_OBJECTS = '''
   C00000000000000000000024 = {isa = PBXCopyFilesBuildPhase; buildActionMask = 2147483647; dstPath = ""; dstSubfolderSpec = 13; files = (C00000000000000000000022); name = "Embed App Extensions"; runOnlyForDeploymentPostprocessing = 0; };
 '''
 
+# Hosted unit tests exercise the actual app store, including @Published observers.
+UNIT_OBJECTS = (
+    EXTRA_OBJECTS[:EXTRA_OBJECTS.index("  C000")]
+    .replace("B000", "D000")
+    .replace("LisaUITests", "LisaStoreTests")
+    .replace("path = UITests", "path = AppTests")
+    .replace("bundle.ui-testing", "bundle.unit-test")
+    .replace("com.xavier.sudokulisa.uitests", "com.xavier.sudokulisa.storetests")
+    .replace("TEST_TARGET_NAME = SudokuLisa;",
+             'BUNDLE_LOADER = "$(TEST_HOST)"; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SudokuLisa.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SudokuLisa";')
+)
+
+def with_unit_tests(project):
+    project = project.replace(" objects = {", " objects = {" + UNIT_OBJECTS)
+    project = project.replace("B00000000000000000000001, C000", "B00000000000000000000001, D00000000000000000000001, C000")
+    project = project.replace("B00000000000000000000005, C000", "B00000000000000000000005, D00000000000000000000005, C000")
+    project = project.replace("B00000000000000000000006, C000", "B00000000000000000000006, D00000000000000000000006, C000")
+    return project
+
 def with_extra_targets(project):
     project = project.replace("ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;", "ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; CODE_SIGN_ENTITLEMENTS = App/SudokuLisa.entitlements;")
     project = project.replace("membershipExceptions = (Info.plist); target = A", "membershipExceptions = (Info.plist, SudokuLisa.entitlements); target = A")
@@ -95,8 +114,9 @@ SCHEME = '''<?xml version="1.0" encoding="UTF-8"?>
 if __name__ == "__main__":
     project_dir = ROOT / "SudokuLisa.xcodeproj"
     project_dir.mkdir(exist_ok=True)
-    (project_dir / "project.pbxproj").write_text(with_extra_targets(PROJECT))
+    (project_dir / "project.pbxproj").write_text(with_unit_tests(with_extra_targets(PROJECT)))
     scheme_dir = project_dir / "xcshareddata" / "xcschemes"
     scheme_dir.mkdir(parents=True, exist_ok=True)
-    (scheme_dir / "SudokuLisa.xcscheme").write_text(SCHEME)
-    print("Generated SudokuLisa.xcodeproj with LisaUITests and LisaStickers targets")
+    unit_reference = '<TestableReference skipped="NO" parallelizable="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="D00000000000000000000001" BuildableName="LisaStoreTests.xctest" BlueprintName="LisaStoreTests" ReferencedContainer="container:SudokuLisa.xcodeproj"/></TestableReference>'
+    (scheme_dir / "SudokuLisa.xcscheme").write_text(SCHEME.replace("</Testables>", unit_reference + "</Testables>"))
+    print("Generated SudokuLisa.xcodeproj with LisaUITests, LisaStoreTests and LisaStickers targets")

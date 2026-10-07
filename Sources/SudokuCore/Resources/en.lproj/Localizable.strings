@@ -111,7 +111,7 @@
 "La partie en cours sera remplacée après le choix du niveau." = "Your current game will be replaced once you choose a level.";
 "La règle d’or" = "The golden rule";
 "La réduction des animations suit le réglage d’accessibilité de votre iPhone." = "Reduced motion follows your iPhone's accessibility setting.";
-"La sauvegarde n’a pas pu être chargée. Vos nouvelles parties pourront être enregistrées." = "Your save couldn't be loaded. New games can still be saved.";
+"La sauvegarde n’a pas pu être chargée. Elle est conservée et l’enregistrement est suspendu pour protéger votre progression." = "Your save could not be loaded. It has been kept, and saving is paused to protect your progress.";
 "La seule place" = "The only place";
 "La suite" = "Next";
 "La valeur en ligne %@, colonne %@ empêche de terminer la grille. La valeur correcte est %@." = "The value in row %@, column %@ prevents the puzzle from being completed. The correct value is %@.";

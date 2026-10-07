@@ -143,6 +143,37 @@ final class LisaUITests: XCTestCase {
         attach(app, name: "03-Reprise-persistée")
     }
 
+    func testTimerPauseAndPersistence() {
+        let app = launchFresh()
+        button("C’est parti !", in: app).tap()
+        app.buttons.containing(.staticText, identifier: "Facile").firstMatch.tap()
+        let timer = app.staticTexts["gameTimer"]
+        XCTAssertTrue(timer.waitForExistence(timeout: 15))
+        let initial = timer.label
+        expectation(for: NSPredicate(format: "label != %@", initial), evaluatedWith: timer)
+        waitForExpectations(timeout: 5)
+        app.buttons["Mettre en pause"].tap()
+        let pausedTime = timer.label
+        let pause = expectation(description: "Time while paused")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) { pause.fulfill() }
+        waitForExpectations(timeout: 4)
+        XCTAssertEqual(timer.label, pausedTime)
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(app.staticTexts["Votre grille vous attend."].waitForExistence(timeout: 5))
+        XCTAssertEqual(timer.label, pausedTime)
+        button("Reprendre", in: app).tap()
+        app.buttons["Sauvegarder et revenir à l’accueil"].tap()
+        XCTAssertTrue(button("Reprendre ma partie", in: app).waitForExistence(timeout: 5))
+        app.terminate()
+        app.launchArguments = ["-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
+        app.launch()
+        button("Reprendre ma partie", in: app).tap()
+        XCTAssertTrue(timer.waitForExistence(timeout: 10))
+        XCTAssertGreaterThanOrEqual(timer.label, pausedTime)
+        XCTAssertNotEqual(timer.label, "00:00")
+    }
+
     func testSpatialCompanionDoesNotBlockBoard() {
         let app = launchFresh()
         button("C’est parti !", in: app).tap()
@@ -177,8 +208,13 @@ final class LisaUITests: XCTestCase {
             expectation(for: NSPredicate(format: "value == %@", "Reviens, papillon !"), evaluatedWith: companion)
             waitForExpectations(timeout: 5)
             attach(app, name: "Poulpe-perspective")
-            expectation(for: NSPredicate(format: "value == %@", "Au repos"), evaluatedWith: companion)
-            waitForExpectations(timeout: 10)
+            // Passing the element itself makes XCTest collect a full debug
+            // hierarchy after every false poll; on SE this stalls the UI for
+            // several seconds. Poll only the value, with the same deadline.
+            let resting = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                companion.value as? String == "Au repos"
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [resting], timeout: 10), .completed)
             // Collect steady-state render windows without driving the UI.
             let observation = expectation(description: "Observe steady-state cadence")
             DispatchQueue.main.asyncAfter(deadline: .now() + 12) { observation.fulfill() }
@@ -276,7 +312,7 @@ final class LisaUITests: XCTestCase {
     func testVictoryRewardsAndNextJourneyChapter() {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--uitest-reset", "--uitest-finale"]
+        app.launchArguments = ["--uitest-reset", "--uitest-finale", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
         app.launch()
         let resume = button("Reprendre ma partie", in: app)
         XCTAssertTrue(resume.waitForExistence(timeout: 10))
@@ -309,7 +345,7 @@ final class LisaUITests: XCTestCase {
     func testZenModeStillAllowsVictory() {
         continueAfterFailure = false
         let app = XCUIApplication()
-        app.launchArguments = ["--uitest-reset", "--uitest-finale", "--uitest-zen"]
+        app.launchArguments = ["--uitest-reset", "--uitest-finale", "--uitest-zen", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
         // Also verify the app observes the real accessibility setting when the QA device enables it.
         if UIAccessibility.isReduceMotionEnabled { app.launchArguments.append("--uitest-reduce-motion") }
         let motion = XCTAttachment(string: "System Reduce Motion: \(UIAccessibility.isReduceMotionEnabled)")

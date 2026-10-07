@@ -1,0 +1,555 @@
+{
+  "date": "2026-10-07",
+  "baseline": "previous optimization pass, same probe and build flags",
+  "scope": "Final ordinary file loading, six sequential launches without concurrent compilation. Simulator only.",
+  "median_summary": {
+    "reference": {
+      "construction_ms": 306.5112082986161,
+      "first_model_ms": 282.98104170244187,
+      "subsequent_model_ms": 3.330875071696937,
+      "physical_footprint_bytes": 66931328,
+      "released_physical_footprint_bytes": 48237232,
+      "portrait_encoding_ms": 0.12979167513549328,
+      "flight_encoding_ms": 0.11016661301255226
+    },
+    "after": {
+      "construction_ms": 301.45483335945755,
+      "first_model_ms": 281.88762499485165,
+      "subsequent_model_ms": 2.8474166756495833,
+      "physical_footprint_bytes": 55495296,
+      "released_physical_footprint_bytes": 40143560,
+      "portrait_encoding_ms": 0.10987499263137579,
+      "flight_encoding_ms": 0.10295829270035028
+    }
+  },
+  "runs": [
+    {
+      "after_release_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 48237232,
+        "resident_bytes": 266207232
+      },
+      "device": "Apple iOS simulator GPU",
+      "eight_models_construction_ms": 307.21112503670156,
+      "eight_models_geometry": {
+        "geometry_elements": 128,
+        "geometry_index_bytes": 15217056,
+        "triangles": 1254272,
+        "unique_buffer_bytes": 21198012
+      },
+      "eight_models_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 67701400,
+        "resident_bytes": 243351552
+      },
+      "individual_construction_ms": [
+        284.3449165811762,
+        3.8235000101849437,
+        3.247999935410917,
+        3.259874996729195,
+        3.3868333557620645,
+        2.9947083676233888,
+        3.0452082864940166,
+        3.0952499946579337
+      ],
+      "initial_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 22268496,
+        "resident_bytes": 185991168
+      },
+      "released_models": 8,
+      "released_scene_roots": 8,
+      "render_cases": [
+        {
+          "encode_wall_median_ms": 0.13687496539205313,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 2047284,
+            "triangles": 156784,
+            "unique_buffer_bytes": 6733324
+          },
+          "gpu_median_ms": 0.03350002225488424,
+          "gpu_timing_samples": 120,
+          "height": 840,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 63163176,
+            "resident_bytes": 302088192
+          },
+          "name": "portrait",
+          "samples": 120,
+          "width": 840
+        },
+        {
+          "encode_wall_median_ms": 0.09849993512034416,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 2047284,
+            "triangles": 156784,
+            "unique_buffer_bytes": 6733324
+          },
+          "gpu_median_ms": 0.03424996975809336,
+          "gpu_timing_samples": 120,
+          "height": 2556,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 71289664,
+            "resident_bytes": 313065472
+          },
+          "name": "flight",
+          "samples": 120,
+          "width": 1179
+        }
+      ],
+      "scope": "Fixed 4x MSAA, native-sized offscreen SceneKit; simulator GPU is the host GPU, not an iPhone GPU",
+      "variant": "reference",
+      "run": 1
+    },
+    {
+      "after_release_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 40454832,
+        "resident_bytes": 256524288
+      },
+      "device": "Apple iOS simulator GPU",
+      "eight_models_construction_ms": 301.45483335945755,
+      "eight_models_geometry": {
+        "geometry_elements": 128,
+        "geometry_index_bytes": 7608576,
+        "triangles": 1254272,
+        "unique_buffer_bytes": 15892416
+      },
+      "eight_models_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 54020760,
+        "resident_bytes": 231997440
+      },
+      "individual_construction_ms": [
+        281.88762499485165,
+        2.8932499699294567,
+        2.5755416136235,
+        2.985416678711772,
+        2.7684166561812162,
+        2.600124920718372,
+        2.60470830835402,
+        3.1351667130365968
+      ],
+      "initial_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 21531192,
+        "resident_bytes": 185155584
+      },
+      "released_models": 8,
+      "released_scene_roots": 8,
+      "render_cases": [
+        {
+          "encode_wall_median_ms": 0.09808328468352556,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 1023648,
+            "triangles": 156784,
+            "unique_buffer_bytes": 5430832
+          },
+          "gpu_median_ms": 0.03200001083314419,
+          "gpu_timing_samples": 120,
+          "height": 840,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 49679096,
+            "resident_bytes": 285802496
+          },
+          "name": "portrait",
+          "samples": 120,
+          "width": 840
+        },
+        {
+          "encode_wall_median_ms": 0.09537499863654375,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 1023648,
+            "triangles": 156784,
+            "unique_buffer_bytes": 5430832
+          },
+          "gpu_median_ms": 0.03112491685897112,
+          "gpu_timing_samples": 120,
+          "height": 2556,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 57494288,
+            "resident_bytes": 295714816
+          },
+          "name": "flight",
+          "samples": 120,
+          "width": 1179
+        }
+      ],
+      "scope": "Fixed 4x MSAA, native-sized offscreen SceneKit; simulator GPU is the host GPU, not an iPhone GPU",
+      "variant": "after",
+      "run": 2
+    },
+    {
+      "after_release_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 38603416,
+        "resident_bytes": 259489792
+      },
+      "device": "Apple iOS simulator GPU",
+      "eight_models_construction_ms": 292.610083357431,
+      "eight_models_geometry": {
+        "geometry_elements": 128,
+        "geometry_index_bytes": 7608576,
+        "triangles": 1254272,
+        "unique_buffer_bytes": 15892416
+      },
+      "eight_models_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 55495296,
+        "resident_bytes": 235962368
+      },
+      "individual_construction_ms": [
+        272.7295000804588,
+        3.1893749255687,
+        2.836291678249836,
+        2.8510834090411663,
+        2.5862084003165364,
+        2.7345416601747274,
+        2.85241671372205,
+        2.8258749516680837
+      ],
+      "initial_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 21793312,
+        "resident_bytes": 185286656
+      },
+      "released_models": 8,
+      "released_scene_roots": 8,
+      "render_cases": [
+        {
+          "encode_wall_median_ms": 0.11812499724328518,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 1023648,
+            "triangles": 156784,
+            "unique_buffer_bytes": 5430832
+          },
+          "gpu_median_ms": 0.03300001844763756,
+          "gpu_timing_samples": 120,
+          "height": 840,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 49318576,
+            "resident_bytes": 290390016
+          },
+          "name": "portrait",
+          "samples": 120,
+          "width": 840
+        },
+        {
+          "encode_wall_median_ms": 0.14162505976855755,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 1023648,
+            "triangles": 156784,
+            "unique_buffer_bytes": 5430832
+          },
+          "gpu_median_ms": 0.03270828165113926,
+          "gpu_timing_samples": 120,
+          "height": 2556,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 56511200,
+            "resident_bytes": 300646400
+          },
+          "name": "flight",
+          "samples": 120,
+          "width": 1179
+        }
+      ],
+      "scope": "Fixed 4x MSAA, native-sized offscreen SceneKit; simulator GPU is the host GPU, not an iPhone GPU",
+      "variant": "after",
+      "run": 3
+    },
+    {
+      "after_release_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 47631000,
+        "resident_bytes": 267649024
+      },
+      "device": "Apple iOS simulator GPU",
+      "eight_models_construction_ms": 306.5112082986161,
+      "eight_models_geometry": {
+        "geometry_elements": 128,
+        "geometry_index_bytes": 15217056,
+        "triangles": 1254272,
+        "unique_buffer_bytes": 21198012
+      },
+      "eight_models_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 66931328,
+        "resident_bytes": 244400128
+      },
+      "individual_construction_ms": [
+        282.98104170244187,
+        3.330875071696937,
+        3.0552500393241644,
+        3.4229584271088243,
+        3.4984999801963568,
+        3.5142500419169664,
+        3.3454583026468754,
+        3.3528333296999335
+      ],
+      "initial_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 21645880,
+        "resident_bytes": 185171968
+      },
+      "released_models": 8,
+      "released_scene_roots": 8,
+      "render_cases": [
+        {
+          "encode_wall_median_ms": 0.12612505815923214,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 2047284,
+            "triangles": 156784,
+            "unique_buffer_bytes": 6733324
+          },
+          "gpu_median_ms": 0.03158324398100376,
+          "gpu_timing_samples": 120,
+          "height": 840,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 60312288,
+            "resident_bytes": 300564480
+          },
+          "name": "portrait",
+          "samples": 120,
+          "width": 840
+        },
+        {
+          "encode_wall_median_ms": 0.11016661301255226,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 2047284,
+            "triangles": 156784,
+            "unique_buffer_bytes": 6733324
+          },
+          "gpu_median_ms": 0.0334583455696702,
+          "gpu_timing_samples": 120,
+          "height": 2556,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 68651768,
+            "resident_bytes": 311689216
+          },
+          "name": "flight",
+          "samples": 120,
+          "width": 1179
+        }
+      ],
+      "scope": "Fixed 4x MSAA, native-sized offscreen SceneKit; simulator GPU is the host GPU, not an iPhone GPU",
+      "variant": "reference",
+      "run": 4
+    },
+    {
+      "after_release_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 50399920,
+        "resident_bytes": 266240000
+      },
+      "device": "Apple iOS simulator GPU",
+      "eight_models_construction_ms": 292.25370823405683,
+      "eight_models_geometry": {
+        "geometry_elements": 128,
+        "geometry_index_bytes": 15217056,
+        "triangles": 1254272,
+        "unique_buffer_bytes": 21198012
+      },
+      "eight_models_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 66030232,
+        "resident_bytes": 243269632
+      },
+      "individual_construction_ms": [
+        269.4768749643117,
+        3.478291677311063,
+        3.5186666063964367,
+        3.028874984011054,
+        2.938208286650479,
+        3.535624942742288,
+        2.98829167149961,
+        3.284499980509281
+      ],
+      "initial_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 21645904,
+        "resident_bytes": 185155584
+      },
+      "released_models": 8,
+      "released_scene_roots": 8,
+      "render_cases": [
+        {
+          "encode_wall_median_ms": 0.12979167513549328,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 2047284,
+            "triangles": 156784,
+            "unique_buffer_bytes": 6733324
+          },
+          "gpu_median_ms": 0.03224995452910662,
+          "gpu_timing_samples": 120,
+          "height": 840,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 62458592,
+            "resident_bytes": 300466176
+          },
+          "name": "portrait",
+          "samples": 120,
+          "width": 840
+        },
+        {
+          "encode_wall_median_ms": 0.1343749463558197,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 2047284,
+            "triangles": 156784,
+            "unique_buffer_bytes": 6733324
+          },
+          "gpu_median_ms": 0.03474997356534004,
+          "gpu_timing_samples": 120,
+          "height": 2556,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 68553464,
+            "resident_bytes": 309985280
+          },
+          "name": "flight",
+          "samples": 120,
+          "width": 1179
+        }
+      ],
+      "scope": "Fixed 4x MSAA, native-sized offscreen SceneKit; simulator GPU is the host GPU, not an iPhone GPU",
+      "variant": "reference",
+      "run": 5
+    },
+    {
+      "after_release_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 40143560,
+        "resident_bytes": 257015808
+      },
+      "device": "Apple iOS simulator GPU",
+      "eight_models_construction_ms": 303.39250003453344,
+      "eight_models_geometry": {
+        "geometry_elements": 128,
+        "geometry_index_bytes": 7608576,
+        "triangles": 1254272,
+        "unique_buffer_bytes": 15892416
+      },
+      "eight_models_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 55691952,
+        "resident_bytes": 233766912
+      },
+      "individual_construction_ms": [
+        283.0767499981448,
+        2.8474166756495833,
+        2.6897500501945615,
+        3.2970833126455545,
+        2.961666672490537,
+        2.7166666695848107,
+        2.8901250334456563,
+        2.9016666812822223
+      ],
+      "initial_memory": {
+        "metal_allocated_bytes": 0,
+        "physical_footprint_bytes": 21711416,
+        "resident_bytes": 185303040
+      },
+      "released_models": 8,
+      "released_scene_roots": 8,
+      "render_cases": [
+        {
+          "encode_wall_median_ms": 0.10987499263137579,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 1023648,
+            "triangles": 156784,
+            "unique_buffer_bytes": 5430832
+          },
+          "gpu_median_ms": 0.03200001083314419,
+          "gpu_timing_samples": 120,
+          "height": 840,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 48696080,
+            "resident_bytes": 284917760
+          },
+          "name": "portrait",
+          "samples": 120,
+          "width": 840
+        },
+        {
+          "encode_wall_median_ms": 0.10295829270035028,
+          "geometry": {
+            "geometry_elements": 16,
+            "geometry_index_bytes": 1023648,
+            "triangles": 156784,
+            "unique_buffer_bytes": 5430832
+          },
+          "gpu_median_ms": 0.030250055715441704,
+          "gpu_timing_samples": 120,
+          "height": 2556,
+          "memory": {
+            "metal_allocated_bytes": 0,
+            "physical_footprint_bytes": 57641768,
+            "resident_bytes": 295944192
+          },
+          "name": "flight",
+          "samples": 120,
+          "width": 1179
+        }
+      ],
+      "scope": "Fixed 4x MSAA, native-sized offscreen SceneKit; simulator GPU is the host GPU, not an iPhone GPU",
+      "variant": "after",
+      "run": 6
+    }
+  ],
+  "static_image_comparisons": [
+    {
+      "case": "portrait",
+      "mean_absolute_difference_rgba": [
+        0.00010062358276643991,
+        0.00011621315192743764,
+        9.495464852607709e-05,
+        0.0
+      ],
+      "maximum_difference_rgba": [
+        5,
+        6,
+        4,
+        0
+      ],
+      "different_pixels": 106,
+      "pixels": 705600
+    },
+    {
+      "case": "flight",
+      "mean_absolute_difference_rgba": [
+        4.645723744028586e-06,
+        3.6502115131653175e-06,
+        4.31388633374083e-06,
+        0.0
+      ],
+      "maximum_difference_rgba": [
+        1,
+        2,
+        1,
+        0
+      ],
+      "different_pixels": 22,
+      "pixels": 3013524
+    }
+  ]
+}

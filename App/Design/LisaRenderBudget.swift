@@ -25,6 +25,9 @@ final class LisaRenderBudget: ObservableObject {
     private let logger = Logger(subsystem: "com.xavier.sudokulisa", category: "AnimationBudget")
 
     var particleCount: Int { [24, 14, 7][level] }
+    func recordGameBody() {
+        if metricsEnabled { logger.info("Game body evaluated") }
+    }
     func cadence(_ requested: Double) -> Double {
         if requested >= 60 { return Double(frameRate) }
         return min(requested, [30, 20, 12][level])

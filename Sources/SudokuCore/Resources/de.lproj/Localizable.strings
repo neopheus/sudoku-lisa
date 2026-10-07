@@ -111,7 +111,7 @@
 "La partie en cours sera remplacée après le choix du niveau." = "Dein aktuelles Spiel wird nach der Auswahl einer Stufe ersetzt.";
 "La règle d’or" = "Die goldene Regel";
 "La réduction des animations suit le réglage d’accessibilité de votre iPhone." = "Die Bewegungsreduzierung richtet sich nach den Bedienungshilfen deines iPhones.";
-"La sauvegarde n’a pas pu être chargée. Vos nouvelles parties pourront être enregistrées." = "Dein Spielstand konnte nicht geladen werden. Neue Spiele können weiterhin gespeichert werden.";
+"La sauvegarde n’a pas pu être chargée. Elle est conservée et l’enregistrement est suspendu pour protéger votre progression." = "Dein Spielstand konnte nicht geladen werden. Er bleibt erhalten. Das Speichern ist ausgesetzt, um deinen Fortschritt zu schützen.";
 "La seule place" = "Der einzige Platz";
 "La suite" = "Weiter";
 "La valeur en ligne %@, colonne %@ empêche de terminer la grille. La valeur correcte est %@." = "Der Wert in Zeile %@, Spalte %@ verhindert die Lösung. Der richtige Wert ist %@.";

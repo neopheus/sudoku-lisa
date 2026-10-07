@@ -17,18 +17,27 @@ struct LisaMascot: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @State private var visible = false
+    @State private var onScreen = true
+    @Environment(\.lisaVisibleBounds) private var visibleBounds
 
     var body: some View {
         OctopusSceneView(
             mood: celebrating ? .celebrating : mood,
             reactionToken: reactionToken,
-            animated: animationEnabled && motionAllowed && visible && scenePhase == .active && !reduceMotion
+            animated: animationEnabled && motionAllowed && visible && onScreen && scenePhase == .active && !reduceMotion
         )
         // SceneKit can fail to create a drawable for fractional SwiftUI dimensions.
         // Whole-point bounds keep the live Metal surface reliable at compact sizes.
         .frame(width: ceil(size * 1.15), height: ceil(size * 1.1))
         .allowsHitTesting(false)
         .accessibilityHidden(true)
+        .background {
+            GeometryReader { proxy in
+                Color.clear.onChange(of: visibleBounds.map { proxy.frame(in: .global).intersects($0) } ?? true, initial: true) { _, intersects in
+                    onScreen = intersects
+                }
+            }
+        }
         .onAppear { visible = true }
         .onDisappear { visible = false }
     }

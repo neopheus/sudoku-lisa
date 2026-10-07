@@ -51,6 +51,14 @@ struct LisaJourneyScenery: View {
 
     private func weather(time: Double) -> some View {
         Canvas { context, size in
+            guard size.height > 0 else { return }
+            // Three symbol sizes serve all 20 particles in these chapters.
+            // Resolve once per size, keeping the exact original SF Symbols.
+            let symbols: [GraphicsContext.ResolvedText] = (region == 3 || region == 4) ? (0..<3).map { offset in
+                context.resolve(Text(Image(systemName: region == 3 ? "snowflake" : "sparkle"))
+                    .font(.system(size: CGFloat(2 + offset) * 3))
+                    .foregroundColor(region == 4 ? LisaTheme.yellow : .white))
+            } : []
             for index in 0..<20 {
                 let seed = Double(index)
                 let speed = region == 3 ? 16.0 : 10.0
@@ -64,8 +72,7 @@ struct LisaJourneyScenery: View {
                     context.stroke(Path(ellipseIn: rect), with: .color(.white), lineWidth: 1.6)
                     context.fill(Path(ellipseIn: rect.insetBy(dx: radius * 0.6, dy: radius * 0.6).offsetBy(dx: -1, dy: -1)), with: .color(.white))
                 } else if region == 3 || region == 4 {
-                    let symbol = context.resolve(Text(Image(systemName: region == 3 ? "snowflake" : "sparkle")).font(.system(size: radius * 3)).foregroundColor(region == 4 ? LisaTheme.yellow : .white))
-                    context.draw(symbol, at: CGPoint(x: x, y: y))
+                    context.draw(symbols[index % 3], at: CGPoint(x: x, y: y))
                 } else {
                     context.fill(Path(ellipseIn: rect), with: .color(index.isMultiple(of: 2) ? .white : color))
                 }

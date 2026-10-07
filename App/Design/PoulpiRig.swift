@@ -12,6 +12,9 @@ final class PoulpiRig: @unchecked Sendable {
     private var swimWeight: Float = 0
     private var bends = Array(repeating: Float(0), count: 24)
     private var twists = Array(repeating: Float(0), count: 24)
+    private static let armAngles = (0..<8).map { Float($0) * .pi / 4 + .pi / 8 }
+    private static let armSines = armAngles.map { sin($0) }
+    private static let curlAxes = armAngles.map { SIMD3<Float>(cos($0), 0, -sin($0)) }
 
     func setSwimming(_ pose: CompanionFlight.SwimPose?) {
         lock.lock(); swimming = pose; lock.unlock()
@@ -46,13 +49,38 @@ final class PoulpiRig: @unchecked Sendable {
     private struct Surface: Decodable { let positions: [Float], normals: [Float], textureCoordinates: [Float]; let indices: [UInt32] }
     private struct Joint: Decodable { let parent: Int; let position: [Float] }
     private struct Asset: Decodable { let version: Int; let joints: [Joint]; let skin: Mesh; let cups: Mesh; let mouth: Surface }
-    private static let asset: Asset = {
+    /// Shared immutable buffers. The decoded JSON arrays are released after
+    /// conversion; every instance owns only its bones and mutable materials.
+    private struct SkinnedMesh {
+        let geometry: SCNGeometry
+        let weights: SCNGeometrySource
+        let boneIndices: SCNGeometrySource
+        init(_ mesh: Mesh, tint: Bool) {
+            geometry = PoulpiRig.geometry(mesh, tint: tint)
+            weights = PoulpiRig.source(mesh.weights, semantic: .boneWeights, count: mesh.weights.count / 4, components: 4, floating: true)
+            boneIndices = PoulpiRig.source(mesh.bones, semantic: .boneIndices, count: mesh.bones.count / 4, components: 4, floating: false)
+        }
+    }
+    private struct Resources {
+        let joints: [Joint]
+        let inverseBindTransforms: [NSValue]
+        let skin: SkinnedMesh
+        let cups: SkinnedMesh
+        let mouth: SCNGeometry
+    }
+    nonisolated(unsafe) private static let resources: Resources = autoreleasepool {
         guard let url = Bundle.main.url(forResource: "poulpi-rig", withExtension: "json"),
-              let data = try? Data(contentsOf: url), let result = try? JSONDecoder().decode(Asset.self, from: data), result.version == 1 else {
+              let data = try? Data(contentsOf: url),
+              let asset = try? JSONDecoder().decode(Asset.self, from: data), asset.version == 1 else {
             preconditionFailure("Missing validated Poulpi sculpt")
         }
-        return result
-    }()
+        return Resources(joints: asset.joints,
+                         inverseBindTransforms: asset.joints.map { joint in
+                             NSValue(scnMatrix4: SCNMatrix4MakeTranslation(-joint.position[0], -joint.position[1], -joint.position[2]))
+                         },
+                         skin: SkinnedMesh(asset.skin, tint: true), cups: SkinnedMesh(asset.cups, tint: false),
+                         mouth: mouthGeometry(asset.mouth))
+    }
     // The reference supplies the iris and lip pigment on curved 3D geometry.
     private static let referenceTexture: UIImage = {
         guard let url=Bundle.main.url(forResource:"poulpi-eye-reference",withExtension:"png"),
@@ -83,11 +111,16 @@ final class PoulpiRig: @unchecked Sendable {
         }
         return SCNGeometry(sources: [source(uv, semantic: .texcoord, count: uv.count/2, components: 2, floating: true), source(colors, semantic: .color, count: colors.count/4, components: 4, floating: true), source(mesh.positions, semantic: .vertex, count: mesh.positions.count / 3, components: 3, floating: true),
                               source(mesh.normals, semantic: .normal, count: mesh.normals.count / 3, components: 3, floating: true)],
-                    elements: [SCNGeometryElement(indices: mesh.indices, primitiveType: .triangles)])
+                    elements: [triangleElement(mesh.indices)])
     }
-    // Immutable prototypes: each instance copies them before assigning materials.
-    nonisolated(unsafe) private static let skinGeometry = geometry(asset.skin)
-    nonisolated(unsafe) private static let cupGeometry = geometry(asset.cups, tint: false)
+    /// Lossless index compaction: every vertex and triangle stays identical.
+    /// The fallback also supports future sculpts larger than 65,536 vertices.
+    private static func triangleElement(_ indices: [UInt32]) -> SCNGeometryElement {
+        if (indices.max() ?? 0) <= UInt32(UInt16.max) {
+            return SCNGeometryElement(indices: indices.map { UInt16($0) }, primitiveType: .triangles)
+        }
+        return SCNGeometryElement(indices: indices, primitiveType: .triangles)
+    }
     private static func material(_ color: UIColor, roughness: CGFloat = 0.48) -> SCNMaterial {
         let m = SCNMaterial(); m.lightingModel = .physicallyBased
         m.diffuse.contents = color; m.roughness.contents = roughness; m.metalness.contents = 0
@@ -132,21 +165,19 @@ final class PoulpiRig: @unchecked Sendable {
         _surface.normal=normalize(abs(determinant)*_surface.normal-0.0006*grainVisibility*grainStrength*gradient);
         """ }
     private let purple = material(UIColor(red: 0.16, green: 0.10, blue: 0.38, alpha: 1), roughness: 0.90)
-    private func attach(_ mesh: Mesh, geometry: SCNGeometry, material: SCNMaterial, to target: SCNNode) {
-        let g = geometry.copy() as! SCNGeometry; g.firstMaterial = material
-        let inverse = Self.asset.joints.map { joint -> NSValue in
-            NSValue(scnMatrix4: SCNMatrix4MakeTranslation(-joint.position[0], -joint.position[1], -joint.position[2]))
-        }
-        let skinner = SCNSkinner(baseGeometry: g, bones: bones, boneInverseBindTransforms: inverse,
-                                boneWeights: Self.source(mesh.weights, semantic: .boneWeights, count: mesh.weights.count/4, components: 4, floating: true),
-                                boneIndices: Self.source(mesh.bones, semantic: .boneIndices, count: mesh.bones.count/4, components: 4, floating: false))
+    private func attach(_ mesh: SkinnedMesh, material: SCNMaterial, to target: SCNNode) {
+        let g = mesh.geometry.copy() as! SCNGeometry
+        g.firstMaterial = material
+        let skinner = SCNSkinner(baseGeometry: g, bones: bones,
+                                boneInverseBindTransforms: Self.resources.inverseBindTransforms,
+                                boneWeights: mesh.weights, boneIndices: mesh.boneIndices)
         skinner.skeleton = bones[0]
         target.geometry = g; target.skinner = skinner; node.addChildNode(target)
     }
     init() {
-        for joint in Self.asset.joints {
+        for joint in Self.resources.joints {
             let b = SCNNode()
-            let p = joint.parent >= 0 ? Self.asset.joints[joint.parent].position : [0,0,0]
+            let p = joint.parent >= 0 ? Self.resources.joints[joint.parent].position : [0,0,0]
             b.position = SCNVector3(joint.position[0]-p[0], joint.position[1]-p[1], joint.position[2]-p[2])
             if joint.parent >= 0 { bones[joint.parent].addChildNode(b) } else { node.addChildNode(b) }
             bones.append(b)
@@ -185,7 +216,7 @@ final class PoulpiRig: @unchecked Sendable {
         float blush=exp(-pow((abs(p.x)-0.47)/0.105,2.0)-pow((p.y-0.155)/0.070,2.0))*front;
         _surface.diffuse.rgb=mix(_surface.diffuse.rgb,float3(0.45,0.045,0.46),blush*0.40);
         """]
-        attach(Self.asset.skin, geometry: Self.skinGeometry, material: skin, to: SCNNode())
+        attach(Self.resources.skin, material: skin, to: SCNNode())
         let cups = Self.material(UIColor(red:0.78,green:0.73,blue:0.62,alpha:1),roughness:0.52)
         cups.emission.contents = UIColor(red:0.35,green:0.30,blue:0.22,alpha:1)
         cups.shaderModifiers = [.surface: """
@@ -200,11 +231,20 @@ final class PoulpiRig: @unchecked Sendable {
         _surface.emission.rgb += float3(0.035,0.017,0.0)*recess;
         _surface.roughness += 0.08*recess;
         """]
-        attach(Self.asset.cups, geometry:Self.cupGeometry, material:cups, to:cupsNode)
+        attach(Self.resources.cups, material:cups, to:cupsNode)
         buildFace()
         node.scale = SCNVector3(0.90,1,1)
     }
     private func eyeShell(_ radius: CGFloat, _ scale: SCNVector3, _ position: SCNVector3, _ material: SCNMaterial, parent: SCNNode) -> SCNNode {
+        let g = Self.eyeShellGeometry.copy() as! SCNGeometry
+        g.firstMaterial = material
+        let n = SCNNode(geometry: g), r = Float(radius)
+        n.scale = SCNVector3(scale.x*r, scale.y*r, scale.z*r)
+        n.position = position
+        parent.addChildNode(n)
+        return n
+    }
+    nonisolated(unsafe) private static let eyeShellGeometry: SCNGeometry = {
         let rows=40,columns=64
         var vertices:[SCNVector3]=[],normals:[SCNVector3]=[],indices:[UInt32]=[]
         for row in 0...rows {
@@ -221,12 +261,9 @@ final class PoulpiRig: @unchecked Sendable {
                 }
             }
         }
-        let g=SCNGeometry(sources:[SCNGeometrySource(vertices:vertices),SCNGeometrySource(normals:normals)],elements:[SCNGeometryElement(indices:indices,primitiveType:.triangles)])
-        g.firstMaterial=material
-        let n=SCNNode(geometry:g);let r=Float(radius)
-        n.scale=SCNVector3(scale.x*r,scale.y*r,scale.z*r);n.position=position;parent.addChildNode(n)
-        return n
-    }
+        let g=SCNGeometry(sources:[SCNGeometrySource(vertices:vertices),SCNGeometrySource(normals:normals)],elements:[PoulpiRig.triangleElement(indices)])
+        return g
+    }()
     /// Iris and pupil follow the ivory shell instead of intersecting it as
     /// flattened spheres. Their small relief also fits inside the closing lid.
     private func eyeDisc(radius:Float, side:Float, lift:Float, material:SCNMaterial, parent:SCNNode) {
@@ -258,7 +295,7 @@ final class PoulpiRig: @unchecked Sendable {
                 }
             }
         }
-        let g=SCNGeometry(sources:[SCNGeometrySource(vertices:vertices),SCNGeometrySource(normals:normals),SCNGeometrySource(textureCoordinates:uv)],elements:[SCNGeometryElement(indices:indices,primitiveType:.triangles)])
+        let g=SCNGeometry(sources:[SCNGeometrySource(vertices:vertices),SCNGeometrySource(normals:normals),SCNGeometrySource(textureCoordinates:uv)],elements:[PoulpiRig.triangleElement(indices)])
         g.firstMaterial=material;parent.addChildNode(SCNNode(geometry:g))
     }
     private func buildFace() {
@@ -359,7 +396,7 @@ final class PoulpiRig: @unchecked Sendable {
         #pragma body
         _surface.diffuse.a=1.0;
         """]
-        let lips=SCNNode(geometry:Self.smileGeometry)
+        let lips=SCNNode(geometry:Self.resources.mouth)
         lips.geometry = lips.geometry?.copy() as? SCNGeometry
         lips.geometry?.firstMaterial=orange; lips.scale=SCNVector3(1.05,1.158,1); mouth.addChildNode(lips)
         mouth.position = SCNVector3(-0.0033,0.179,0.601); bones[0].addChildNode(mouth)
@@ -388,19 +425,18 @@ final class PoulpiRig: @unchecked Sendable {
                 }
             }
         }
-        return SCNGeometry(sources:[SCNGeometrySource(vertices:vertices),SCNGeometrySource(normals:normals)],elements:[SCNGeometryElement(indices:indices,primitiveType:.triangles)])
+        return SCNGeometry(sources:[SCNGeometrySource(vertices:vertices),SCNGeometrySource(normals:normals)],elements:[PoulpiRig.triangleElement(indices)])
     }
 
     // A single closed lip cushion, with the smile pressed into the surface.
     // Immutable geometry is cached; expression scaling still costs one transform.
-    nonisolated(unsafe) private static let smileGeometry: SCNGeometry = {
-        let mesh=asset.mouth
+    private static func mouthGeometry(_ mesh: Surface) -> SCNGeometry {
         return SCNGeometry(sources:[
             source(mesh.positions,semantic:.vertex,count:mesh.positions.count/3,components:3,floating:true),
             source(mesh.normals,semantic:.normal,count:mesh.normals.count/3,components:3,floating:true),
             source(mesh.textureCoordinates,semantic:.texcoord,count:mesh.textureCoordinates.count/2,components:2,floating:true)
-        ],elements:[SCNGeometryElement(indices:mesh.indices,primitiveType:.triangles)])
-    }()
+        ],elements:[triangleElement(mesh.indices)])
+    }
 
     /// Smooth variable-radius tubes for eyebrow ridges.
     private func tube(points: [SCNVector3], radius: Float, material: SCNMaterial, radiusScale: ((Float) -> Float)? = nil) -> SCNNode {
@@ -451,7 +487,7 @@ final class PoulpiRig: @unchecked Sendable {
         for i in normals.indices where simd_length_squared(accumulated[i])>1e-24 {
             let n=simd_normalize(accumulated[i]);normals[i]=SCNVector3(n.x,n.y,n.z)
         }
-        let g=SCNGeometry(sources:[SCNGeometrySource(vertices:vertices),SCNGeometrySource(normals:normals)],elements:[SCNGeometryElement(indices:indices,primitiveType:.triangles)])
+        let g=SCNGeometry(sources:[SCNGeometrySource(vertices:vertices),SCNGeometrySource(normals:normals)],elements:[PoulpiRig.triangleElement(indices)])
         g.firstMaterial=material
         return SCNNode(geometry:g)
     }
@@ -541,8 +577,11 @@ final class PoulpiRig: @unchecked Sendable {
         let effort = Float(swimming?.effort ?? 0)
         let braking = Float(swimming?.braking ?? 0)
         let turn = Float(swimming?.turn ?? 0)
+        let gestureTime = swimming != nil && (mood == .swim || mood == .chase || mood == .rocket) ? stroke / .pi : t
         for i in 0..<8 {
-            let angle=Float(i) * .pi/4 + .pi/8
+            let angle = Self.armAngles[i]
+            let steering = turn * Self.armSines[i]
+            let baseTwist = sin(cycle * 6 + angle) * 0.035 + swimWeight * turn * 0.10
             for j in 0..<3 {
                 let joint = Float(j)
                 let idle = sin(cycle * Float(mood == .sleepy ? 3 : 6+i%3) + angle - joint * 0.55) * (0.07 + joint * 0.045) * (mood == .sleepy ? 0.45 : 1)
@@ -552,16 +591,15 @@ final class PoulpiRig: @unchecked Sendable {
                 let power = sin(stroke - lag)
                 let paddle = (0.08 + power * (0.22 + joint * 0.085)) * (0.45 + effort * 0.55)
                 let fan = -braking * (0.14 + joint * 0.04)
-                let steering = turn * sin(angle) * (0.15 + joint * 0.04)
-                let gestureTime = swimming != nil && [.swim, .chase, .rocket].contains(mood) ? stroke / .pi : t
+                let jointSteering = steering * (0.15 + joint * 0.04)
                 let gesture = armGesture(mood, arm: i, joint: j, time: gestureTime)
-                let target = idle * (1 - swimWeight * 0.7) + swimWeight * (paddle + fan + steering) + gesture.bend
+                let target = idle * (1 - swimWeight * 0.7) + swimWeight * (paddle + fan + jointSteering) + gesture.bend
                 let index = i * 3 + j
                 bends[index] += (target - bends[index]) * blend
-                let twist = (j == 0 ? sin(cycle * 6 + angle) * 0.035 + swimWeight * turn * 0.10 : 0) + gesture.twist
+                let twist = (j == 0 ? baseTwist : 0) + gesture.twist
                 twists[index] += (twist - twists[index]) * blend
                 // Compose rotations once: do not mix Euler writes with axis-angle.
-                let curl = simd_quatf(angle: bends[index], axis: SIMD3(cos(angle), 0, -sin(angle)))
+                let curl = simd_quatf(angle: bends[index], axis: Self.curlAxes[i])
                 let sweep = simd_quatf(angle: twists[index], axis: SIMD3(0, 1, 0))
                 bones[1+index].simdOrientation = sweep * curl
             }

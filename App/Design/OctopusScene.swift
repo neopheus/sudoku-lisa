@@ -62,6 +62,13 @@ final class OctopusRenderView: SCNView {
     private var playbackRunning: Bool?
     private var detailLevel = -1
     private var spatial = false
+    private var portraitState: PortraitState?
+    private struct PortraitState: Equatable {
+        let interactive: Bool
+        let yaw: Double
+        let pitch: Double
+        let zoom: Double
+    }
     private var viewport = CGSize.zero
     private var occlusionRect = CGRect.zero
     private let budgetClient = UUID()
@@ -99,10 +106,14 @@ final class OctopusRenderView: SCNView {
     func setSpatial(_ enabled: Bool) {
         guard spatial != enabled else { return }
         spatial = enabled
+        portraitState = nil
         viewport = .zero
         updateViewport()
     }
     func setPortrait(interactive: Bool, yaw: Double, pitch: Double, zoom: Double) {
+        let state = PortraitState(interactive: interactive, yaw: yaw, pitch: pitch, zoom: zoom)
+        guard portraitState != state else { return }
+        portraitState = state
         companion.setPortrait(interactive: interactive, yaw: yaw, pitch: pitch, zoom: zoom)
         if interactive { setNeedsDisplay() }
     }
