@@ -1,5 +1,4 @@
 import SwiftUI
-import Combine
 import SudokuCore
 
 struct GameView: View {
@@ -10,8 +9,17 @@ struct GameView: View {
     @State private var selected: Int?
     @State private var notesMode = false
     @State private var paused = false
-    @State private var hint: SudokuHint?
+    @StateObject private var coach = HintCoachModel()
+    private var hint: SudokuHint? { coach.hint }
+    private var observedBoard: GameBoardSnapshot? {
+        store.session.map { GameBoardSnapshot(puzzle: $0.puzzle, values: $0.values) }
+    }
+    @State private var learning = false
+    @State private var lessonTechnique: SudokuTechnique?
+    @State private var lockedDigit: Int?
+    @State private var continueRequested = false
     @State private var hintPresented = false
+    @State private var usesWideLayout = false
     @State private var hintStage = 0
     @State private var settings = false
     @State private var errorPresented = false
@@ -28,8 +36,11 @@ struct GameView: View {
     @State private var celebrationMessage = ""
     @State private var victoryPresented = false
     @Environment(\.colorScheme) private var colorScheme
-    private var mascotUncovered: Bool { scenePhase == .active && !settings && !victoryPresented && !hintPresented && !errorPresented }
-    private let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    private var mascotUncovered: Bool { scenePhase == .active && !settings && !victoryPresented && !hintPresented && !errorPresented && !learning && !coach.isWorking && !store.isGenerating }
+    private var timerRunning: Bool {
+        scenePhase == .active && !paused && !hintPresented && !settings && !errorPresented && !learning
+            && !coach.isWorking && !store.isGenerating && store.session?.isComplete == false
+    }
 
     var body: some View {
         let _ = LisaRenderBudget.shared.recordGameBody()
@@ -58,12 +69,17 @@ struct GameView: View {
                             gameHeader(game, wide: wide)
                             layout {
                                 VStack(spacing: compact ? 8 : 16) {
-                                    if !wide { gameStatus(game, wide: false) }
-                                    board(game, width: boardWidth)
+                                    if !wide && !hintPresented { gameStatus(game, wide: false) }
+                                    board(game, width: boardWidth).disabled(hintPresented)
                                 }
                                 .frame(width: wide ? boardWidth : contentWidth)
-                                gameControls(game, compact: compact, wide: wide)
-                                    .frame(width: controlsWidth)
+                                if hintPresented, wide, let hint {
+                                    ScrollView { coaching(hint) }
+                                        .frame(width: controlsWidth, height: max(180, geometry.size.height - 94))
+                                } else if !hintPresented {
+                                    gameControls(game, compact: compact, wide: wide)
+                                        .frame(width: controlsWidth)
+                                }
                             }
                             .frame(minHeight: wide ? max(0, geometry.size.height - (compact ? 94 : 102)) : nil)
                         }
@@ -71,6 +87,7 @@ struct GameView: View {
                         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 15)
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height, alignment: .top)
                     }
+                    .onChange(of: wide, initial: true) { _, value in usesWideLayout = value }
                 }
             }
             if paused {
@@ -82,27 +99,35 @@ struct GameView: View {
         }
         .animation(reduceMotion || !store.settings.animatedDecor ? nil : .easeInOut(duration: 0.25), value: paused)
         .coordinateSpace(name: "game-space")
-        .overlay(alignment: .bottom) {
-            if hintPresented, let hint {
-                ZStack(alignment: .bottom) {
-                    Color.black.opacity(0.16).ignoresSafeArea()
-                    hintCoach(hint)
-                }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if hintPresented, !usesWideLayout, let hint {
+                ScrollView { coaching(hint) }
+                    .frame(maxHeight: 260)
+                    .background(LisaTheme.paper)
             }
         }
         .onPreferenceChange(LisaBoardFrameKey.self) { boardFrame = $0 }
         .preferredColorScheme(store.settings.darkMode ? .dark : .light)
         .saturation(store.settings.paperMode ? 0 : 1)
         .environment(\.lisaMotionAllowed, !paused && mascotUncovered)
-        .onReceive(timer) { _ in
-            guard scenePhase == .active, !paused, !hintPresented, !settings, !errorPresented, store.session?.isComplete == false else { return }
-            store.tick()
+        .task(id: timerRunning) {
+            guard timerRunning else { return }
+            while !Task.isCancelled {
+                do { try await Task.sleep(for: .seconds(1)) } catch { return }
+                guard !Task.isCancelled else { return }
+                store.tick()
+            }
         }
-        .onChange(of: scenePhase) { _, phase in if phase != .active { paused = true; store.saveForBackground() } }
-        .onDisappear { store.synchronizeElapsedTime(); store.save(); LisaAudio.shared.configure(paused: false) }
+        .onChange(of: scenePhase) { _, phase in if phase != .active { paused = true; if coach.isWorking { coach.cancel() }; store.saveForBackground() } }
+        .onDisappear { coach.cancel(); store.synchronizeElapsedTime(); store.save(); LisaAudio.shared.configure(paused: false) }
         .onChange(of: paused, initial: true) { _, value in LisaAudio.shared.configure(paused: value) }
-        .onChange(of: store.session?.values) { before, after in
-            guard let before, let after, let game = store.session else { return }
+        .onChange(of: observedBoard) { previous, current in
+            guard let current, let previous, previous.puzzle == current.puzzle else {
+                resetForNewPuzzle()
+                return
+            }
+            guard let game = store.session else { return }
+            let before = previous.values, after = current.values
             let event = store.milestones.record(before: before, after: after, solution: game.puzzle.solution,
                                           revealsCorrectness: store.settings.autoCheck || store.settings.errorLimit)
             guard !game.isComplete, !event.isEmpty else { return }
@@ -142,69 +167,84 @@ struct GameView: View {
         .onChange(of: languagePreference) { _, _ in
             celebrationMessage = ""
             companionMessage = L10n.text("Au repos")
-            if hint != nil { hint = store.session?.hint() }
+            if hintPresented, let game = store.session { hintPresented = false; coach.request(game) }
         }
+        .onChange(of: coach.hint) { _, suggestion in
+            guard suggestion != nil, coach.matches(store.session) else { return }
+            hintStage = 0
+            store.session?.recordHintConsultation()
+            store.save()
+            store.feedback(.hint)
+            react(.thinking)
+            hintPresented = true
+        }
+        .onChange(of: store.settings.numberFirst) { _, _ in lockedDigit = nil }
+        .sheet(isPresented: $learning) {
+            LearnView(initialTechnique: lessonTechnique).environment(\.lisaMotionAllowed, scenePhase == .active)
+        }
+        .overlay { GenerationOverlay() }
+        .alert(L10n.text("Préparation de la grille"), isPresented: Binding(get: { store.generationError != nil }, set: { if !$0 { store.generationError = nil } })) {
+            Button(L10n.text("D’accord")) { store.generationError = nil }
+        } message: { Text(L10n.text(store.generationError ?? "")) }
         .sheet(isPresented: $settings) { SettingsView() }
-        .sheet(isPresented: $victoryPresented) { VictoryView().environment(\.lisaMotionAllowed, true).interactiveDismissDisabled() }
+        .sheet(isPresented: $victoryPresented, onDismiss: {
+            if continueRequested { continueRequested = false; store.continueAfterVictory() }
+        }) {
+            VictoryView(onContinue: {
+                store.showVictory = false
+                continueRequested = true
+                victoryPresented = false
+            }).environment(\.lisaMotionAllowed, scenePhase == .active).interactiveDismissDisabled()
+        }
         .alert(L10n.text("On respire, puis on reprend ?"), isPresented: $errorPresented) {
             Button(L10n.text("Continuer sans limite")) { store.settings.errorLimit = false }
             Button(L10n.text("Retour à l’accueil")) { store.showGame = false }
         } message: { Text(L10n.text("Trois erreurs, ce n’est pas la fin du monde. Continuez à votre rythme ou faites une pause.")) }
     }
 
-    private func hintCoach(_ hint: SudokuHint) -> some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                LisaMascot(size: 48, mood: .thinking, reactionToken: hintStage)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(L10n.text("Un indice pour comprendre")).font(LisaTheme.heading(17))
-                    Text(L10n.text("Étape %@ sur 3", String(describing: hintStage + 1)))
-                        .font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
-                }
-                Spacer()
-                Button { hintPresented = false } label: {
-                    Image(systemName: "xmark.circle.fill").font(.title2).foregroundStyle(LisaTheme.muted)
-                }.accessibilityLabel(L10n.text("Fermer"))
-            }
-            HStack(spacing: 7) {
-                ForEach(0..<3, id: \.self) { step in
-                    Capsule().fill(step <= hintStage ? LisaTheme.coral : LisaTheme.line).frame(height: 5)
-                }
-            }
-            Text(hintStage == 0 ? hint.detail : hintStage == 1 ? "\(hint.technique). \(hint.explanation)" : L10n.text("La valeur vérifiée est %@, en ligne %@, colonne %@.", String(describing: hint.value), String(describing: hint.index / 9 + 1), String(describing: hint.index % 9 + 1)))
-                .font(LisaTheme.body(15)).fixedSize(horizontal: false, vertical: true).foregroundStyle(LisaTheme.ink)
-            if hintStage == 1, !hint.eliminatedCandidates.isEmpty {
-                HStack(spacing: 8) {
-                    Text(L10n.text("Candidats à éliminer")).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
-                    ForEach(hint.eliminatedCandidates, id: \.self) { digit in
-                        Text("\(digit)").font(LisaTheme.heading(15)).strikethrough()
-                            .foregroundStyle(LisaTheme.coral).padding(7)
-                            .background(LisaTheme.coral.opacity(0.12), in: Circle())
-                    }
-                }
-            }
-            HStack {
-                Spacer()
-                if hintStage < 2 {
-                    LisaButton(title: L10n.text("Voir la suite"), icon: "arrow.right") { hintStage += 1 }
-                } else {
-                    Button { hintPresented = false } label: {
-                        Text(L10n.text("Je continue seul")).font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted).padding(.horizontal, 10)
-                    }
-                    LisaButton(title: L10n.text("Placer le %@", String(describing: hint.value)), icon: "checkmark") {
-                        selected = hint.index
-                        store.session?.enter(hint.value, at: hint.index)
-                        store.feedback(.place); store.changed(); react(.happy); hintPresented = false
-                    }
-                }
-            }
+    /// Reset the puzzle interaction without rebuilding the companion scene.
+    /// Monotonic companion requests and geometry belong to the retained scene.
+    private func resetForNewPuzzle() {
+        coach.cancel()
+        selected = nil
+        lockedDigit = nil
+        notesMode = false
+        paused = false
+        hintPresented = false
+        hintStage = 0
+        learning = false
+        lessonTechnique = nil
+        settings = false
+        errorPresented = false
+        continueRequested = false
+        victoryPresented = false
+        glowCells = []
+        completedUnits = []
+        completedDigits = []
+        celebrationOrigin = 40
+        celebrationToken = 0
+        celebrationMessage = ""
+        mascotMood = .idle
+        mascotReaction = 0
+        companionMessage = L10n.text("Au repos")
+    }
+
+    private func coaching(_ hint: SudokuHint) -> some View {
+        HintCoachView(hint: hint, stage: $hintStage,
+                      animationEnabled: scenePhase == .active && !learning && !reduceMotion && store.settings.animatedDecor,
+                      close: { hintPresented = false },
+                      learn: { lessonTechnique = hint.deduction?.techniqueID; learning = true },
+                      apply: { applyHint(hint) })
+            .environment(\.lisaMotionAllowed, scenePhase == .active && !learning && !reduceMotion && store.settings.animatedDecor)
+    }
+
+    private func applyHint(_ hint: SudokuHint) {
+        guard coach.matches(store.session), let deduction = hint.deduction else { hintPresented = false; return }
+        if store.session?.applyDeduction(deduction) == true {
+            selected = hint.index
+            store.feedback(.place); store.changed(); react(.happy)
         }
-        .padding(18)
-        .background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 24))
-        .overlay(RoundedRectangle(cornerRadius: 24).strokeBorder(LisaTheme.line.opacity(0.55), lineWidth: 1))
-        .shadow(color: LisaTheme.ink.opacity(0.18), radius: 20, y: 8)
-        .padding(.horizontal, 16).padding(.bottom, 16)
-        .transition(.move(edge: .bottom).combined(with: .opacity))
+        hintPresented = false
     }
 
     private func gameHeader(_ game: GameSession, wide: Bool) -> some View {
@@ -226,6 +266,8 @@ struct GameView: View {
                     .foregroundStyle(LisaTheme.ink).padding(.top, 4)
             }
             Spacer()
+            LisaIconButton(icon: "book", label: L10n.text("Apprendre")) { lessonTechnique = nil; learning = true }
+                .accessibilityIdentifier("gameLearnButton")
             LisaIconButton(icon: "gearshape", label: L10n.text("Réglages")) { settings = true }.accessibilityIdentifier("gameSettingsButton")
         }
     }
@@ -261,16 +303,22 @@ struct GameView: View {
     private func gameControls(_ game: GameSession, compact: Bool, wide: Bool) -> some View {
         VStack(spacing: compact ? 8 : 16) {
             if wide { gameStatus(game, wide: true) }
+            if game.isComplete && !victoryPresented && !store.isGenerating && !store.showVictory {
+                LisaButton(title: store.victoryContinuationTitle, icon: "arrow.right") {
+                    store.continueAfterVictory()
+                }
+                .accessibilityIdentifier("completedContinue")
+            }
             HStack(spacing: 8) {
                 tool(L10n.text("Annuler"), icon: "arrow.uturn.backward", enabled: game.canUndo) { store.session?.undo(); store.feedback(.erase); store.changed() }
                 tool(L10n.text("Gommer"), icon: "eraser", enabled: selected.map { game.isEditable($0) } ?? false) { if let selected { store.session?.erase(at: selected); store.feedback(.erase); store.changed() } }
                 tool(notesMode ? L10n.text("Notes oui") : L10n.text("Notes"), icon: "pencil.tip", active: notesMode) { notesMode.toggle(); store.feedback(.note) }
-                tool(L10n.text("Indice"), icon: "lightbulb") { hint = store.session?.hint(); if hint != nil { hintStage = 0; store.session?.recordHintConsultation(); store.save(); store.feedback(.hint); react(.thinking) }; hintPresented = hint != nil }
+                tool(coach.isWorking ? L10n.text("Recherche…") : L10n.text("Indice"), icon: "lightbulb", enabled: !coach.isWorking) { if let game = store.session { coach.request(game) } }
             }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: compact && !wide ? 5 : 3), spacing: 9) {
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: 3), spacing: 9) {
                 ForEach(1...9, id: \.self) { value in
                     let remaining = max(0, 9 - game.values.filter { $0 == value }.count)
-                    Button { enter(value) } label: {
+                    Button { if store.settings.numberFirst || lockedDigit != nil { lockedDigit = value; store.feedback(.select) } else { enter(value) } } label: {
                         HStack(alignment: .firstTextBaseline, spacing: 7) {
                             Text("\(value)").font(.system(size: compact ? 27 : 30, weight: .black, design: .rounded))
                                 .shadow(color: .black.opacity(0.12), radius: 0, y: 1)
@@ -280,12 +328,29 @@ struct GameView: View {
                         .frame(maxWidth: .infinity).frame(height: 47)
                         .background(CandySurface(tint: candyColor(value), cornerRadius: notesMode ? 10 : 16))
                         .contentShape(RoundedRectangle(cornerRadius: 16))
+                        .overlay(RoundedRectangle(cornerRadius: notesMode ? 10 : 16).strokeBorder(lockedDigit == value ? LisaTheme.ink : .clear, lineWidth: 3))
                         .overlay(alignment: .topLeading) {
                             if notesMode { Image(systemName: "pencil.tip").font(.system(size: 8, weight: .bold)).foregroundStyle(.white).padding(5) }
                         }
                     }
-                    .buttonStyle(LisaPressStyle()).accessibilityLabel("\(value), " + L10n.count("remaining", remaining)).disabled(paused || game.isComplete)
+                    .buttonStyle(LisaPressStyle()).accessibilityLabel("\(value), " + L10n.count("remaining", remaining))
+                    .accessibilityIdentifier("digit-\(value)")
+                    .accessibilityAddTraits(lockedDigit == value ? .isSelected : [])
+                    .simultaneousGesture(LongPressGesture(minimumDuration: 0.5).onEnded { _ in lockedDigit = value; store.feedback(.select) })
+                    .disabled(paused || game.isComplete)
                 }
+            }
+            if let digit = lockedDigit {
+                Button { lockedDigit = nil } label: {
+                    Label(L10n.text("Chiffre %@ verrouillé · Libérer", String(digit)), systemImage: "lock.open")
+                        .font(LisaTheme.body(12))
+                }.accessibilityIdentifier("unlockDigit")
+            }
+            if notesMode {
+                Label(L10n.text("Mode notes · Les petits chiffres sont des possibilités."), systemImage: "pencil.tip")
+                    .font(LisaTheme.body(12)).foregroundStyle(LisaTheme.accentInk)
+                    .padding(8).frame(maxWidth: .infinity).background(LisaTheme.lavender, in: RoundedRectangle(cornerRadius: 10))
+                    .accessibilityIdentifier("notesModeBanner")
             }
             if !compact {
                 Text(!celebrationMessage.isEmpty ? celebrationMessage : notesMode ? L10n.text("Mode notes · Touchez une case puis un chiffre.") : L10n.text("Une case, un chiffre, un petit déclic."))
@@ -337,9 +402,10 @@ struct GameView: View {
                             Button {
                                 guard !paused else { return }
                                 withAnimation(reduceMotion ? nil : .easeOut(duration: 0.14)) { selected = index }
-                                store.feedback()
+                                if let lockedDigit, game.isEditable(index) { enter(lockedDigit) } else { store.feedback() }
                             } label: { cell(game, index: index, side: side) }
                             .buttonStyle(.plain)
+                            .accessibilityIdentifier("cell-\(index)")
                             .accessibilityLabel(cellLabel(game, index: index))
                             .accessibilityAddTraits(selected == index ? .isSelected : [])
                         }
@@ -384,22 +450,31 @@ struct GameView: View {
 
     private func cell(_ game: GameSession, index: Int, side: CGFloat) -> some View {
         SudokuCellContent(
-            value: game.values[index], notes: game.notes[index], given: game.puzzle.givens[index] != 0,
+            value: game.values[index], notes: displayedNotes(game, index: index), given: game.puzzle.givens[index] != 0,
             wrong: store.settings.autoCheck && game.isIncorrect(at: index),
             duplicate: store.settings.highlightDuplicates && store.duplicateCells.contains(index),
             isSelected: selected == index,
-            sameNumber: selected.map { game.values[$0] != 0 && game.values[$0] == game.values[index] } ?? false,
+            sameNumber: lockedDigit.map { game.values[index] == $0 } ?? selected.map { game.values[$0] != 0 && game.values[$0] == game.values[index] } ?? false,
             peer: store.settings.highlightPeers && (selected.map { peers(index, $0) } ?? false),
-            inHintFocus: hintPresented && (hint?.focusCells.contains(index) ?? false),
-            marks: hintPresented && hintStage >= 1 ? hint?.eliminationMarks.filter { $0.index == index } ?? [] : [],
+            inHintFocus: hintPresented && coach.focusedCells.contains(index),
+            marks: hintPresented && hintStage >= 1 ? coach.marksByCell[index] ?? [] : [],
             side: side, colorScheme: colorScheme
         ).equatable()
     }
     private func peers(_ a: Int, _ b: Int) -> Bool { a / 9 == b / 9 || a % 9 == b % 9 || (a / 27 == b / 27 && a % 9 / 3 == b % 9 / 3) }
+    private func displayedNotes(_ game: GameSession, index: Int) -> Set<Int> {
+        hintPresented && hintStage >= 1 && coach.candidates.count == 81 && coach.focusedCells.contains(index)
+            ? coach.candidates[index] : game.notes[index]
+    }
     private func cellLabel(_ game: GameSession, index: Int) -> String {
         let value = game.values[index]
-        let notes = game.notes[index].sorted().map(String.init).joined(separator: ", ")
-        return L10n.text("Ligne %@, colonne %@, %@%@%@%@", String(describing: index / 9 + 1), String(describing: index % 9 + 1), String(describing: value == 0 ? L10n.text("vide") : String(value)), String(describing: game.puzzle.givens[index] != 0 ? L10n.text(", chiffre donné") : ""), String(describing: notes.isEmpty ? "" : L10n.text(", notes ") + notes), String(describing: store.settings.autoCheck && game.isIncorrect(at: index) ? L10n.text(", erreur") : ""))
+        let notes = displayedNotes(game, index: index).sorted().map(String.init).formatted(.list(type: .and).locale(L10n.locale))
+        let base = L10n.text("Ligne %@, colonne %@, %@%@%@%@", String(describing: index / 9 + 1), String(describing: index % 9 + 1), String(describing: value == 0 ? L10n.text("vide") : String(value)), String(describing: game.puzzle.givens[index] != 0 ? L10n.text(", chiffre donné") : ""), String(describing: notes.isEmpty ? "" : L10n.text(", notes ") + notes), String(describing: store.settings.autoCheck && game.isIncorrect(at: index) ? L10n.text(", erreur") : ""))
+        guard hintPresented, hintStage >= 1 else { return base }
+        let removals = (coach.marksByCell[index] ?? []).map {
+            L10n.text("Ligne %@, colonne %@ : retirer le candidat %@.", String(index / 9 + 1), String(index % 9 + 1), String($0.value))
+        }
+        return ([base] + removals).joined(separator: " ")
     }
     private func candyColor(_ value: Int) -> Color {
         let colors: [Color] = [
@@ -433,6 +508,7 @@ struct GameView: View {
 }
 
 struct VictoryView: View {
+    var onContinue: () -> Void = {}
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     @EnvironmentObject private var store: LisaStore
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -491,9 +567,10 @@ struct VictoryView: View {
                         }
                         .buttonStyle(LisaPressStyle())
                     }
-                    LisaButton(title: L10n.text("Continuer l’aventure"), icon: "arrow.right") {
-                        store.showVictory = false; store.showGame = false
-                    }
+                    LisaButton(title: store.victoryContinuationTitle, icon: "arrow.right", action: onContinue)
+                        .accessibilityIdentifier("victoryContinue")
+                    Button(L10n.text("Retour à l’accueil")) { store.showVictory = false; store.showGame = false }
+                        .font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted)
                 }
                 .padding(.horizontal, 24).padding(.bottom, 30)
                 .frame(maxWidth: 480).frame(maxWidth: .infinity)
@@ -537,6 +614,16 @@ struct VictoryView: View {
     private var rewardCard: some View {
         VStack(spacing: 10) {
             Label(reward.0, systemImage: reward.1).font(LisaTheme.heading(20)).foregroundStyle(LisaTheme.ink)
+                .accessibilityIdentifier("victoryReward")
+            if store.mode == "Voyage", store.eventWins == 5 {
+                PoulpiStarBadge(size: 44)
+                Text(L10n.text("Un souvenir pour Poulpi !")).font(LisaTheme.heading(18))
+                Text(L10n.text("L’étoile du voyage est à vous. Retrouvez-la dans Poulpi."))
+                    .font(LisaTheme.body(13)).multilineTextAlignment(.center)
+                Button(store.poulpiStarEquipped ? L10n.text("Étoile équipée") : L10n.text("Équiper l’étoile")) {
+                    store.equipPoulpiStar(true)
+                }.disabled(store.poulpiStarEquipped).accessibilityIdentifier("equipVictoryStar")
+            }
             if store.mode == "Voyage" {
                 ProgressView(value: progress).tint(LisaTheme.coral)
                     .accessibilityLabel(L10n.text("Progression du voyage"))
@@ -558,7 +645,6 @@ struct VictoryView: View {
         .background(CandySurface(tint: LisaTheme.paper, cornerRadius: 22, depth: 3))
         .overlay(RoundedRectangle(cornerRadius: 22).strokeBorder(LisaTheme.yellow.opacity(0.65), lineWidth: 2))
         .overlay { LisaShimmer(radius: 22) }
-        .accessibilityIdentifier("victoryReward")
     }
     private func metric(_ value: String, _ label: String, icon: String) -> some View {
         VStack(spacing: 5) {
@@ -569,6 +655,13 @@ struct VictoryView: View {
         .frame(maxWidth: .infinity).padding(.vertical, 13)
         .background(CandySurface(tint: LisaTheme.paper, cornerRadius: 18, depth: 3))
     }
+}
+
+/// Candidate/clock changes do not trigger board milestones. Puzzle equality
+/// separates edits within a game from a successfully generated next game.
+private struct GameBoardSnapshot: Equatable {
+    let puzzle: Puzzle
+    let values: [Int]
 }
 
 private struct LisaBoardFrameKey: PreferenceKey {

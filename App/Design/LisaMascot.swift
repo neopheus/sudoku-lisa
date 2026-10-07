@@ -70,6 +70,9 @@ struct LisaCompanion: View {
                             .fixedSize().offset(y: 5)
                     }
                 }
+                .overlay(alignment: .topTrailing) {
+                    if store.poulpiStarEquipped { PoulpiStarBadge(size: max(20, size * 0.24)).allowsHitTesting(false) }
+                }
                 .contentShape(Rectangle())
         }
         .buttonStyle(LisaPressStyle())

@@ -28,18 +28,18 @@ Pour un véritable iPhone, choisir une équipe Apple dans **Signing & Capabiliti
 
 ## Fonctionnalités présentes
 
-- Grilles classiques 9 × 9 générées sur l’appareil, avec unicité vérifiée ; six choix : Express, Facile, Moyen, Difficile, Expert et Maître.
-- Saisie tactile, notes et retrait automatique des candidats après un chiffre correct, gomme, annulation illimitée avec historique compact.
-- Indices : explication des candidats uniques et des chiffres uniques cachés, correction d’une erreur ou proposition d’une valeur vérifiée pour une étape avancée.
+- Grilles classiques 9 × 9 préparées sur l’appareil à partir de 64 originaux à solution unique prévalidés, avec transformations déterministes et contrôle du profil logique ; six choix : Express, Facile, Moyen, Difficile, Expert et Maître.
+- Saisie case puis chiffre ou chiffre verrouillé puis cases, notes distinctes et retrait automatique des candidats après un chiffre correct, gomme, annulation avec historique compact.
+- Indices en trois étapes : zone à observer, explication, puis placement ou élimination de candidats. Le moteur commun couvre uniques, candidats verrouillés, paires, triplets et X-Wing. Les anciennes grilles hors de ce répertoire proposent explicitement une valeur de la solution sans la présenter comme une déduction.
 - Surlignage ligne/colonne/bloc et doublons, coloration facultative des erreurs, pause facultative après trois erreurs, chronomètre masquable, pause et reprise.
-- Sauvegarde locale automatique d’une partie en cours, de ses notes, du chronomètre, des réglages et des résultats ; confirmation avant remplacement d’une partie.
+- Sauvegarde locale automatique d’une partie par mode, avec notes, éliminations, annulations, chronomètre et identité du défi. Migration de l’ancienne sauvegarde et confirmation avant remplacement d’une partie libre ou d’un autre défi quotidien.
 - Défi quotidien déterministe et archives du calendrier, série calculée à partir des dates de défis résolus.
 - Voyage individuel de 25 étapes réparties en cinq escales, événements locaux de 10 grilles par mois avec médailles, collection de badges, statistiques filtrables par difficulté et historique récent.
-- Trois exercices d’apprentissage interactifs, partage textuel du résultat, sons et retours haptiques désactivables, thèmes Soleil/Nuit/Papier, mascotte et animations de victoire.
+- Cinq tutoriels interactifs accessibles depuis la partie et les indices : observation, candidat unique, position unique, candidats verrouillés et paire nue. Chaque tutoriel propose une démonstration, une étape guidée et une pratique autonome. Partage textuel du résultat, sons et retours haptiques désactivables, thèmes Soleil/Nuit/Papier, mascotte et animations de victoire.
 - Extension iMessage `LisaStickers` intégrée au projet, avec quatre stickers originaux. Ouvrir Messages sur un appareil de test pour vérifier la sélection et l’envoi ; la compilation de l’extension ne prouve pas cet échange.
 - Libellés VoiceOver et prise en compte de Réduire les animations dans les animations personnalisées. Une validation sur appareil reste nécessaire.
 
-Les données sont stockées dans le conteneur de l’application : supprimer l’application supprime sa progression. Une seule partie active est conservée. Il n’y a pas de synchronisation entre appareils.
+Les données sont stockées dans le conteneur de l’application : supprimer l’application supprime sa progression. Une partie par mode est conservée. L’étoile du voyage se débloque après cinq étapes, avec équipement facultatif dans Poulpi ; le droit est rétroactif pour les sauvegardes existantes. Il n’y a pas de synchronisation entre appareils.
 
 ## Ambiance et petites victoires
 
@@ -47,7 +47,11 @@ Sons originaux, musique douce facultative, décors animés, coucou interactif de
 
 ## Écarts et limites
 
-Les niveaux combinent densité initiale et sélection bornée parmi quatre grilles selon les techniques détectées (candidats uniques, positions uniques, candidats verrouillés, paires nues ou techniques avancées). Cela améliore la séparation des difficultés sans garantir six catégories strictement disjointes. Les indices avancés donnent une valeur vérifiée sans enseigner la technique complète. L’historique d’annulation enregistre uniquement les cases modifiées et migre les anciennes sauvegardes.
+Les niveaux utilisent le chemin de résolution du moteur humain partagé : Express = candidats uniques ; Facile = positions uniques ; Moyen = candidats verrouillés ; Difficile = paires nues ; Expert = paires cachées ou triplets nus ; Maître = triplets cachés ou X-Wing. Une grille n’est acceptée que si la trace entière aboutit et correspond à son profil. Le nombre de cases vides n’est pas le critère de classement. Express décrit une pause courte, sans promesse de durée.
+
+La génération explore au maximum 12 transformations d’un original puis utilise un repli déterministe validé. L’app exécute ce travail hors du thread principal, en série, avec annulation et délai de deux secondes ; un dépassement ne remplace pas la partie. Le corpus limité à 64 structures originales offre de nombreuses transformations mais ne constitue pas un générateur de structures inédites illimité. Les profils sont vérifiés techniquement ; la difficulté ressentie et l’effet sur l’envie de revenir nécessitent des essais joueurs.
+
+Les anciennes parties conservent leur grille et leur ancien libellé de difficulté. Les éliminations logiques sont distinctes des notes manuscrites, persistées et annulables. Les exercices interactifs couvrent les cinq premières techniques ; les techniques avancées disposent d’une explication, sans exercice dédié supplémentaire. Voir [le rapport d’implémentation et de validation](docs/improvements-implementation.md).
 
 Le parcours « Voyage » est une progression individuelle locale permanente. Les événements saisonniers suivent le mois du calendrier local ; leur contenu déterministe fonctionne hors ligne. Ce ne sont pas des événements pilotés par serveur. Un trophée mensuel récompense la résolution de tous les défis quotidiens du mois, y compris via les archives. Aucun achat intégré n’est provisionné. L’identité, les illustrations et le code sont propres à Lisa Sudoku ; une parité intégrale avec Sudoku.com n’est pas revendiquée.
 

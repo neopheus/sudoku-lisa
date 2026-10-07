@@ -14,7 +14,7 @@ public enum Difficulty: String, CaseIterable, Codable, Sendable, Identifiable {
         }
     }
     public var targetClues: Int {
-        switch self { case .quick: return 48; case .easy: return 42; case .medium: return 35; case .hard: return 30; case .expert: return 26; case .master: return 24 }
+        switch self { case .quick: return 48; case .easy: return 30; case .medium: return 28; case .hard: return 26; case .expert: return 26; case .master: return 24 }
     }
 }
 
@@ -115,7 +115,7 @@ public enum SudokuSolver {
     }
 }
 
-private struct SeededRandom: RandomNumberGenerator {
+struct SeededRandom: RandomNumberGenerator {
     var state: UInt64
     mutating func next() -> UInt64 {
         state &+= 0x9E3779B97F4A7C15
@@ -123,56 +123,5 @@ private struct SeededRandom: RandomNumberGenerator {
         z = (z ^ (z >> 30)) &* 0xBF58476D1CE4E5B9
         z = (z ^ (z >> 27)) &* 0x94D049BB133111EB
         return z ^ (z >> 31)
-    }
-}
-
-public enum SudokuGenerator {
-    /// Generates up to eight unique-solution candidates and selects the closest
-    /// supported logical rating. Expert/master favor the strongest candidate;
-    /// clue density further distinguishes them. This is bounded best effort,
-    /// not a guarantee of six strict human-technique grades.
-    public static func generate(difficulty: Difficulty = .easy, seed: UInt64 = UInt64.random(in: 0...UInt64.max)) -> Puzzle {
-        let target: HumanTechniqueRating
-        switch difficulty {
-        case .quick: target = .nakedSingles
-        case .easy: target = .hiddenSingles
-        case .medium: target = .lockedCandidates
-        case .hard: target = .searchRequired
-        case .expert, .master: target = .searchRequired
-        }
-        var selected: Puzzle?
-        var selectedRating = HumanTechniqueRating.nakedSingles
-        var bestDistance = Int.max
-        for attempt in 0..<8 {
-            let candidateSeed = seed &+ UInt64(attempt) &* 0x9E3779B97F4A7C15
-            let candidate = makeCandidate(difficulty: difficulty, seed: seed, randomSeed: candidateSeed)
-            let rating = SudokuSolver.humanTechniqueRating(candidate.givens) ?? .searchRequired
-            let ratingDistance = abs(rating.rawValue - target.rawValue)
-            // Maître shares advanced techniques with Expert but favors a leaner grid.
-            let densityDistance = difficulty == .master ? max(0, candidate.clueCount - 26) / 2 : 0
-            let distance = ratingDistance * 10 + densityDistance
-            let fewerClues = candidate.clueCount < (selected?.clueCount ?? 82)
-            if distance < bestDistance || (distance == bestDistance && rating == selectedRating && fewerClues) {
-                selected = candidate; selectedRating = rating; bestDistance = distance
-            }
-            if distance == 0 && difficulty != .master { break }
-        }
-        return selected!
-    }
-    private static func makeCandidate(difficulty: Difficulty, seed: UInt64, randomSeed: UInt64) -> Puzzle {
-        var random = SeededRandom(state: randomSeed)
-        let digits = Array(1...9).shuffled(using: &random)
-        let bands = Array(0..<3).shuffled(using: &random)
-        let stacks = Array(0..<3).shuffled(using: &random)
-        let rows = bands.flatMap { band in Array(0..<3).shuffled(using: &random).map { band * 3 + $0 } }
-        let columns = stacks.flatMap { stack in Array(0..<3).shuffled(using: &random).map { stack * 3 + $0 } }
-        let solution = rows.flatMap { row in columns.map { column in digits[(row * 3 + row / 3 + column) % 9] } }
-        var givens = solution, clues = 81
-        for index in Array(0..<81).shuffled(using: &random) {
-            if clues <= difficulty.targetClues { break }
-            let value = givens[index]; givens[index] = 0
-            if SudokuSolver.countSolutions(givens) == 1 { clues -= 1 } else { givens[index] = value }
-        }
-        return Puzzle(givens: givens, solution: solution, difficulty: difficulty, seed: seed)
     }
 }

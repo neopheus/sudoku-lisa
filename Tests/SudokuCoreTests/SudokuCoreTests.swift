@@ -41,7 +41,13 @@ final class SudokuCoreTests: XCTestCase {
         XCTAssertEqual(session.hint()?.index, index)
         while !session.isComplete {
             guard let hint = session.applyHint() else { return XCTFail("Unfinished game must offer a hint") }
-            XCTAssertEqual(hint.value, session.puzzle.solution[hint.index])
+            switch hint.deduction?.action {
+            case let .placement(index, value): XCTAssertEqual(value, session.puzzle.solution[index])
+            case let .eliminations(marks):
+                XCTAssertFalse(marks.isEmpty)
+                XCTAssertTrue(marks.allSatisfy { session.puzzle.solution[$0.index] != $0.value })
+            case nil: XCTFail("Hint must expose its atomic action")
+            }
             XCTAssertEqual(SudokuSolver.countSolutions(session.values), 1)
         }
         XCTAssertTrue(SudokuSolver.isValidSolution(session.values))
@@ -201,7 +207,11 @@ final class SudokuCoreTests: XCTestCase {
         XCTAssertEqual(session.elapsedSeconds, 1)
         while !session.isComplete {
             let hint = try XCTUnwrap(session.applyHint())
-            XCTAssertEqual(session.values[hint.index], hint.value)
+            switch hint.deduction?.action {
+            case let .placement(index, value): XCTAssertEqual(session.values[index], value)
+            case let .eliminations(marks): XCTAssertTrue(marks.allSatisfy { !session.candidates(at: $0.index).contains($0.value) })
+            case nil: XCTFail("Hint must expose its atomic action")
+            }
         }
         XCTAssertEqual(session.progress, 1)
         XCTAssertNil(session.hint())

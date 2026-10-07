@@ -1,0 +1,45 @@
+{
+  "date": "2026-10-07",
+  "environment": "Local macOS arm64, Swift Release package, Xcode 27.1; not an iPhone measurement",
+  "performance": {
+    "sample_count": 240,
+    "generation_median_ms": 0.33925,
+    "generation_max_ms": 0.8148749999999999,
+    "first_hint_median_ms": 0.077042,
+    "first_hint_max_ms": 0.547959
+  },
+  "profile_diagnostics": [
+    "PROFILE difficulty=quick samples=40 ratingsByRank=[0: 40] uniqueBoards=40",
+    "WORKLOAD difficulty=quick samples=40 placementRange=33...33 eliminationStepRange=0...0 eliminatedCandidateRange=0...0 hardestCountRange=33...33 longestEliminationRunRange=0...0 hardestCountDistribution=[33:40] longestEliminationRunDistribution=[0:40]",
+    "PROFILE difficulty=easy samples=40 ratingsByRank=[1: 40] uniqueBoards=40",
+    "WORKLOAD difficulty=easy samples=40 placementRange=46...51 eliminationStepRange=0...0 eliminatedCandidateRange=0...0 hardestCountRange=1...11 longestEliminationRunRange=0...0 hardestCountDistribution=[1:2,2:5,3:9,4:5,5:6,6:4,7:1,8:3,9:2,10:2,11:1] longestEliminationRunDistribution=[0:40]",
+    "PROFILE difficulty=medium samples=40 ratingsByRank=[2: 40] uniqueBoards=40",
+    "WORKLOAD difficulty=medium samples=40 placementRange=46...53 eliminationStepRange=1...6 eliminatedCandidateRange=1...15 hardestCountRange=1...6 longestEliminationRunRange=1...6 hardestCountDistribution=[1:14,2:7,3:9,4:5,5:4,6:1] longestEliminationRunDistribution=[1:17,2:11,3:5,4:6,6:1]",
+    "PROFILE difficulty=hard samples=40 ratingsByRank=[3: 40] uniqueBoards=40",
+    "WORKLOAD difficulty=hard samples=40 placementRange=55...55 eliminationStepRange=2...8 eliminatedCandidateRange=4...26 hardestCountRange=1...2 longestEliminationRunRange=1...7 hardestCountDistribution=[1:36,2:4] longestEliminationRunDistribution=[1:2,2:8,3:14,4:11,5:2,6:2,7:1]",
+    "PROFILE difficulty=expert samples=40 ratingsByRank=[5: 22, 4: 18] uniqueBoards=40",
+    "WORKLOAD difficulty=expert samples=40 placementRange=51...55 eliminationStepRange=2...9 eliminatedCandidateRange=6...25 hardestCountRange=1...2 longestEliminationRunRange=2...6 hardestCountDistribution=[1:37,2:3] longestEliminationRunDistribution=[2:3,3:15,4:8,5:10,6:4]",
+    "PROFILE difficulty=master samples=40 ratingsByRank=[6: 18, 7: 22] uniqueBoards=40",
+    "WORKLOAD difficulty=master samples=40 placementRange=51...57 eliminationStepRange=1...12 eliminatedCandidateRange=3...34 hardestCountRange=1...1 longestEliminationRunRange=1...12 hardestCountDistribution=[1:40] longestEliminationRunDistribution=[1:3,2:3,4:9,5:16,6:5,9:2,12:2]"
+  ],
+  "tests": {
+    "core_release": 53,
+    "app_on_simulator": 18,
+    "new_ui_iphone16": 5,
+    "new_ui_iphone_se": 3,
+    "ui_continuation_after_identity_fix": 1,
+    "final_generic_ios_release_build": "passed, signing disabled"
+  },
+  "instruments_before_identity_fix": {
+    "template": "Time Profiler",
+    "configuration": "Debug under UI automation, iPhone 16 simulator iOS 18.5",
+    "duration_seconds": 8.590012,
+    "microhang_ms": 348.911542,
+    "warning": "One instrument table has no known input source; trace remains readable",
+    "scope": "Short diagnostic capture, no CPU/GPU/battery improvement claim"
+  },
+  "instruments_after_identity_fix": {
+    "result": "No usable trace: attach attempted before process existed",
+    "improvement_measured": false
+  }
+}

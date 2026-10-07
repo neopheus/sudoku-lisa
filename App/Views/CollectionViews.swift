@@ -39,15 +39,15 @@ struct DailyView: View {
                             }.buttonStyle(LisaPressStyle()).disabled(future).accessibilityLabel(date.formatted(Date.FormatStyle(date: .complete, time: .omitted).locale(L10n.locale)) + (done ? L10n.text(", terminé") : ""))
                         }
                     }
-                    LisaButton(title: completed ? L10n.text("Défi accompli !") : L10n.text("Jouer le défi"), icon: completed ? "checkmark.seal.fill" : "sun.max.fill") {
-                        if store.session != nil && store.session?.isComplete == false { replace = true } else { start() }
+                    LisaButton(title: completed ? L10n.text("Défi accompli !") : store.hasSavedGame(mode: "Quotidien", date: selected) ? L10n.text("Reprendre le défi") : L10n.text("Jouer le défi"), icon: completed ? "checkmark.seal.fill" : "sun.max.fill") {
+                        if store.resume(mode: "Quotidien", date: selected) { return }; if store.hasSavedGame(mode: "Quotidien") { replace = true } else { start() }
                     }.disabled(completed)
                     Text(selected.formatted(Date.FormatStyle(date: .long, time: .omitted).locale(L10n.locale))).font(LisaTheme.body(13)).foregroundStyle(LisaTheme.muted)
                 }
             }
             HStack { LisaCompanion(size: 70, animationEnabled: motionEnabled && !replace); VStack(alignment: .leading, spacing: 6) { Text(L10n.count("streak", store.streak)).font(LisaTheme.heading(24)); Text(L10n.text("Chaque grille compte. Chaque pause aussi.")).font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted) } }
         }.frame(maxWidth: 720).padding(24).frame(maxWidth: .infinity) } }.environment(\.lisaMotionAllowed, motionEnabled && !replace).navigationTitle(L10n.text("Chaque jour")).navigationBarTitleDisplayMode(.inline)
-            .alert(L10n.text("Remplacer la partie en cours ?"), isPresented: $replace) { Button(L10n.text("Annuler l’action"), role: .cancel) {}; Button(L10n.text("Jouer le défi"), role: .destructive) { start() } } message: { Text(L10n.text("Votre progression dans la partie actuelle sera perdue.")) }
+            .alert(L10n.text("Remplacer la partie en cours ?"), isPresented: $replace) { Button(L10n.text("Annuler l’action"), role: .cancel) {}; Button(L10n.text("Jouer le défi"), role: .destructive) { start() } } message: { Text(L10n.text("Seule votre autre grille quotidienne sera remplacée. Les autres modes sont conservés.")) }
     }
     private func start() { store.start(.medium, mode: "Quotidien", date: selected) }
 }
@@ -56,8 +56,6 @@ struct JourneyView: View {
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     var motionEnabled = true
     @EnvironmentObject private var store: LisaStore
-    @State private var replace = false
-    @State private var seasonReplace = false
     private var places: [String] { [L10n.text("Les jardins guimauve"), L10n.text("La forêt des sucettes"), L10n.text("Le lagon pétillant"), L10n.text("Les sommets givrés"), L10n.text("La voie des étoiles")] }
     private let icons = ["leaf.fill", "tree.fill", "drop.fill", "mountain.2.fill", "moon.stars.fill"]
     private let colors: [Color] = [Color(red: 0.96, green: 0.33, blue: 0.60), Color(red: 0.18, green: 0.72, blue: 0.58), Color(red: 0.18, green: 0.63, blue: 0.91), Color(red: 0.59, green: 0.40, blue: 0.88), Color(red: 0.95, green: 0.59, blue: 0.18)]
@@ -65,7 +63,7 @@ struct JourneyView: View {
 
     var body: some View {
         ZStack {
-            LisaBackground(motionEnabled: motionEnabled && !replace && !seasonReplace, chapter: chapter)
+            LisaBackground(motionEnabled: motionEnabled, chapter: chapter)
             ScrollView {
                 VStack(spacing: 0) {
                     HStack(alignment: .center, spacing: 12) {
@@ -75,9 +73,16 @@ struct JourneyView: View {
                             Text(L10n.text("25 défis. Une étoile à la fois.")).font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted)
                         }
                         Spacer(minLength: 0)
-                        LisaCompanion(size: 84, animationEnabled: motionEnabled && !replace && !seasonReplace)
+                        LisaCompanion(size: 84, animationEnabled: motionEnabled)
                     }.padding(.horizontal, 24).padding(.top, 8).padding(.bottom, 22)
 
+                    if let saved = store.savedGame(mode: "Voyage") {
+                        LisaButton(title: L10n.text("Reprendre l’étape %@", String(saved.journeyStage ?? store.eventWins + 1)), icon: "play.fill") {
+                            _ = store.resume(mode: "Voyage")
+                        }
+                        .accessibilityIdentifier("journey-resume")
+                        .padding(.horizontal, 20).padding(.bottom, 20)
+                    }
                     seasonPass.padding(.horizontal, 20).padding(.bottom, 24)
 
                     HStack(spacing: 10) {
@@ -100,16 +105,19 @@ struct JourneyView: View {
                 }.padding(.bottom, 25)
             }
         }
-        .environment(\.lisaMotionAllowed, motionEnabled && !replace && !seasonReplace)
+        .environment(\.lisaMotionAllowed, motionEnabled)
         .navigationTitle(L10n.text("Voyage")).navigationBarTitleDisplayMode(.inline)
-        .alert(L10n.text("Remplacer la partie en cours ?"), isPresented: $seasonReplace) {
-            Button(L10n.text("Annuler l’action"), role: .cancel) {}
-            Button(L10n.text("Jouer l’événement"), role: .destructive) { store.startSeason() }
-        } message: { Text(L10n.text("Votre progression dans la partie actuelle sera perdue.")) }
-        .alert(L10n.text("Remplacer la partie en cours ?"), isPresented: $replace) {
-            Button(L10n.text("Annuler l’action"), role: .cancel) {}
-            Button(L10n.text("Commencer l’étape"), role: .destructive) { start() }
-        } message: { Text(L10n.text("Votre progression dans la partie actuelle sera perdue.")) }
+
+    }
+
+    private var seasonActionTitle: String {
+        if let saved = store.savedGame(mode: "Événement") {
+            if let eventID = saved.eventID {
+                return L10n.text("Reprendre l’événement de %@", String(eventID.prefix(7)))
+            }
+            return L10n.text("Reprendre l’événement")
+        }
+        return store.seasonProgress >= 10 ? L10n.text("Médaille remportée !") : L10n.text("Jouer · %@/10", String(store.seasonProgress))
     }
 
     private var seasonPass: some View {
@@ -130,9 +138,10 @@ struct JourneyView: View {
                     Capsule().fill(step < store.seasonProgress ? LisaTheme.coral : LisaTheme.line.opacity(0.7)).frame(height: 9)
                 }
             }.accessibilityLabel(L10n.text("Événement : %@ grilles sur 10 terminées", String(describing: store.seasonProgress)))
-            LisaButton(title: store.seasonProgress >= 10 ? L10n.text("Médaille remportée !") : L10n.text("Jouer · %@/10", String(describing: store.seasonProgress)), icon: "sparkles") {
-                if store.session != nil && store.session?.isComplete == false { seasonReplace = true } else { store.startSeason() }
-            }.disabled(store.seasonProgress >= 10)
+            LisaButton(title: seasonActionTitle, icon: store.hasSavedGame(mode: "Événement") ? "play.fill" : "sparkles") {
+                if !store.resume(mode: "Événement") { store.startSeason() }
+            }.disabled(store.seasonProgress >= 10 && !store.hasSavedGame(mode: "Événement"))
+            .accessibilityIdentifier("season-play")
         }
         .padding(20)
         .background(CandySurface(tint: LisaTheme.paper, cornerRadius: 28, depth: 6))
@@ -141,9 +150,9 @@ struct JourneyView: View {
 
     private func requestStart() {
         guard store.eventWins < 25 else { return }
-        if store.session != nil && store.session?.isComplete == false { replace = true } else { start() }
+        if !store.resume(mode: "Voyage") { start() }
     }
-    private func start() { store.start([Difficulty.easy, .easy, .medium, .hard, .expert][chapter], mode: "Voyage") }
+    private func start() { store.startJourney() }
 }
 
 private struct JourneyRegionView: View {
@@ -316,6 +325,7 @@ struct SettingsView: View {
                 Toggle(L10n.text("Retours haptiques"), isOn: $store.settings.haptics)
             }
             Section(L10n.text("Votre façon de jouer")) {
+                Toggle(L10n.text("Choisir le chiffre avant la case"), isOn: $store.settings.numberFirst).accessibilityIdentifier("numberFirstToggle")
                 Toggle(L10n.text("Vérifier les erreurs"), isOn: $store.settings.autoCheck)
                 Toggle(L10n.text("Surligner ligne, colonne et bloc"), isOn: $store.settings.highlightPeers)
                 Toggle(L10n.text("Signaler les doublons"), isOn: $store.settings.highlightDuplicates)

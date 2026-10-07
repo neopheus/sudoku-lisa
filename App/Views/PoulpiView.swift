@@ -108,6 +108,7 @@ struct PoulpiView: View {
 
     private var controls: some View {
         VStack(spacing: 10) {
+            rewardControls
             HStack(spacing: 8) {
                 control(L10n.text("Recentrer"), icon: "viewfinder") { yaw = 0; pitch = 0; zoom = 1 }
                 control(L10n.text("Éloigner"), icon: "minus.magnifyingglass") { zoom = max(0.75, zoom - 0.15) }
@@ -149,6 +150,24 @@ struct PoulpiView: View {
         }
     }
 
+    private var rewardControls: some View {
+        HStack(spacing: 10) {
+            PoulpiStarBadge(size: 30).opacity(store.hasPoulpiStarReward ? 1 : 0.35)
+            VStack(alignment: .leading, spacing: 3) {
+                Text(L10n.text("L’étoile du voyage")).font(LisaTheme.heading(14)).accessibilityIdentifier("poulpiReward")
+                Text(store.hasPoulpiStarReward ? L10n.text("Un souvenir de votre première escale.") : L10n.text("Encore %@ étapes pour la débloquer.", String(max(0, 5 - store.eventWins))))
+                    .font(LisaTheme.body(11)).foregroundStyle(LisaTheme.muted)
+            }
+            Spacer(minLength: 0)
+            if store.hasPoulpiStarReward {
+                Button(store.poulpiStarEquipped ? L10n.text("Retirer") : L10n.text("Équiper")) {
+                    store.equipPoulpiStar(!store.poulpiStarEquipped)
+                }.font(LisaTheme.body(12)).accessibilityIdentifier("poulpiStarToggle")
+            } else { Image(systemName: "lock.fill").foregroundStyle(LisaTheme.muted) }
+        }
+        .padding(10).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 16))
+    }
+
     private func stage(height: CGFloat) -> some View {
         ZStack(alignment: .bottom) {
             RoundedRectangle(cornerRadius: 28).fill(LisaTheme.paper.opacity(0.5))
@@ -178,6 +197,11 @@ struct PoulpiView: View {
                 .accessibilityHint(L10n.text("Glissez pour tourner, pincez pour zoomer, touchez pour le faire rire."))
                 .accessibilityAdjustableAction { direction in yaw += direction == .increment ? .pi / 4 : -.pi / 4 }
                 .accessibilityIdentifier("poulpiStage")
+            if store.poulpiStarEquipped {
+                PoulpiStarBadge(size: 42)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                    .padding(18).allowsHitTesting(false)
+            }
             VStack(spacing: 2) {
                 Text(mood.title).font(LisaTheme.heading(16)).contentTransition(.numericText())
                 Text(L10n.text("Tournez · zoomez · chatouillez")).font(LisaTheme.body(10))

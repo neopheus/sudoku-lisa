@@ -1,0 +1,166 @@
+Building for production...
+[1 / 4]
+Build complete! (0.47 sec)
+Test Suite 'All tests' started at 2026-10-07 09:02:35.998.
+Test Suite 'SudokuCoreTests.xctest' started at 2026-10-07 09:02:36.000.
+Test Suite 'AnimationBudgetTests' started at 2026-10-07 09:02:36.000.
+Test Case '-[SudokuCoreTests.AnimationBudgetTests testLoadReducesDetailBeforeCadence]' started.
+Test Case '-[SudokuCoreTests.AnimationBudgetTests testLoadReducesDetailBeforeCadence]' passed (0.001 seconds).
+Test Case '-[SudokuCoreTests.AnimationBudgetTests testPowerThermalAndScreenLimits]' started.
+Test Case '-[SudokuCoreTests.AnimationBudgetTests testPowerThermalAndScreenLimits]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.AnimationBudgetTests testRecoveryRequiresSustainedHeadroom]' started.
+Test Case '-[SudokuCoreTests.AnimationBudgetTests testRecoveryRequiresSustainedHeadroom]' passed (0.000 seconds).
+Test Suite 'AnimationBudgetTests' passed at 2026-10-07 09:02:36.002.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.002 (0.002) seconds
+Test Suite 'CompanionFlightTests' started at 2026-10-07 09:02:36.002.
+Test Case '-[SudokuCoreTests.CompanionFlightTests testJoinsAndLoopHaveContinuousPositionAndVelocity]' started.
+Test Case '-[SudokuCoreTests.CompanionFlightTests testJoinsAndLoopHaveContinuousPositionAndVelocity]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.CompanionFlightTests testRouteCoversScreenAndDepthWithinBounds]' started.
+Test Case '-[SudokuCoreTests.CompanionFlightTests testRouteCoversScreenAndDepthWithinBounds]' passed (0.002 seconds).
+Test Case '-[SudokuCoreTests.CompanionFlightTests testSwimmingLoopClosesWithoutPoseOrStrokeJump]' started.
+Test Case '-[SudokuCoreTests.CompanionFlightTests testSwimmingLoopClosesWithoutPoseOrStrokeJump]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.CompanionFlightTests testSwimmingVelocityMatchesActualDisplacement]' started.
+Test Case '-[SudokuCoreTests.CompanionFlightTests testSwimmingVelocityMatchesActualDisplacement]' passed (0.001 seconds).
+Test Suite 'CompanionFlightTests' passed at 2026-10-07 09:02:36.006.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.003 (0.004) seconds
+Test Suite 'GameMilestonesTests' started at 2026-10-07 09:02:36.006.
+Test Case '-[SudokuCoreTests.GameMilestonesTests testIncorrectFullUnitAndNineCopiesDoNotCelebrate]' started.
+Test Case '-[SudokuCoreTests.GameMilestonesTests testIncorrectFullUnitAndNineCopiesDoNotCelebrate]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.GameMilestonesTests testIsolatedUnitsKeepTheirIdentity]' started.
+Test Case '-[SudokuCoreTests.GameMilestonesTests testIsolatedUnitsKeepTheirIdentity]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.GameMilestonesTests testLastCellCompletesRowColumnBoxAndDigitTogether]' started.
+Test Case '-[SudokuCoreTests.GameMilestonesTests testLastCellCompletesRowColumnBoxAndDigitTogether]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.GameMilestonesTests testUnchangedAndMalformedBoardsDoNotEmitEvents]' started.
+Test Case '-[SudokuCoreTests.GameMilestonesTests testUnchangedAndMalformedBoardsDoNotEmitEvents]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.GameMilestonesTests testUndoAndReentryDoNotFarmCelebrations]' started.
+Test Case '-[SudokuCoreTests.GameMilestonesTests testUndoAndReentryDoNotFarmCelebrations]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.GameMilestonesTests testZenModeNeverExposesCorrectnessAndDoesNotReplayOnSettingChange]' started.
+Test Case '-[SudokuCoreTests.GameMilestonesTests testZenModeNeverExposesCorrectnessAndDoesNotReplayOnSettingChange]' passed (0.000 seconds).
+Test Suite 'GameMilestonesTests' passed at 2026-10-07 09:02:36.007.
+	 Executed 6 tests, with 0 failures (0 unexpected) in 0.001 (0.001) seconds
+Test Suite 'LessonTests' started at 2026-10-07 09:02:36.007.
+Test Case '-[SudokuCoreTests.LessonTests testEveryLessonHasTwoDifferentValidExercisesFromSharedRules]' started.
+Test Case '-[SudokuCoreTests.LessonTests testEveryLessonHasTwoDifferentValidExercisesFromSharedRules]' passed (0.004 seconds).
+Test Case '-[SudokuCoreTests.LessonTests testExamplesTeachTheIntendedDistinctionAndAcceptAlternativeDeductions]' started.
+Test Case '-[SudokuCoreTests.LessonTests testExamplesTeachTheIntendedDistinctionAndAcceptAlternativeDeductions]' passed (0.000 seconds).
+Test Suite 'LessonTests' passed at 2026-10-07 09:02:36.012.
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.004 (0.005) seconds
+Test Suite 'LocalizationTests' started at 2026-10-07 09:02:36.012.
+Test Case '-[SudokuCoreTests.LocalizationTests testEveryLanguageHasEveryKeyAndCompatiblePlaceholders]' started.
+Test Case '-[SudokuCoreTests.LocalizationTests testEveryLanguageHasEveryKeyAndCompatiblePlaceholders]' passed (0.038 seconds).
+Test Case '-[SudokuCoreTests.LocalizationTests testManualLanguageOverridesSystemAndCanReturnToAutomatic]' started.
+Test Case '-[SudokuCoreTests.LocalizationTests testManualLanguageOverridesSystemAndCanReturnToAutomatic]' passed (0.003 seconds).
+Test Case '-[SudokuCoreTests.LocalizationTests testPluralRulesIncludingRussianTeensAndCompoundNumbers]' started.
+Test Case '-[SudokuCoreTests.LocalizationTests testPluralRulesIncludingRussianTeensAndCompoundNumbers]' passed (0.002 seconds).
+Test Suite 'LocalizationTests' passed at 2026-10-07 09:02:36.054.
+	 Executed 3 tests, with 0 failures (0 unexpected) in 0.043 (0.043) seconds
+Test Suite 'LogicalEngineTests' started at 2026-10-07 09:02:36.054.
+Test Case '-[SudokuCoreTests.LogicalEngineTests testAtomicTraceHintsAndRatingUseSameRules]' started.
+Test Case '-[SudokuCoreTests.LogicalEngineTests testAtomicTraceHintsAndRatingUseSameRules]' passed (0.017 seconds).
+Test Case '-[SudokuCoreTests.LogicalEngineTests testEliminationRejectsSolutionDigitAndRepeatedStaleAction]' started.
+Test Case '-[SudokuCoreTests.LogicalEngineTests testEliminationRejectsSolutionDigitAndRepeatedStaleAction]' passed (0.001 seconds).
+Test Case '-[SudokuCoreTests.LogicalEngineTests testEliminationsPersistUndoAndInvalidateAfterBoardReplacement]' started.
+Test Case '-[SudokuCoreTests.LogicalEngineTests testEliminationsPersistUndoAndInvalidateAfterBoardReplacement]' passed (0.001 seconds).
+Test Case '-[SudokuCoreTests.LogicalEngineTests testHintCorrectionDoesNotExposeValueInObservation]' started.
+Test Case '-[SudokuCoreTests.LogicalEngineTests testHintCorrectionDoesNotExposeValueInObservation]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.LogicalEngineTests testInvalidStateAndEveryAlternateDeductionRemainSound]' started.
+Test Case '-[SudokuCoreTests.LogicalEngineTests testInvalidStateAndEveryAlternateDeductionRemainSound]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.LogicalEngineTests testNotesUndoPreservesPreviouslyAppliedEliminations]' started.
+Test Case '-[SudokuCoreTests.LogicalEngineTests testNotesUndoPreservesPreviouslyAppliedEliminations]' passed (0.001 seconds).
+Test Case '-[SudokuCoreTests.LogicalEngineTests testWorkloadCountsTechniqueFrequencyAndConsecutiveEliminations]' started.
+Test Case '-[SudokuCoreTests.LogicalEngineTests testWorkloadCountsTechniqueFrequencyAndConsecutiveEliminations]' passed (0.000 seconds).
+Test Suite 'LogicalEngineTests' passed at 2026-10-07 09:02:36.076.
+	 Executed 7 tests, with 0 failures (0 unexpected) in 0.021 (0.021) seconds
+Test Suite 'PerformanceStateTests' started at 2026-10-07 09:02:36.076.
+Test Case '-[SudokuCoreTests.PerformanceStateTests testAtomicSnapshotPreservesSessionAndTime]' started.
+Test Case '-[SudokuCoreTests.PerformanceStateTests testAtomicSnapshotPreservesSessionAndTime]' passed (0.002 seconds).
+Test Case '-[SudokuCoreTests.PerformanceStateTests testConflictsMatchPeerScanAcrossBoards]' started.
+Test Case '-[SudokuCoreTests.PerformanceStateTests testConflictsMatchPeerScanAcrossBoards]' passed (0.001 seconds).
+Test Case '-[SudokuCoreTests.PerformanceStateTests testSupersededFailureDoesNotMaskSuccessfulLatestSave]' started.
+Test Case '-[SudokuCoreTests.PerformanceStateTests testSupersededFailureDoesNotMaskSuccessfulLatestSave]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.PerformanceStateTests testWriterCoalescesAndFlushesLatestCapture]' started.
+Test Case '-[SudokuCoreTests.PerformanceStateTests testWriterCoalescesAndFlushesLatestCapture]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.PerformanceStateTests testWriterReportsFailureAndCanRetry]' started.
+Test Case '-[SudokuCoreTests.PerformanceStateTests testWriterReportsFailureAndCanRetry]' passed (0.000 seconds).
+Test Suite 'PerformanceStateTests' passed at 2026-10-07 09:02:36.080.
+	 Executed 5 tests, with 0 failures (0 unexpected) in 0.004 (0.004) seconds
+Test Suite 'PuzzleGenerationTests' started at 2026-10-07 09:02:36.080.
+Test Case '-[SudokuCoreTests.PuzzleGenerationTests testCancellationInterruptsAnInProgressTrace]' started.
+Test Case '-[SudokuCoreTests.PuzzleGenerationTests testCancellationInterruptsAnInProgressTrace]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.PuzzleGenerationTests testDeadlineAndCancellationThrowWithoutChangingSeedResult]' started.
+Test Case '-[SudokuCoreTests.PuzzleGenerationTests testDeadlineAndCancellationThrowWithoutChangingSeedResult]' passed (0.004 seconds).
+Test Case '-[SudokuCoreTests.PuzzleGenerationTests testEveryOriginalHasUniqueSolutionAndExactSupportedProfile]' started.
+Test Case '-[SudokuCoreTests.PuzzleGenerationTests testEveryOriginalHasUniqueSolutionAndExactSupportedProfile]' passed (0.027 seconds).
+Test Case '-[SudokuCoreTests.PuzzleGenerationTests testTransformedCorpusDistributionAndReproducibility]' started.
+Test Case '-[SudokuCoreTests.PuzzleGenerationTests testTransformedCorpusDistributionAndReproducibility]' passed (0.262 seconds).
+Test Suite 'PuzzleGenerationTests' passed at 2026-10-07 09:02:36.374.
+	 Executed 4 tests, with 0 failures (0 unexpected) in 0.294 (0.295) seconds
+Test Suite 'SudokuCoreTests' started at 2026-10-07 09:02:36.374.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testAdvancedGenerationUsesLogicalRatingToChooseStrongerPuzzles]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testAdvancedGenerationUsesLogicalRatingToChooseStrongerPuzzles]' passed (0.002 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testCompletedSessionCannotBeReopenedByUndo]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testCompletedSessionCannotBeReopenedByUndo]' passed (0.002 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testCorrectEntriesPrunePeerNotesAndUndoRestoresThem]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testCorrectEntriesPrunePeerNotesAndUndoRestoresThem]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testCorruptSavedSessionIsRejected]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testCorruptSavedSessionIsRejected]' passed (0.001 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testDailySeedsReproduceAndDifferentDaysDiffer]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testDailySeedsReproduceAndDifferentDaysDiffer]' passed (0.001 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testGeneratedPuzzlesHaveExactlyOneValidSolution]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testGeneratedPuzzlesHaveExactlyOneValidSolution]' passed (0.012 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testGivenCellsAndInvalidInputCannotChange]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testGivenCellsAndInvalidInputCannotChange]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testHintConsultationAndApplicationCountOnlyOnce]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testHintConsultationAndApplicationCountOnlyOnce]' passed (0.001 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testHintsCorrectErrorsBeforeAdvancingAndMatchSolution]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testHintsCorrectErrorsBeforeAdvancingAndMatchSolution]' passed (0.004 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testHintsFinishPuzzleAndSessionRoundTrips]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testHintsFinishPuzzleAndSessionRoundTrips]' passed (0.004 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testHumanRatingDistribution]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testHumanRatingDistribution]' passed (0.169 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testHumanRatingHandlesSinglesAndInvalidBoards]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testHumanRatingHandlesSinglesAndInvalidBoards]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testInvalidBoardsRejected]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testInvalidBoardsRejected]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testInvalidDeltaIndexIsRejected]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testInvalidDeltaIndexIsRejected]' passed (0.001 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testLegacySnapshotsMigrateToEquivalentUndoDeltas]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testLegacySnapshotsMigrateToEquivalentUndoDeltas]' passed (0.001 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testMasterGenerationBatchPerformance]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testMasterGenerationBatchPerformance]' passed (0.027 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testNotesEntryUndoAndMistakes]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testNotesEntryUndoAndMistakes]' passed (0.001 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testRepeatedWrongInputAndUndoDoNotEraseMistakeHistory]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testRepeatedWrongInputAndUndoDoNotEraseMistakeHistory]' passed (0.000 seconds).
+Test Case '-[SudokuCoreTests.SudokuCoreTests testUnlimitedUndoUsesCompactDeltasAndRoundTrips]' started.
+Test Case '-[SudokuCoreTests.SudokuCoreTests testUnlimitedUndoUsesCompactDeltasAndRoundTrips]' passed (0.004 seconds).
+Test Suite 'SudokuCoreTests' passed at 2026-10-07 09:02:36.605.
+	 Executed 19 tests, with 0 failures (0 unexpected) in 0.230 (0.231) seconds
+Test Suite 'SudokuCoreTests.xctest' passed at 2026-10-07 09:02:36.605.
+	 Executed 53 tests, with 0 failures (0 unexpected) in 0.602 (0.605) seconds
+Test Suite 'All tests' passed at 2026-10-07 09:02:36.605.
+	 Executed 53 tests, with 0 failures (0 unexpected) in 0.602 (0.607) seconds
+PROFILE difficulty=quick samples=40 ratingsByRank=[0: 40] uniqueBoards=40
+WORKLOAD difficulty=quick samples=40 placementRange=33...33 eliminationStepRange=0...0 eliminatedCandidateRange=0...0 hardestCountRange=33...33 longestEliminationRunRange=0...0 hardestCountDistribution=[33:40] longestEliminationRunDistribution=[0:40]
+PROFILE difficulty=easy samples=40 ratingsByRank=[1: 40] uniqueBoards=40
+WORKLOAD difficulty=easy samples=40 placementRange=46...51 eliminationStepRange=0...0 eliminatedCandidateRange=0...0 hardestCountRange=1...11 longestEliminationRunRange=0...0 hardestCountDistribution=[1:2,2:5,3:9,4:5,5:6,6:4,7:1,8:3,9:2,10:2,11:1] longestEliminationRunDistribution=[0:40]
+PROFILE difficulty=medium samples=40 ratingsByRank=[2: 40] uniqueBoards=40
+WORKLOAD difficulty=medium samples=40 placementRange=46...53 eliminationStepRange=1...6 eliminatedCandidateRange=1...15 hardestCountRange=1...6 longestEliminationRunRange=1...6 hardestCountDistribution=[1:14,2:7,3:9,4:5,5:4,6:1] longestEliminationRunDistribution=[1:17,2:11,3:5,4:6,6:1]
+PROFILE difficulty=hard samples=40 ratingsByRank=[3: 40] uniqueBoards=40
+WORKLOAD difficulty=hard samples=40 placementRange=55...55 eliminationStepRange=2...8 eliminatedCandidateRange=4...26 hardestCountRange=1...2 longestEliminationRunRange=1...7 hardestCountDistribution=[1:36,2:4] longestEliminationRunDistribution=[1:2,2:8,3:14,4:11,5:2,6:2,7:1]
+PROFILE difficulty=expert samples=40 ratingsByRank=[5: 22, 4: 18] uniqueBoards=40
+WORKLOAD difficulty=expert samples=40 placementRange=51...55 eliminationStepRange=2...9 eliminatedCandidateRange=6...25 hardestCountRange=1...2 longestEliminationRunRange=2...6 hardestCountDistribution=[1:37,2:3] longestEliminationRunDistribution=[2:3,3:15,4:8,5:10,6:4]
+PROFILE difficulty=master samples=40 ratingsByRank=[6: 18, 7: 22] uniqueBoards=40
+WORKLOAD difficulty=master samples=40 placementRange=51...57 eliminationStepRange=1...12 eliminatedCandidateRange=3...34 hardestCountRange=1...1 longestEliminationRunRange=1...12 hardestCountDistribution=[1:40] longestEliminationRunDistribution=[1:3,2:3,4:9,5:16,6:5,9:2,12:2]
+LOGICAL_PERFORMANCE samples=240 generationP50Seconds=0.00033925 generationMaxSeconds=0.000814875 hintP50Seconds=7.7042e-05 hintMaxSeconds=0.000547959
+RATING quick: techniques=["Naked singles": 40], clues=48...48, average=48.0
+RATING easy: techniques=["Hidden singles": 40], clues=30...35, average=32.0
+RATING medium: techniques=["Locked candidates": 40], clues=28...35, average=29.65
+RATING hard: techniques=["Naked pairs": 40], clues=26...26, average=26.0
+RATING expert: techniques=["Hidden pairs": 18, "Naked triples": 22], clues=26...30, average=28.2
+RATING master: techniques=["X-Wing": 22, "Hidden triples": 18], clues=24...30, average=26.45
+MASTER_BATCH samples=30 totalSeconds=0.025581955909729004 worstGenerationSeconds=0.0024019479751586914
+◇ Test run started.
+↳ Testing Library Version: 2084
+↳ Target Platform: arm64e-apple-macos14.0
+✔ Test run with 0 tests in 0 suites passed after 0.001 seconds.

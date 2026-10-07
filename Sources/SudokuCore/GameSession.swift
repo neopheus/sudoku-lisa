@@ -1,6 +1,7 @@
 import Foundation
 
 public struct SudokuHint: Codable, Sendable, Equatable {
+    public let deduction: SudokuDeduction?
     public let index: Int
     public let value: Int
     public let title: String
@@ -10,7 +11,8 @@ public struct SudokuHint: Codable, Sendable, Equatable {
     public let eliminationMarks: [CandidateElimination]
     public let technique: String
     public let explanation: String
-    public init(index: Int, value: Int, title: String, detail: String, focusCells: [Int] = [], eliminatedCandidates: [Int] = [], eliminationMarks: [CandidateElimination] = [], technique: String = "", explanation: String = "") {
+    public init(index: Int, value: Int, title: String, detail: String, focusCells: [Int] = [], eliminatedCandidates: [Int] = [], eliminationMarks: [CandidateElimination] = [], technique: String = "", explanation: String = "", deduction: SudokuDeduction? = nil) {
+        self.deduction = deduction
         self.index = index; self.value = value; self.title = title; self.detail = detail
         self.focusCells = focusCells; self.eliminatedCandidates = eliminatedCandidates; self.eliminationMarks = eliminationMarks
         self.technique = technique; self.explanation = explanation
@@ -30,6 +32,8 @@ public struct GameSession: Codable, Sendable, Equatable {
     public private(set) var mistakes: Int = 0
     public var elapsedSeconds: Int = 0
     public private(set) var hintsUsed: Int = 0
+    public private(set) var candidateEliminations: Set<CandidateElimination> = []
+    private var eliminationHistory: [Set<CandidateElimination>?] = []
     private var undoHistory: [[CellChange]] = []
     private struct CellChange: Codable, Sendable, Equatable {
         let index: Int
@@ -44,7 +48,7 @@ public struct GameSession: Codable, Sendable, Equatable {
         self.puzzle = puzzle; self.values = puzzle.givens
         self.notes = Array(repeating: [], count: 81)
     }
-    private enum CodingKeys: String, CodingKey { case puzzle, values, notes, mistakes, elapsedSeconds, hintsUsed, undoHistory, history }
+    private enum CodingKeys: String, CodingKey { case puzzle, values, notes, mistakes, elapsedSeconds, hintsUsed, undoHistory, history, candidateEliminations, eliminationHistory }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         puzzle = try c.decode(Puzzle.self, forKey: .puzzle)
@@ -84,7 +88,14 @@ public struct GameSession: Codable, Sendable, Equatable {
                 })
             }
         }
+        candidateEliminations = try c.decodeIfPresent(Set<CandidateElimination>.self, forKey: .candidateEliminations) ?? []
+        eliminationHistory = try c.decodeIfPresent([Set<CandidateElimination>?].self, forKey: .eliminationHistory) ?? Array(repeating: nil, count: undoHistory.count)
+        func validMarks(_ marks: Set<CandidateElimination>) -> Bool {
+            marks.allSatisfy { (0..<81).contains($0.index) && (1...9).contains($0.value) && puzzle.solution[$0.index] != $0.value }
+        }
+        guard eliminationHistory.count == undoHistory.count, validMarks(candidateEliminations), eliminationHistory.allSatisfy({ $0.map(validMarks) ?? true }) else { throw invalid }
     }
+
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(puzzle, forKey: .puzzle)
@@ -94,6 +105,8 @@ public struct GameSession: Codable, Sendable, Equatable {
         try c.encode(elapsedSeconds, forKey: .elapsedSeconds)
         try c.encode(hintsUsed, forKey: .hintsUsed)
         try c.encode(undoHistory, forKey: .undoHistory)
+        try c.encode(candidateEliminations, forKey: .candidateEliminations)
+        try c.encode(eliminationHistory, forKey: .eliminationHistory)
     }
     public var isComplete: Bool { values == puzzle.solution }
     public var canUndo: Bool { !isComplete && !undoHistory.isEmpty }
@@ -111,15 +124,17 @@ public struct GameSession: Codable, Sendable, Equatable {
         (0..<81).contains(index) && values[index] != 0 && values[index] != puzzle.solution[index]
     }
     /// Unlimited undo stores only cells changed by an edit, including pruned notes.
-    private mutating func save(indices: [Int]) {
-        undoHistory.append(indices.sorted().map { CellChange(index: $0, value: values[$0], notes: notes[$0]) })
+    private mutating func save(indices: [Int], savesEliminations: Bool = false) {
+        eliminationHistory.append(savesEliminations ? candidateEliminations : nil)
+        undoHistory.append(Array(Set(indices)).sorted().map { CellChange(index: $0, value: values[$0], notes: notes[$0]) })
     }
     /// Incorrect entries remain visible. Mistake count is cumulative across undo.
     @discardableResult public mutating func enter(_ value: Int, at index: Int) -> Bool {
         guard isEditable(index), (1...9).contains(value), values[index] != value else { return false }
         let affectedPeers = value == puzzle.solution[index]
             ? SudokuSolver.peers(of: index).filter { notes[$0].contains(value) } : []
-        save(indices: [index] + affectedPeers)
+        save(indices: [index] + affectedPeers, savesEliminations: values[index] != 0 || value != puzzle.solution[index])
+        if values[index] != 0 || value != puzzle.solution[index] { candidateEliminations.removeAll() }
         values[index] = value; notes[index] = []
         if value != puzzle.solution[index] { mistakes += 1; return false }
         for peer in affectedPeers { notes[peer].remove(value) }
@@ -132,22 +147,66 @@ public struct GameSession: Codable, Sendable, Equatable {
     }
     public mutating func erase(at index: Int) {
         guard isEditable(index), values[index] != 0 || !notes[index].isEmpty else { return }
-        save(indices: [index]); values[index] = 0; notes[index] = []
+        save(indices: [index], savesEliminations: values[index] != 0)
+        if values[index] != 0 { candidateEliminations.removeAll() }
+        values[index] = 0; notes[index] = []
     }
     public mutating func undo() {
         guard !isComplete, let changes = undoHistory.popLast() else { return }
+        if let saved = eliminationHistory.popLast(), let marks = saved { candidateEliminations = marks }
         for change in changes { values[change.index] = change.value; notes[change.index] = change.notes }
     }
     public mutating func tick() { if !isComplete { elapsedSeconds += 1 } }
-    public func hint() -> SudokuHint? {
+    public func candidates(at index: Int) -> Set<Int> {
+        LogicalState(board: values, eliminations: candidateEliminations).candidates(at: index)
+    }
+    public func hint() -> SudokuHint? { try? hint(cancellation: { false }) }
+    public func hint(cancellation: @Sendable () -> Bool) throws -> SudokuHint? {
+        if cancellation() { throw CancellationError() }
         guard !isComplete else { return nil }
+        let deduction: SudokuDeduction
         if let wrong = (0..<81).first(where: { isIncorrect(at: $0) }) {
-            return SudokuHint(index: wrong, value: puzzle.solution[wrong], title: L10n.text("Une case à revoir"), detail: L10n.text("La valeur en ligne %@, colonne %@ empêche de terminer la grille. La valeur correcte est %@.", String(describing: wrong / 9 + 1), String(describing: wrong % 9 + 1), String(describing: puzzle.solution[wrong])), focusCells: [wrong], technique: L10n.text("Une case à revoir"), explanation: L10n.text("Cette case est en erreur. Remplace son chiffre pour débloquer la grille."))
+            deduction = SudokuDeduction(techniqueID: .correction, action: .placement(index: wrong, value: puzzle.solution[wrong]), focusCells: [wrong])
+        } else if let next = LogicalState(board: values, eliminations: candidateEliminations).nextDeduction() {
+            deduction = next
+        } else {
+            // Compatibility for older games which exceed our logical engine.
+            // The provenance is explicit and never misrepresented as a deduction.
+            guard let cell = values.firstIndex(of: 0) else { return nil }
+            deduction = SudokuDeduction(techniqueID: .solutionReveal, action: .placement(index: cell, value: puzzle.solution[cell]), focusCells: [cell])
         }
-        guard let move = SudokuSolver.nextLogicalMove(in: values) else { return nil }
-        return SudokuHint(index: move.index, value: move.value, title: L10n.text("Regarde cette zone"),
-                          detail: move.observation, focusCells: move.focusCells, eliminatedCandidates: move.eliminatedCandidates, eliminationMarks: move.eliminationMarks,
-                          technique: move.technique, explanation: move.explanation)
+        if cancellation() { throw CancellationError() }
+        let index: Int, value: Int, marks: [CandidateElimination]
+        switch deduction.action {
+        case let .placement(cell, digit): index = cell; value = digit; marks = []
+        case let .eliminations(eliminations): index = eliminations.first?.index ?? 0; value = 0; marks = eliminations
+        }
+        return SudokuHint(index: index, value: value, title: deduction.techniqueID == .correction ? L10n.text("Une case à revoir") : L10n.text("Regarde cette zone"),
+                          detail: deduction.observation, focusCells: deduction.focusCells,
+                          eliminatedCandidates: Array(Set(marks.map(\.value))).sorted(), eliminationMarks: marks,
+                          technique: deduction.techniqueID.label, explanation: deduction.explanation, deduction: deduction)
+    }
+    /// Applies the already displayed atomic action. Candidate notes are only
+    /// pruned where they exist; automatic candidates remain a separate state.
+    @discardableResult public mutating func applyDeduction(_ deduction: SudokuDeduction, countAsUsed: Bool = false) -> Bool {
+        guard !isComplete else { return false }
+        switch deduction.action {
+        case let .placement(index, value):
+            guard isEditable(index), value == puzzle.solution[index], values[index] != value else { return false }
+            if countAsUsed { recordHintConsultation() }
+            return enter(value, at: index)
+        case let .eliminations(marks):
+            let state = LogicalState(board: values, eliminations: candidateEliminations)
+            guard !marks.isEmpty, marks.allSatisfy({ mark in
+                isEditable(mark.index) && values[mark.index] == 0 && (1...9).contains(mark.value)
+                    && puzzle.solution[mark.index] != mark.value && state.candidates(at: mark.index).contains(mark.value)
+            }) else { return false }
+            if countAsUsed { recordHintConsultation() }
+            save(indices: marks.map(\.index), savesEliminations: true)
+            candidateEliminations.formUnion(marks)
+            for mark in marks { notes[mark.index].remove(mark.value) }
+            return true
+        }
     }
     /// Count help when it is displayed, even if the player enters it manually.
     public mutating func recordHintConsultation() {
@@ -155,9 +214,8 @@ public struct GameSession: Codable, Sendable, Equatable {
         hintsUsed += 1
     }
     @discardableResult public mutating func applyHint(countAsUsed: Bool = true) -> SudokuHint? {
-        guard let suggestion = hint() else { return nil }
-        if countAsUsed { recordHintConsultation() }
-        _ = enter(suggestion.value, at: suggestion.index)
+        guard let suggestion = hint(), let deduction = suggestion.deduction,
+              applyDeduction(deduction, countAsUsed: countAsUsed) else { return nil }
         return suggestion
     }
 }

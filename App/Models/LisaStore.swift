@@ -14,9 +14,11 @@ struct LisaSettings: Codable, Sendable {
     var darkMode = false
     var paperMode = false
     var showTimer = true
+    var numberFirst = false
+    var poulpiStarEquipped = false
 
     init() {}
-    private enum CodingKeys: String, CodingKey { case sound, music, animatedDecor, haptics, autoCheck, highlightPeers, highlightDuplicates, errorLimit, darkMode, paperMode, showTimer }
+    private enum CodingKeys: String, CodingKey { case sound, music, animatedDecor, haptics, autoCheck, highlightPeers, highlightDuplicates, errorLimit, darkMode, paperMode, showTimer, numberFirst, poulpiStarEquipped }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         sound = try c.decodeIfPresent(Bool.self, forKey: .sound) ?? true
@@ -30,6 +32,8 @@ struct LisaSettings: Codable, Sendable {
         darkMode = try c.decodeIfPresent(Bool.self, forKey: .darkMode) ?? false
         paperMode = try c.decodeIfPresent(Bool.self, forKey: .paperMode) ?? false
         showTimer = try c.decodeIfPresent(Bool.self, forKey: .showTimer) ?? true
+        numberFirst = try c.decodeIfPresent(Bool.self, forKey: .numberFirst) ?? false
+        poulpiStarEquipped = try c.decodeIfPresent(Bool.self, forKey: .poulpiStarEquipped) ?? false
     }
 }
 
@@ -43,6 +47,18 @@ struct FinishedGame: Codable, Identifiable, Sendable {
     let mode: String
 }
 
+/// The puzzle and its reward context travel together, including across app launches.
+struct SavedModeGame: Codable, Sendable, Identifiable {
+    var id = UUID()
+    var session: GameSession
+    let mode: String
+    let day: String?
+    let eventID: String?
+    let tournamentID: String?
+    let journeyStage: Int?
+    var recorded: Bool
+}
+
 private struct SaveData: Codable, Sendable {
     var session: GameSession?
     var settings: LisaSettings
@@ -54,6 +70,7 @@ private struct SaveData: Codable, Sendable {
     var eventMedals: Set<String>?
     var activeEvent: String?
     var activeTournament: String?
+    var savedGames: [String: SavedModeGame]?
 }
 
 @MainActor
@@ -80,12 +97,23 @@ final class LisaStore: ObservableObject {
     @Published var activeTournament: String?
     @Published var mode = "Libre"
     @Published var activeDay: String?
+    // Snapshots are not UI state: periodic saves must not redraw the whole board.
+    // Session, mode and presentation changes already publish real menu updates.
+    private(set) var savedGames: [String: SavedModeGame] = [:]
+    @Published var generationError: String?
     @Published var isGenerating = false
     @Published var showGame = false
     @Published var showVictory = false
     @Published var saveError: String?
     var milestones = GameMilestones()
     private var recorded = false
+    private var currentGameID = UUID()
+    private var activeJourneyStage: Int?
+    private var generationID: UUID?
+    private var generationTask: Task<Void, Never>?
+    // Keep the previous worker until it exits; its successor waits before entering the engine.
+    private var generationWorker: Task<Puzzle, Error>?
+    private let generatePuzzle: @Sendable (Difficulty, UInt64) throws -> Puzzle
     // @Published observers run during init: never persist a partially restored store.
     // A failed load keeps this gate closed, even after the error alert is dismissed.
     private var canPersist = false
@@ -101,7 +129,12 @@ final class LisaStore: ObservableObject {
         return writer
     }()
 
-    init(saveURL: URL? = nil) {
+    init(saveURL: URL? = nil, generator: @escaping @Sendable (Difficulty, UInt64) throws -> Puzzle = { difficulty, seed in
+        return try SudokuGenerator.generateCancellable(difficulty: difficulty, seed: seed,
+                                                       deadline: Date().addingTimeInterval(2),
+                                                       cancellation: { Task.isCancelled })
+    }) {
+        self.generatePuzzle = generator
         let defaultDirectory = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
         self.saveURL = saveURL ?? defaultDirectory.appendingPathComponent("sudoku-lisa-v1.json")
         let saveURL = self.saveURL
@@ -116,6 +149,14 @@ final class LisaStore: ObservableObject {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             if FileManager.default.fileExists(atPath: saveURL.path) {
                 let data = try JSONDecoder().decode(SaveData.self, from: Data(contentsOf: saveURL))
+                if let saves = data.savedGames {
+                    guard saves.allSatisfy({ key, game in
+                        key == game.mode && ["Libre", "Quotidien", "Voyage", "Événement", "Tournoi"].contains(key)
+                            && (game.journeyStage == nil || (1...25).contains(game.journeyStage!))
+                    }) else {
+                        throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid per-mode game context"))
+                    }
+                }
                 session = data.session
                 settings = data.settings
                 history = data.history
@@ -127,6 +168,20 @@ final class LisaStore: ObservableObject {
                 mode = data.mode
                 activeDay = data.activeDay
                 recorded = session?.isComplete ?? false
+                savedGames = data.savedGames ?? [:]
+                if let saved = savedGames[mode] {
+                    session = saved.session
+                    activeDay = saved.day
+                    activeEvent = saved.eventID
+                    activeTournament = saved.tournamentID
+                    activeJourneyStage = saved.journeyStage
+                    recorded = saved.recorded
+                    currentGameID = saved.id
+                } else if let session {
+                    // The original v1 save is migrated in memory without rewriting on launch.
+                    activeJourneyStage = mode == "Voyage" ? min(max(1, eventWins + (recorded ? 0 : 1)), 25) : nil
+                    savedGames[mode] = currentSavedGame(session)
+                }
             }
             clock.seconds = session?.elapsedSeconds ?? 0
             canPersist = true
@@ -145,6 +200,7 @@ final class LisaStore: ObservableObject {
             session = GameSession(puzzle: Puzzle(givens: givens, solution: solution, difficulty: .quick, seed: 1))
             mode = "Voyage"
             eventWins = 4
+            activeJourneyStage = 5
             recorded = false
             if ProcessInfo.processInfo.arguments.contains("--uitest-zen") {
                 settings.autoCheck = false
@@ -165,7 +221,8 @@ final class LisaStore: ObservableObject {
         guard canPersist else { return }
         var snapshot = session
         snapshot?.elapsedSeconds = clock.seconds
-        let data = SaveData(session: snapshot, settings: settings, history: history, completedDays: completedDays, eventWins: eventWins, mode: mode, activeDay: activeDay, eventMedals: eventMedals, activeEvent: activeEvent, activeTournament: activeTournament)
+        if let snapshot { savedGames[mode] = currentSavedGame(snapshot) }
+        let data = SaveData(session: snapshot, settings: settings, history: history, completedDays: completedDays, eventWins: eventWins, mode: mode, activeDay: activeDay, eventMedals: eventMedals, activeEvent: activeEvent, activeTournament: activeTournament, savedGames: savedGames)
         writer.submit(data)
     }
 
@@ -181,6 +238,7 @@ final class LisaStore: ObservableObject {
     }
 
     func saveForBackground() {
+        cancelGeneration()
         save()
         guard backgroundSave == .invalid else { return }
         backgroundSaveGeneration += 1
@@ -222,29 +280,99 @@ final class LisaStore: ObservableObject {
         return count
     }
 
+    private func currentSavedGame(_ session: GameSession) -> SavedModeGame {
+        SavedModeGame(id: currentGameID, session: session, mode: mode, day: activeDay,
+                      eventID: activeEvent, tournamentID: activeTournament,
+                      journeyStage: activeJourneyStage, recorded: recorded)
+    }
+
+    func savedGame(mode: String, date: Date? = nil) -> SavedModeGame? {
+        let saved: SavedModeGame?
+        if self.mode == mode, var session {
+            session.elapsedSeconds = clock.seconds
+            saved = currentSavedGame(session)
+        } else { saved = savedGames[mode] }
+        guard let saved, !saved.session.isComplete else { return nil }
+        if mode == "Quotidien", let date, saved.day != Self.dayKey(date) { return nil }
+        return saved
+    }
+
+    func hasSavedGame(mode: String, date: Date? = nil) -> Bool { savedGame(mode: mode, date: date) != nil }
+
+    @discardableResult func resume(mode: String, date: Date? = nil) -> Bool {
+        guard let saved = savedGame(mode: mode, date: date) else { return false }
+        cancelGeneration()
+        save()
+        restore(saved)
+        showGame = true
+        save()
+        return true
+    }
+
+    @discardableResult func resumeLastGame() -> Bool { resume(mode: mode) }
+
+    private func restore(_ saved: SavedModeGame) {
+        mode = saved.mode
+        activeDay = saved.day
+        activeEvent = saved.eventID
+        activeTournament = saved.tournamentID
+        activeJourneyStage = saved.journeyStage
+        currentGameID = saved.id
+        session = saved.session
+        clock.seconds = saved.session.elapsedSeconds
+        recorded = saved.recorded
+        showVictory = false
+        milestones = GameMilestones()
+        _ = milestones.record(before: Array(repeating: 0, count: 81), after: saved.session.values,
+                              solution: saved.session.puzzle.solution, revealsCorrectness: false)
+    }
+
+    func cancelGeneration() {
+        generationID = nil
+        generationWorker?.cancel()
+        generationTask?.cancel()
+        generationTask = nil
+        isGenerating = false
+    }
+
     func start(_ difficulty: Difficulty, mode: String = "Libre", date: Date? = nil, seedOverride: UInt64? = nil, eventID: String? = nil, tournamentID: String? = nil) {
         guard canPersist else { saveError = Self.loadFailureMessage; return }
-        guard !isGenerating else { return }
+        cancelGeneration()
+        save() // Preserve the old board before requesting a replacement.
+        let id = UUID()
+        generationID = id
+        generationError = nil
         isGenerating = true
-        self.mode = mode
-        activeDay = mode == "Quotidien" ? date.map(Self.dayKey) : nil
-        activeEvent = eventID
-        activeTournament = tournamentID
-        let seed: UInt64
-        if let seedOverride { seed = seedOverride }
-        else if let date {
-            seed = Self.dayKey(date).utf8.reduce(UInt64(14695981039346656037)) { ($0 ^ UInt64($1)) &* 1099511628211 }
-        } else { seed = UInt64.random(in: 1...UInt64.max) }
-        Task {
-            let puzzle = await Task.detached(priority: .userInitiated) { SudokuGenerator.generate(difficulty: difficulty, seed: seed) }.value
-            session = GameSession(puzzle: puzzle)
-            clock.seconds = 0
-            milestones = GameMilestones()
-            recorded = false
-            showVictory = false
-            isGenerating = false
-            showGame = true
-            save()
+        let day = mode == "Quotidien" ? Self.dayKey(date ?? Date()) : nil
+        let stage = mode == "Voyage" ? min(eventWins + 1, 25) : nil
+        let seed = seedOverride ?? day.map(Self.stableSeed) ?? date.map { Self.stableSeed(Self.dayKey($0)) } ?? UInt64.random(in: 1...UInt64.max)
+        let previousWorker = generationWorker
+        let generator = generatePuzzle
+        let worker = Task.detached(priority: .userInitiated) {
+            if let previousWorker { _ = await previousWorker.result }
+            try Task.checkCancellation()
+            return try generator(difficulty, seed)
+        }
+        generationWorker = worker
+        generationTask = Task { [weak self] in
+            let result = await worker.result
+            guard let self, !Task.isCancelled, self.generationID == id else { return }
+            self.generationID = nil
+            self.generationTask = nil
+            self.isGenerating = false
+            switch result {
+            case .success(let puzzle):
+                // Context changes only after a complete, current generation result exists.
+                self.save()
+                let saved = SavedModeGame(session: GameSession(puzzle: puzzle), mode: mode,
+                                          day: day, eventID: eventID, tournamentID: tournamentID,
+                                          journeyStage: stage, recorded: false)
+                self.restore(saved)
+                self.showGame = true
+                self.save()
+            case .failure:
+                self.generationError = L10n.text("La grille n’a pas pu être préparée. Votre partie est conservée. Réessayez.")
+            }
         }
     }
 
@@ -253,9 +381,9 @@ final class LisaStore: ObservableObject {
         if session?.isComplete == true && !recorded, let game = session {
             recorded = true
             history.append(FinishedGame(date: Date(), difficulty: game.puzzle.difficulty, seconds: game.elapsedSeconds, mistakes: game.mistakes, hints: game.hintsUsed, mode: mode))
-            if let activeDay { completedDays.insert(activeDay) }
-            if mode == "Voyage" { eventWins += 1 }
-            if let activeEvent { eventMedals.insert(activeEvent) }
+            if mode == "Quotidien", let activeDay { completedDays.insert(activeDay) }
+            if mode == "Voyage", (activeJourneyStage ?? eventWins + 1) == eventWins + 1, eventWins < 25 { eventWins += 1 }
+            if mode == "Événement", let activeEvent { eventMedals.insert(activeEvent) }
             if mode == "Tournoi", activeTournament == Self.tournamentKey() {
                 GameCenterService.shared.submit(seconds: game.elapsedSeconds, mistakes: game.mistakes, hints: game.hintsUsed)
             }
@@ -297,7 +425,13 @@ final class LisaStore: ObservableObject {
     }
 
     var seasonKey: String { String(Self.dayKey(Date()).prefix(7)) }
-    var seasonProgress: Int { eventMedals.filter { $0.hasPrefix(seasonKey + "-") }.count }
+    private func seasonalProgress(_ key: String) -> Int {
+        (1...10).filter { eventMedals.contains(key + "-" + String($0)) }.count
+    }
+    private func nextSeasonEvent(_ key: String) -> String? {
+        (1...10).first { !eventMedals.contains(key + "-" + String($0)) }.map { key + "-" + String($0) }
+    }
+    var seasonProgress: Int { seasonalProgress(seasonKey) }
     var seasonTitle: String {
         switch Calendar.current.component(.month, from: Date()) {
         case 3...5: return L10n.text("Les petits bourgeons")
@@ -307,10 +441,59 @@ final class LisaStore: ObservableObject {
         }
     }
     func startSeason() {
-        guard seasonProgress < 10 else { return }
-        let eventID = seasonKey + "-" + String(seasonProgress + 1)
+        guard let eventID = nextSeasonEvent(seasonKey) else { return }
         start(seasonProgress < 3 ? .easy : seasonProgress < 7 ? .medium : .hard,
               mode: "Événement", seedOverride: Self.stableSeed("season-v1-" + eventID), eventID: eventID)
+    }
+
+    var hasPoulpiStarReward: Bool { eventWins >= 5 }
+    var poulpiStarEquipped: Bool { hasPoulpiStarReward && settings.poulpiStarEquipped }
+
+    func equipPoulpiStar(_ equipped: Bool) {
+        guard !equipped || hasPoulpiStarReward else { return }
+        settings.poulpiStarEquipped = equipped
+    }
+
+    func startJourney() {
+        guard eventWins < 25 else { return }
+        let difficulty: Difficulty = [.easy, .easy, .medium, .hard, .expert][min(eventWins / 5, 4)]
+        start(difficulty, mode: "Voyage")
+    }
+
+    var victoryContinuationTitle: String {
+        switch mode {
+        case "Libre": return L10n.text("Une autre grille")
+        case "Voyage" where eventWins < 25: return L10n.text("Prochaine étape")
+        case "Événement" where canContinueSeason: return L10n.text("Prochain défi")
+        default: return L10n.text("Retour à l’accueil")
+        }
+    }
+
+    private var canContinueSeason: Bool {
+        guard let activeEvent else { return false }
+        let key = String(activeEvent.prefix(7))
+        return nextSeasonEvent(key) != nil
+    }
+
+    func continueAfterVictory() {
+        guard session?.isComplete == true else { return }
+        changed() // Idempotent even if victory presentation raced the final edit.
+        switch mode {
+        case "Libre":
+            if let difficulty = session?.puzzle.difficulty { start(difficulty) }
+        case "Voyage" where eventWins < 25: startJourney()
+        case "Événement" where canContinueSeason:
+            // Continue the season that belongs to this puzzle, even after a month boundary.
+            guard let activeEvent else { return }
+            let key = String(activeEvent.prefix(7))
+            let progress = seasonalProgress(key)
+            guard let next = nextSeasonEvent(key) else { return }
+            start(progress < 3 ? .easy : progress < 7 ? .medium : .hard,
+                  mode: "Événement", seedOverride: Self.stableSeed("season-v1-" + next), eventID: next)
+        default:
+            showVictory = false
+            showGame = false
+        }
     }
 
     var monthlyTrophies: [String] {
