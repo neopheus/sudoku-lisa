@@ -105,3 +105,12 @@ Cette version améliore la lisibilité et les commandes d'accessibilité. Merci 
 5. Dans Poulpi, changer de couleur, relancer l’app et vérifier sa conservation. Terminer une battle pour débloquer le bandeau ; cinq victoires débloquent la couronne. Vérifier que la sauvegarde solo est conservée.
 
 Signaler le modèle d’iPhone, iOS, numéro de build, comptes distincts, étape et capture via TestFlight.
+
+### Livraison vérifiée
+
+- Sources : `ab1d93a`, puis correction Release `7ea3604`. Aucun push Git. Les modifications préexistantes des médias App Store restent séparées.
+- Archive signée : `/tmp/lisa-release-20261008-b8.xcarchive`, signature vérifiée ; application et extension en 1.0 (8), entitlement Game Center présent.
+- Les 69 tests moteur passent également en Release (`/tmp/lisa-battle-work/release-core.log`).
+- Envoi accepté le 8 octobre à 12 h 59 (Europe/Paris) : `Upload succeeded`, `EXPORT SUCCEEDED` ; journal `/tmp/lisa-release-20261008-b8-upload.log`.
+- Traitement Apple terminé, consignes et notes de vérification enregistrées. Build associé aux groupes **Lisa — Interne** (3 testeurs), **Lisa — Externe** (1) et **Liens à partager** (1), puis soumis à la vérification. État final observé : **En cours de test**. Les effectifs de groupes peuvent inclure les mêmes personnes. Installation physique non vérifiée.
+- [Build 8](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/b7283013-3eb3-40d5-b39c-87392d4027ba) · [Lien public TestFlight](https://testflight.apple.com/join/tWFCgtQF) · [Preuve](screenshots/testflight-build-8.png).

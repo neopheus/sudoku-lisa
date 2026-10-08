@@ -36,6 +36,8 @@ Avant distribution : essais de 2 puis 4 appareils avec comptes Game Center disti
 - `python3 scripts/localization/check.py` : 574 clés partagées complètes dans les cinq langues. `git diff --check` passe.
 - Simulateur dédié : `Lisa Gameplay QA`, iOS 18.5, `F60920A4-E595-4FAD-9DD0-C7FC876233A7`. DerivedData : `/tmp/lisa-validation`. Journaux : `/tmp/lisa-battle-work/`.
 - La passe finale recompilée termine avec `TEST SUCCEEDED` : 28 tests applicatifs et le parcours UI complet de battle repassent. Rapport final valide : `/tmp/lisa-validation/Logs/Test/Test-SudokuLisa-2026.10.08_12-41-04-+0200.xcresult`. Certains passages précédents avaient bloqué à la clôture sous Xcode 27.1 (`invalidDigitCount(94232)`) ; leurs rapports incomplets ne sont pas retenus.
-- Aucun commit, push, archive ou envoi TestFlight. Aucun essai réseau multi-compte sur appareils physiques.
+- Cette validation initiale précédait la livraison TestFlight ; voir `docs/testflight.md` pour son état. Aucun essai réseau multi-compte sur appareils physiques.
 
 - Dernier contrôle visuel : correction sRGB → lumière linéaire pour les palettes ; les quatre tests de rendu repassent avec `TEST SUCCEEDED`. Rapport : `/tmp/lisa-validation/Logs/Test/Test-SudokuLisa-2026.10.08_12-43-46-+0200.xcresult`.
+
+- Validation de livraison : les 69 tests moteur passent en Release. Une référence de revanche au helper UI de débogage a été protégée par `#if DEBUG` ; l’archive Release signée compile ensuite avec succès.
