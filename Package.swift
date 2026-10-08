@@ -4,6 +4,8 @@ let package = Package(
     name: "SudokuLisa",
     defaultLocalization: "fr",
     platforms: [.macOS(.v13), .iOS(.v17)],
-    products: [.library(name: "SudokuCore", targets: ["SudokuCore"])],
-    targets: [.target(name: "SudokuCore", resources: [.process("Resources")]), .testTarget(name: "SudokuCoreTests", dependencies: ["SudokuCore"])]
+    products: [.library(name: "SudokuCore", targets: ["SudokuCore"]),
+               .library(name: "PoulpiStickers", targets: ["PoulpiStickers"])],
+    targets: [.target(name: "SudokuCore", resources: [.process("Resources")]),
+              .target(name: "PoulpiStickers", resources: [.process("Resources")]), .testTarget(name: "SudokuCoreTests", dependencies: ["SudokuCore"])]
 )

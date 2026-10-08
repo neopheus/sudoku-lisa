@@ -18,7 +18,7 @@ Merci de tester une partie complète, les notes, les indices, l’annulation, la
 
 ## Notes pour l’examen Apple
 
-Le sudoku solo et sa progression fonctionnent localement, sans compte ni identifiant de démonstration. Le mode Battle nécessite une connexion Game Center et deux à quatre joueurs sur des appareils distincts. Depuis l’accueil, ouvrir Battle, inviter des amis, se déclarer prêt puis laisser l’hôte lancer la manche. Chaque joueur reçoit la même grille avec un départ commun et voit la progression des autres. Aucun indice en Battle. La personnalisation de Poulpi est accessible depuis son écran ; les couleurs sont gratuites et certains accessoires se débloquent en jouant. L’extension Lisa Stickers fournit quatre stickers pour Messages. Aucun achat intégré ni publicité.
+Le sudoku solo et sa progression fonctionnent localement, sans compte ni identifiant de démonstration. Le mode Battle nécessite une connexion Game Center et deux à quatre joueurs sur des appareils distincts. Depuis l’accueil, ouvrir Battle, inviter des amis, se déclarer prêt puis laisser l’hôte lancer la manche. Chaque joueur reçoit la même grille avec un départ commun et voit la progression des autres. Aucun indice en Battle. La personnalisation de Poulpi est accessible depuis son écran ; les couleurs sont gratuites et certains accessoires se débloquent en jouant. L’extension Lisa Stickers fournit 24 autocollants pour Messages. La galerie Poulpi permet aussi de partager les images et de transférer le pack vers WhatsApp installé. Aucun achat intégré ni publicité.
 
 Les coordonnées du contact de bêta doivent être saisies dans App Store Connect par le titulaire ou confirmées avant utilisation ; ne pas inventer d’adresse ou de téléphone.
 
@@ -114,3 +114,10 @@ Signaler le modèle d’iPhone, iOS, numéro de build, comptes distincts, étape
 - Envoi accepté le 8 octobre à 12 h 59 (Europe/Paris) : `Upload succeeded`, `EXPORT SUCCEEDED` ; journal `/tmp/lisa-release-20261008-b8-upload.log`.
 - Traitement Apple terminé, consignes et notes de vérification enregistrées. Build associé aux groupes **Lisa — Interne** (3 testeurs), **Lisa — Externe** (1) et **Liens à partager** (1), puis soumis à la vérification. État final observé : **En cours de test**. Les effectifs de groupes peuvent inclure les mêmes personnes. Installation physique non vérifiée.
 - [Build 8](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/b7283013-3eb3-40d5-b39c-87392d4027ba) · [Lien public TestFlight](https://testflight.apple.com/join/tWFCgtQF) · [Preuve](screenshots/testflight-build-8.png).
+
+## Préparation 1.0 (9) — 8 octobre 2026
+
+- Animations Battle, aperçu Poulpi fixe en portrait et paysage, galerie de 24 autocollants transparents, catalogue commun avec iMessage et import de pack WhatsApp.
+- Ressources et traductions intégrées dans cinq langues. Le manifeste de confidentialité de l’extension déclare les préférences locales UserDefaults désormais utilisées par le catalogue.
+- Parcours UI et contrôles des ressources effectués sur simulateur ; envoi réel iMessage et import dans WhatsApp à confirmer sur iPhone.
+- Vérification avant livraison : 69 tests moteur et 35 tests applicatifs réussis ; couverture des langues et `git diff --check` validées. Les tests UI de galerie, Battle et Poulpi fixe ont été validés pendant l’implémentation.

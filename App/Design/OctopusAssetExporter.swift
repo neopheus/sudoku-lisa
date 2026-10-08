@@ -8,6 +8,7 @@ import UniformTypeIdentifiers
 @MainActor
 enum OctopusAssetExporter {
     static func exportIfRequested() {
+        PoulpiStickerExporter.exportIfRequested()
         guard ProcessInfo.processInfo.arguments.contains("--export-octopus-assets") else { return }
         do {
             let directory = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]

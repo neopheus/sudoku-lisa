@@ -6,8 +6,14 @@ struct BattleView: View {
     @EnvironmentObject private var store: LisaStore
     @Environment(\.dismiss) private var dismiss
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var battle = BattleService.shared
     @State private var confirmLeave = false
+    @State private var visible = false
+
+    private var motionEnabled: Bool {
+        visible && scenePhase == .active && !reduceMotion && store.settings.animatedDecor
+    }
 
     var body: some View {
         NavigationStack {
@@ -24,18 +30,27 @@ struct BattleView: View {
                         switch battle.state {
                         case .idle, .matchmaking:
                             BattleWelcome(battle: battle, appearance: store.poulpiAppearance)
+                                .transition(.opacity.combined(with: .offset(y: 12)))
                         case .lobby, .preparing, .countdown:
                             BattleLobby(battle: battle)
+                                .transition(.opacity.combined(with: .offset(y: 12)))
                         case .playing:
                             BattlePlayView(battle: battle)
+                                .transition(.opacity.combined(with: .offset(y: 12)))
                         case .finished:
                             BattlePodium(battle: battle)
+                                .transition(.opacity.combined(with: .offset(y: 12)))
                         case .cancelled:
-                            ContentUnavailableView(L10n.text("Battle interrompue"), systemImage: "wifi.exclamationmark",
-                                description: Text(L10n.text("La partie n’a pas été comptabilisée. Retrouvez vos amis pour une nouvelle battle.")))
-                            LisaButton(title: L10n.text("Retour à l’accueil"), icon: "house") { close() }
+                            VStack(spacing: 20) {
+                                ContentUnavailableView(L10n.text("Battle interrompue"), systemImage: "wifi.exclamationmark",
+                                    description: Text(L10n.text("La partie n’a pas été comptabilisée. Retrouvez vos amis pour une nouvelle battle.")))
+                                LisaButton(title: L10n.text("Retour à l’accueil"), icon: "house") { close() }
+                            }
+                            .transition(.opacity.combined(with: .offset(y: 12)))
                         }
-                    }.padding(16).frame(maxWidth: 1000).frame(maxWidth: .infinity)
+                    }
+                    .animation(motionEnabled ? .easeInOut(duration: 0.24) : nil, value: battle.state)
+                    .padding(16).frame(maxWidth: 1000).frame(maxWidth: .infinity)
                 }
             }
             .navigationTitle(L10n.text("Battle entre amis"))
@@ -58,9 +73,11 @@ struct BattleView: View {
         .preferredColorScheme(store.settings.darkMode ? .dark : .light)
         .saturation(store.settings.paperMode ? 0 : 1)
         .interactiveDismissDisabled()
+        .environment(\.lisaMotionAllowed, motionEnabled)
         .onChange(of: scenePhase, initial: true) { _, phase in battle.setActive(phase == .active) }
-        .onDisappear { battle.setPresented(false) }
+        .onDisappear { visible = false; battle.setPresented(false) }
         .onAppear {
+            visible = true
             battle.setPresented(true)
             battle.configureAppearance(store.poulpiAppearance)
             #if DEBUG
@@ -75,9 +92,10 @@ struct BattleView: View {
 private struct BattleWelcome: View {
     @ObservedObject var battle: BattleService
     let appearance: PoulpiAppearance
+    @Environment(\.lisaMotionAllowed) private var motionAllowed
     var body: some View {
         VStack(spacing: 22) {
-            PoulpiAvatar(appearance: appearance, size: 120).accessibilityHidden(true)
+            LisaMascot(size: 110, mood: .happy, animationEnabled: motionAllowed, appearance: appearance)
             Text(L10n.text("Une grille, quatre Poulpi, un podium.")).font(LisaTheme.heading(28)).multilineTextAlignment(.center)
             Text(L10n.text("Invitez 1 à 3 amis avec Game Center. La course commence quand tout le monde est prêt."))
                 .font(.body).foregroundStyle(LisaTheme.muted).multilineTextAlignment(.center)
@@ -103,6 +121,7 @@ private struct BattleWelcome: View {
 
 private struct BattleLobby: View {
     @ObservedObject var battle: BattleService
+    @Environment(\.lisaMotionAllowed) private var motionAllowed
     var body: some View {
         VStack(spacing: 20) {
             Text(L10n.text("Sur la ligne de départ")).font(LisaTheme.heading(26))
@@ -111,6 +130,14 @@ private struct BattleLobby: View {
             }
             if battle.state == .countdown {
                 Text("\(battle.countdown)").font(.system(size: 80, weight: .black, design: .rounded)).monospacedDigit()
+                    .contentTransition(.numericText(countsDown: true))
+                    .animation(motionAllowed ? .spring(response: 0.32, dampingFraction: 0.72) : nil, value: battle.countdown)
+                    .keyframeAnimator(initialValue: 1.0, trigger: motionAllowed ? battle.countdown : 0) { content, scale in
+                        content.scaleEffect(motionAllowed ? scale : 1)
+                    } keyframes: { _ in
+                        CubicKeyframe(1.16, duration: 0.12)
+                        SpringKeyframe(1.0, duration: 0.28)
+                    }
                     .accessibilityLabel(L10n.text("Départ dans %@", String(battle.countdown)))
                     .accessibilityIdentifier("battleCountdown")
                 Text(L10n.text("La grille se dévoile au départ.")).font(.callout)
@@ -139,6 +166,7 @@ private struct BattleParticipantRow: View {
     let participant: BattleParticipant
     let local: Bool
     let rank: Int?
+    @Environment(\.lisaMotionAllowed) private var motionAllowed
     var body: some View {
         HStack(spacing: 12) {
             PoulpiAvatar(appearance: participant.appearance, size: 48).accessibilityHidden(true)
@@ -147,11 +175,21 @@ private struct BattleParticipantRow: View {
                 if let rank {
                     Text(L10n.text("Place %@ · %@ %%", String(rank), String(Int(participant.progress * 100)))).font(.caption).monospacedDigit()
                     ProgressView(value: participant.progress).tint(LisaTheme.actionInk).accessibilityHidden(true)
+                        .animation(motionAllowed ? .easeOut(duration: 0.35) : nil, value: participant.progress)
                 }
                 Text(L10n.text(statusKey)).font(.caption).foregroundStyle(LisaTheme.muted)
+                    .contentTransition(.opacity)
+                    .animation(motionAllowed ? .easeInOut(duration: 0.2) : nil, value: participant.status)
+                    .animation(motionAllowed ? .easeInOut(duration: 0.2) : nil, value: participant.ready)
             }
             Spacer(minLength: 0)
-            if rank != nil {
+            if rank == nil {
+                Image(systemName: participant.ready && participant.status == .connected ? "checkmark.circle.fill" : "circle")
+                    .font(.title3).foregroundStyle(LisaTheme.actionInk)
+                    .contentTransition(.symbolEffect(.replace))
+                    .animation(motionAllowed ? .easeInOut(duration: 0.22) : nil, value: participant.ready)
+                    .accessibilityHidden(true)
+            } else {
                 Text(L10n.text("Erreurs : %@", String(participant.mistakes))).font(.caption).foregroundStyle(LisaTheme.muted)
             }
         }.padding(12).background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 18))
@@ -303,11 +341,20 @@ private struct BattleKeypad: View {
 
 private struct BattlePodium: View {
     @ObservedObject var battle: BattleService
+    @EnvironmentObject private var store: LisaStore
+    @Environment(\.lisaMotionAllowed) private var motionAllowed
+    @State private var revealedCount = 0
     var body: some View {
         VStack(spacing: 18) {
-            Image(systemName: "trophy.fill").font(.system(size: 48)).foregroundStyle(LisaTheme.actionInk).accessibilityHidden(true)
+            LisaMascot(size: 100, celebrating: true, animationEnabled: motionAllowed,
+                appearance: battle.participants.first(where: { $0.id == battle.localPlayerID })?.appearance ?? store.poulpiAppearance)
+                .overlay(alignment: .topTrailing) {
+                    Image(systemName: "trophy.fill").font(.title2).foregroundStyle(LisaTheme.actionInk)
+                        .offset(x: 12, y: 4).accessibilityHidden(true)
+                }
             Text(L10n.text("Le podium des Poulpi")).font(LisaTheme.heading(28)).accessibilityIdentifier("battlePodium")
             ForEach(battle.results) { result in
+                let index = battle.results.firstIndex(where: { $0.id == result.id }) ?? 0
                 HStack(spacing: 14) {
                     if let participant = battle.participants.first(where: { $0.id == result.playerID }) {
                         PoulpiAvatar(appearance: participant.appearance, size: 58).accessibilityHidden(true)
@@ -322,7 +369,12 @@ private struct BattlePodium: View {
                         }
                     }
                     Spacer()
-                }.padding().background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 18)).accessibilityElement(children: .combine)
+                }
+                .padding().background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 18))
+                .opacity(!motionAllowed || index < revealedCount ? 1 : 0)
+                .offset(y: !motionAllowed || index < revealedCount ? 0 : 16)
+                .accessibilityElement(children: .combine)
+                .accessibilityHidden(motionAllowed && index >= revealedCount)
             }
             Text(L10n.text("À moins d’une demi-seconde, vous partagez la même place."))
                 .font(.footnote).foregroundStyle(LisaTheme.muted).multilineTextAlignment(.center)
@@ -332,6 +384,15 @@ private struct BattlePodium: View {
                 }
                 LisaButton(title: L10n.text("Revanche !"), icon: "arrow.clockwise") { battle.rematch() }.disabled(!battle.canRematch).accessibilityIdentifier("battleRematch")
             } else { Text(L10n.text("L’organisateur peut proposer une revanche.")).font(.callout) }
-        }.frame(maxWidth: 560)
+        }
+        .frame(maxWidth: 560)
+        .task(id: motionAllowed) {
+            guard motionAllowed else { revealedCount = battle.results.count; return }
+            guard revealedCount < battle.results.count else { return }
+            for index in revealedCount..<battle.results.count {
+                do { try await Task.sleep(for: .milliseconds(index == 0 ? 100 : 130)) } catch { return }
+                withAnimation(.spring(response: 0.36, dampingFraction: 0.82)) { revealedCount = index + 1 }
+            }
+        }
     }
 }

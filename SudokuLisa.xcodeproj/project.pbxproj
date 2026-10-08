@@ -8,7 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		A00000000000000000000022 /* SudokuCore in Frameworks */ = {isa = PBXBuildFile; productRef = A00000000000000000000021 /* SudokuCore */; };
+		A00000000000000000000032 /* PoulpiStickers in Frameworks */ = {isa = PBXBuildFile; productRef = A00000000000000000000031 /* PoulpiStickers */; };
 		C00000000000000000000022 /* LisaStickers.appex in Embed App Extensions */ = {isa = PBXBuildFile; fileRef = C00000000000000000000006 /* LisaStickers.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		C00000000000000000000032 /* PoulpiStickers in Frameworks */ = {isa = PBXBuildFile; productRef = C00000000000000000000031 /* PoulpiStickers */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -86,6 +88,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A00000000000000000000022 /* SudokuCore in Frameworks */,
+				A00000000000000000000032 /* PoulpiStickers in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -100,6 +103,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C00000000000000000000032 /* PoulpiStickers in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,6 +162,7 @@
 			name = SudokuLisa;
 			packageProductDependencies = (
 				A00000000000000000000021 /* SudokuCore */,
+				A00000000000000000000031 /* PoulpiStickers */,
 			);
 			productName = SudokuLisa;
 			productReference = A00000000000000000000006 /* SudokuLisa.app */;
@@ -200,6 +205,9 @@
 				C00000000000000000000005 /* Stickers */,
 			);
 			name = LisaStickers;
+			packageProductDependencies = (
+				C00000000000000000000031 /* PoulpiStickers */,
+			);
 			productName = LisaStickers;
 			productReference = C00000000000000000000006 /* LisaStickers.appex */;
 			productType = "com.apple.product-type.app-extension.messages";
@@ -387,7 +395,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/SudokuLisa.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = S2UPJPPKKG;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Info.plist;
@@ -410,7 +418,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = App/SudokuLisa.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = S2UPJPPKKG;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = App/Info.plist;
@@ -459,7 +467,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "iMessage App Icon";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = S2UPJPPKKG;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Stickers/Info.plist;
@@ -482,7 +490,7 @@
 				APPLICATION_EXTENSION_API_ONLY = YES;
 				ASSETCATALOG_COMPILER_APPICON_NAME = "iMessage App Icon";
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 8;
+				CURRENT_PROJECT_VERSION = 9;
 				DEVELOPMENT_TEAM = S2UPJPPKKG;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Stickers/Info.plist;
@@ -589,6 +597,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = A00000000000000000000020 /* XCLocalSwiftPackageReference "." */;
 			productName = SudokuCore;
+		};
+		A00000000000000000000031 /* PoulpiStickers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A00000000000000000000020 /* XCLocalSwiftPackageReference "." */;
+			productName = PoulpiStickers;
+		};
+		C00000000000000000000031 /* PoulpiStickers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A00000000000000000000020 /* XCLocalSwiftPackageReference "." */;
+			productName = PoulpiStickers;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

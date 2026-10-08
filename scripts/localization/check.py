@@ -24,7 +24,7 @@ def read(path):
         values[key] = value
     return values
 
-for directory in ('Sources/SudokuCore/Resources', 'Stickers'):
+for directory in ('Sources/SudokuCore/Resources', 'Sources/PoulpiStickers/Resources', 'Stickers'):
     source = read(root / directory / 'fr.lproj/Localizable.strings')
     for language in languages:
         values = read(root / directory / f'{language}.lproj/Localizable.strings')
@@ -39,3 +39,13 @@ for directory in ('App', 'Sources/SudokuCore'):
         for key in re.findall(rf'L10n\.text\(({literal})', file.read_text()):
             assert json.loads(key) in source, (file, 'missing translation', key)
 print('All literal L10n.text calls have translations.')
+
+stickers = read(root / 'Sources/PoulpiStickers/Resources/fr.lproj/Localizable.strings')
+for directory in ('App', 'Stickers', 'Sources/PoulpiStickers'):
+    for file in (root / directory).rglob('*.swift'):
+        contents = file.read_text()
+        keys = re.findall(rf'PoulpiStickerCatalog\.text\(({literal})', contents)
+        keys += re.findall(rf'titleKey:\s*({literal})', contents)
+        for key in keys:
+            assert json.loads(key) in stickers, (file, 'missing sticker translation', key)
+print('All literal sticker titles and text calls have translations.')

@@ -30,6 +30,17 @@ final class LisaUITests: XCTestCase {
         app.tabBars.buttons["Poulpi"].tap()
         let stage = app.descendants(matching: .any)["poulpiStage"].firstMatch
         XCTAssertTrue(stage.waitForExistence(timeout: 10), app.debugDescription)
+        let controls = app.scrollViews["poulpiControlsScroll"]
+        func revealControl(_ element: XCUIElement) {
+            for _ in 0..<24 {
+                if element.isHittable { return }
+                if element.exists && element.frame.midY < controls.frame.midY {
+                    controls.swipeDown()
+                } else {
+                    controls.swipeUp()
+                }
+            }
+        }
         let happy = app.buttons["poulpiAnimation-happy"]
         for _ in 0..<6 {
             if happy.isHittable && app.frame.contains(happy.frame) { break }
@@ -44,6 +55,7 @@ final class LisaUITests: XCTestCase {
         let before = stage.value as? String
         stage.swipeLeft()
         XCTAssertNotEqual(stage.value as? String, before)
+        revealControl(app.buttons["Recentrer"])
         app.buttons["Recentrer"].tap()
         XCTAssertTrue((stage.value as? String)?.contains("rotation 0 degrés, zoom 100") == true)
         attach(app, name: "Poulpi-accueil")
@@ -51,6 +63,7 @@ final class LisaUITests: XCTestCase {
         XCTAssertTrue((stage.value as? String)?.contains("zoom 114") == true || (stage.value as? String)?.contains("zoom 115") == true)
         app.buttons["Recentrer"].tap()
         let auto = app.buttons["poulpiAutoplay"]
+        revealControl(auto)
         auto.tap()
         XCTAssertEqual(auto.value as? String, "Activé")
         expectation(for: NSPredicate(format: "NOT (value BEGINSWITH %@)", "Coucou"), evaluatedWith: stage)
@@ -70,7 +83,7 @@ final class LisaUITests: XCTestCase {
         }
         XCTAssertTrue(superhero.isHittable)
         superhero.tap()
-        // The accessible layout scrolls the whole page, including the stage.
+        // Only the controls scroll; Poulpi remains fixed and interactive.
         for _ in 0..<6 {
             if stage.isHittable && auto.isHittable { break }
             app.scrollViews.firstMatch.swipeDown()

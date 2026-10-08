@@ -1,4 +1,5 @@
 import SudokuCore
+import PoulpiStickers
 import SwiftUI
 
 extension LisaMascotMood {
@@ -68,28 +69,36 @@ struct PoulpiView: View {
 
     var body: some View {
         GeometryReader { geometry in
-            let wide = geometry.size.width >= 600 && !dynamicTypeSize.isAccessibilitySize
+            let wide = geometry.size.width >= 560
+                && geometry.size.width > geometry.size.height * 1.2
+                && geometry.size.height >= 150
             let contentWidth = max(0, min(1040, geometry.size.width - 32))
-            let panelWidth = wide ? min(340, contentWidth * 0.43) : contentWidth
+            let panelWidth = wide
+                ? min(dynamicTypeSize.isAccessibilitySize ? 420 : 340,
+                      contentWidth * (dynamicTypeSize.isAccessibilitySize ? 0.55 : 0.43))
+                : contentWidth
+            let availableHeight = max(0, geometry.size.height - 12)
             let stageHeight = wide
-                ? max(140, min(500, geometry.size.height - 12))
-                : ceil(min(350, max(140, geometry.size.height * 0.4)))
+                ? min(500, availableHeight)
+                : ceil(min(300, max(100, availableHeight * 0.34)))
+            let controlsHeight = wide ? availableHeight : max(0, availableHeight - stageHeight - 10)
             let layout = wide
                 ? AnyLayout(HStackLayout(alignment: .center, spacing: 20))
                 : AnyLayout(VStackLayout(spacing: 10))
             ZStack {
                 LisaBackground(motionEnabled: active, quiet: true)
-                ScrollView {
                 layout {
                     stage(height: stageHeight)
                         .frame(width: wide ? max(0, contentWidth - panelWidth - 20) : contentWidth)
-                    controls
-                        .frame(width: panelWidth)
-                        .frame(maxHeight: .infinity)
+                    ScrollView {
+                        controls
+                            .frame(width: panelWidth)
+                    }
+                    .frame(width: panelWidth, height: controlsHeight)
+                    .accessibilityIdentifier("poulpiControlsScroll")
                 }
                 .padding(.horizontal, 16).padding(.vertical, 6)
                 .frame(maxWidth: 1072).frame(maxWidth: .infinity)
-                }
             }
         }
         .navigationTitle("Poulpi").navigationBarTitleDisplayMode(.inline)
@@ -115,6 +124,18 @@ struct PoulpiView: View {
 
     private var controls: some View {
         VStack(spacing: 10) {
+            NavigationLink {
+                PoulpiStickersView()
+            } label: {
+                Label(PoulpiStickerCatalog.text("Autocollants Poulpi"), systemImage: "face.smiling")
+                    .font(LisaTheme.heading(17))
+                    .foregroundStyle(LisaTheme.ink)
+                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .padding(10)
+                    .background(CandySurface(tint: LisaTheme.yellow, cornerRadius: 18, depth: 3))
+            }
+            .buttonStyle(LisaPressStyle())
+            .accessibilityIdentifier("openPoulpiStickers")
             PoulpiAppearanceControls()
             LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                 control(L10n.text("Tourner à gauche"), icon: "arrow.turn.up.left") { yaw -= .pi / 4 }
@@ -200,10 +221,15 @@ struct PoulpiView: View {
                 .accessibilityIdentifier("poulpiStage")
             VStack(spacing: 2) {
                 Text(mood.title).font(LisaTheme.heading(16)).contentTransition(.numericText())
-                Text(L10n.text("Tournez · zoomez · chatouillez")).font(LisaTheme.body(10))
+                    .lineLimit(1).minimumScaleFactor(0.75)
+                if !dynamicTypeSize.isAccessibilitySize {
+                    Text(L10n.text("Tournez · zoomez · chatouillez")).font(LisaTheme.body(10))
+                }
             }.foregroundStyle(LisaTheme.ink).padding(8)
+                .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
                 .background(LisaTheme.paper.opacity(0.9), in: Capsule()).padding(.bottom, 5)
                 .allowsHitTesting(false)
+                .accessibilityHidden(true)
         }
         .frame(height: height).clipShape(RoundedRectangle(cornerRadius: 28))
         .contentShape(RoundedRectangle(cornerRadius: 28))

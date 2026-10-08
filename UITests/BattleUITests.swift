@@ -69,6 +69,69 @@ final class BattleUITests: XCTestCase {
         attach(app, name: "Battle-Accessibilite")
     }
 
+    func testPoulpiStaysVisibleWhileScrollingControls() {
+        verifyStickyPoulpi(largeText: false)
+    }
+
+    func testPoulpiStaysVisibleAtAccessibilityTextSize() {
+        verifyStickyPoulpi(largeText: true)
+    }
+
+    func testPoulpiStaysVisibleInLandscape() {
+        XCUIDevice.shared.orientation = .landscapeLeft
+        defer { XCUIDevice.shared.orientation = .portrait }
+        verifyStickyPoulpi(largeText: true, landscape: true)
+    }
+
+    func testPoulpiStickerGalleryAndWhatsAppUnavailable() {
+        let app = launch(fixture: false)
+        app.tabBars.buttons["Poulpi"].tap()
+        app.buttons["openPoulpiStickers"].tap()
+        let first = app.buttons["poulpiSticker.idle"]
+        XCTAssertTrue(first.waitForExistence(timeout: 5))
+        attach(app, name: "Poulpi-Autocollants")
+        first.tap()
+        XCTAssertTrue(app.buttons["poulpiShareSticker"].waitForExistence(timeout: 5))
+        attach(app, name: "Poulpi-Autocollant-Apercu")
+        app.buttons["OK"].tap()
+        let whatsapp = app.buttons["poulpiAddToWhatsApp"]
+        for _ in 0..<16 {
+            if whatsapp.isHittable { break }
+            app.swipeUp()
+        }
+        XCTAssertTrue(whatsapp.isHittable)
+        whatsapp.tap()
+        XCTAssertTrue(app.alerts["WhatsApp introuvable"].waitForExistence(timeout: 5))
+        attach(app, name: "Poulpi-WhatsApp-Simulateur")
+        app.terminate()
+    }
+
+    private func verifyStickyPoulpi(largeText: Bool, landscape: Bool = false) {
+        let app = launch(fixture: false, largeText: largeText)
+        if landscape {
+            XCTAssertTrue(app.frame.width > app.frame.height, "The landscape layout must actually be exercised")
+        }
+        app.tabBars.buttons["Poulpi"].tap()
+        let stage = app.descendants(matching: .any)["poulpiStage"].firstMatch
+        let controls = app.scrollViews["poulpiControlsScroll"]
+        XCTAssertTrue(stage.waitForExistence(timeout: 5))
+        XCTAssertTrue(controls.exists)
+        let initial = stage.frame
+        let lastAnimation = app.buttons["poulpiAnimation-superhero"]
+        for _ in 0..<24 {
+            if lastAnimation.isHittable { break }
+            controls.swipeUp()
+        }
+        XCTAssertTrue(lastAnimation.isHittable, "The last animation remains reachable below the fixed preview")
+        XCTAssertTrue(stage.isHittable, "Poulpi stays visible while its controls scroll")
+        XCTAssertEqual(stage.frame.minY, initial.minY, accuracy: 2)
+        XCTAssertEqual(stage.frame.height, initial.height, accuracy: 2)
+        lastAnimation.tap()
+        XCTAssertTrue(lastAnimation.isSelected)
+        attach(app, name: landscape ? "Poulpi-Sticky-Paysage" : (largeText ? "Poulpi-Sticky-Grand-Texte" : "Poulpi-Sticky"))
+        app.terminate()
+    }
+
     private func launch(fixture: Bool, largeText: Bool = false) -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
@@ -82,6 +145,20 @@ final class BattleUITests: XCTestCase {
     private func openBattle(_ app: XCUIApplication) { tap(app.buttons["openBattle"], in: app) }
     private func tap(_ element: XCUIElement, in app: XCUIApplication) { reveal(element, in: app); if !element.isHittable { print(app.debugDescription) }; XCTAssertTrue(element.isHittable); element.tap() }
     private func reveal(_ element: XCUIElement, in app: XCUIApplication) {
+        let controls = app.scrollViews["poulpiControlsScroll"]
+        if controls.exists {
+            for _ in 0..<24 {
+                if element.isHittable { return }
+                let upper = controls.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.35))
+                let lower = controls.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
+                if element.exists && element.frame.midY < controls.frame.minY {
+                    upper.press(forDuration: 0.05, thenDragTo: lower)
+                } else {
+                    lower.press(forDuration: 0.05, thenDragTo: upper)
+                }
+            }
+            return
+        }
         for _ in 0..<12 {
             if element.isHittable { return }
             if element.exists {
