@@ -199,7 +199,9 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
     }
     func rematch() {
         guard isHost, state == .finished else { return }
+        #if DEBUG
         if fixture { prepareUITestRound(); return }
+        #endif
         guard disconnectedPlayers.isEmpty, let match, match.players.count + 1 == participants.count else { errorMessage = "Un ami a quitté le groupe. Créez une nouvelle invitation."; return }
         roundID = UUID(); ledger?.beginRound(roundID!); resetLobby(); startLoop(); send(.lobby)
     }
