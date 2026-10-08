@@ -1,6 +1,10 @@
 # Fiche App Store — Lisa Sudoku
 
+Complément appareils du 7 octobre : **30 captures natives iPhone Duo ouvert chargées et acceptées**, six par langue. Les grandes tailles iPhone héritent des captures existantes. L’iPad reste à traiter : le projet cible actuellement l’iPhone et son exécution iPad montre le mode de compatibilité. Voir [les captures par appareil et leurs validations](device-screenshots.md).
+
 Mise à jour le 7 octobre 2026 dans App Store Connect, version iOS 1.0.
+
+Les quatre fiches supplémentaires (anglais, allemand, espagnol, russe) sont enregistrées dans App Store Connect sous le nom « Lisa Sudoku – Poulpi » : sous-titres et textes traduits, six captures natives par langue et une illustration de recherche sans texte français. Le français reste « Lisa Sudoku ». Voir [le dossier multilingue et ses validations](localizations.md).
 
 - Textes français enregistrés : sous-titre, texte promotionnel, description, mots-clés, copyright et notes de vérification. Copie dans `fr-FR.json`.
 - Catégorie : Jeux, sous-catégorie Casse-tête.
@@ -14,7 +18,7 @@ Les captures sont issues de l’application réelle sur un simulateur QA dédié
 
 ## Captures françaises
 
-Six PNG RGB natifs de 1179 × 2556 : grille, accueil, indice expliqué, leçon, Voyage, Poulpi. Ordre des fichiers dans `fr-FR/`. Capture native sans redimensionnement ; les pièces jointes XCTest arrondissent ici la largeur à 1178 pixels et ne sont pas utilisées pour le chargement.
+Six PNG natifs opaques de 1179 × 2556 (RGBA, alpha entièrement opaque) : grille, accueil, indice expliqué, leçon, Voyage, Poulpi. Ordre des fichiers dans `fr-FR/`. Capture native sans redimensionnement ; les pièces jointes XCTest arrondissent ici la largeur à 1178 pixels et ne sont pas utilisées pour le chargement.
 
 Parcours de capture : `UITests/AppStoreScreenshotTests.swift`, exécuté sur le simulateur QA dédié ; résultat final `/tmp/lisa-store-20261007-capture5.xcresult` : 1 test passé, zéro échec. `TEST_RUNNER_LISA_NATIVE_CAPTURE=1` active uniquement les pauses destinées à la capture native.
 

@@ -1,0 +1,86 @@
+[
+  {
+    "state": "light entered digit on selected cell",
+    "ratio": 4.3582,
+    "foreground": [
+      0.13,
+      0.39,
+      0.72
+    ],
+    "background": [
+      0.7867999999999999,
+      0.8823,
+      0.94
+    ]
+  },
+  {
+    "state": "light entered digit on hint cell",
+    "ratio": 4.4564,
+    "foreground": [
+      0.13,
+      0.39,
+      0.72
+    ],
+    "background": [
+      1.0,
+      0.8662,
+      0.4648
+    ]
+  },
+  {
+    "state": "dark notes on selected cell",
+    "ratio": 4.3208,
+    "foreground": [
+      0.82,
+      0.74,
+      0.89
+    ],
+    "background": [
+      0.19160000000000002,
+      0.32899999999999996,
+      0.563
+    ]
+  },
+  {
+    "state": "dark coral text on paper",
+    "ratio": 2.5568,
+    "foreground": [
+      0.79,
+      0.07,
+      0.43
+    ],
+    "background": [
+      0.2,
+      0.14,
+      0.29
+    ]
+  },
+  {
+    "state": "dark eliminated candidate in hint",
+    "ratio": 2.3963,
+    "foreground": [
+      0.79,
+      0.07,
+      0.43
+    ],
+    "background": [
+      0.27080000000000004,
+      0.13160000000000002,
+      0.30679999999999996
+    ]
+  },
+  {
+    "state": "light eliminated candidate in hint",
+    "ratio": 4.3792,
+    "foreground": [
+      0.79,
+      0.07,
+      0.43
+    ],
+    "background": [
+      0.9748,
+      0.8752,
+      0.8787999999999999
+    ]
+  }
+]

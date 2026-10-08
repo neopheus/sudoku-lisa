@@ -1,0 +1,27 @@
+{
+  "name": "Lisa Sudoku – Poulpi",
+  "subtitle": "Learn and play with Poulpi",
+  "category": "Games / Puzzle",
+  "fields": [
+    {
+      "id": "promotionalText",
+      "value": "Take a sudoku break with Poulpi: six levels, explained hints, five interactive lessons and a 25-stage journey. Play offline at your own pace."
+    },
+    {
+      "id": "description",
+      "value": "Take a break, study the grid and enjoy finding your next move. Lisa Sudoku welcomes you to a colorful world with Poulpi, your little puzzle companion.\n\nA CHALLENGE AT YOUR PACE\nChoose from six difficulty levels, from Express to Master. Enjoy classic sudoku, from your first single candidate to more advanced techniques.\n\nHELP THAT EXPLAINS\nHints guide you step by step: look at the relevant cells, understand the reasoning, then apply the deduction. Learn with five interactive tutorials, available directly from your game.\n\nKEEP YOUR PROGRESS\nTry the daily challenge or explore the 25 stages of the Journey. Games are saved separately for each mode, so you can switch challenges and return to your grid with its notes. After a win, move straight on to the next challenge.\n\nPLAY YOUR WAY\nMake notes, undo a move, pause whenever you like and choose to select a number before a cell. Set the mood with the available themes and sound and animation settings.\n\nYOUR LITTLE COMPANION\nAdvance through the Journey to unlock a star keepsake for Poulpi to wear.\n\nPlay offline, with no account required. Lisa Sudoku is available in French, English, German, Spanish and Russian."
+    },
+    {
+      "id": "keywords",
+      "value": "logic,puzzle,numbers,brain,relax,offline,notes,daily,learn,classic"
+    },
+    {
+      "id": "copyright",
+      "value": "2026 Xavier Valentin"
+    },
+    {
+      "id": "notes",
+      "value": "No account or demo credentials are required. Games and progress are saved locally. The game works offline. Progressive hints and five tutorials are available from a game. Poulpi’s star keepsake unlocks after five Journey stages. There are no in-app purchases or ads. No production Game Center leaderboard is enabled. The Lisa Stickers extension provides four stickers for Messages."
+    }
+  ]
+}

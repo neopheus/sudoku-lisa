@@ -1,0 +1,27 @@
+{
+  "name": "Lisa Sudoku – Poulpi",
+  "subtitle": "Aprende y juega con Poulpi",
+  "category": "Juegos / Puzles",
+  "fields": [
+    {
+      "id": "promotionalText",
+      "value": "Una pausa de sudoku con Poulpi: seis niveles, pistas explicadas, cinco lecciones interactivas y un viaje de 25 etapas. Juega sin conexión, a tu ritmo."
+    },
+    {
+      "id": "description",
+      "value": "Tómate un descanso, observa la cuadrícula y disfruta al descubrir tu próxima jugada. Lisa Sudoku te acompaña en un mundo lleno de color con Poulpi, tu pequeño compañero de juego.\n\nUN RETO A TU RITMO\nElige entre seis niveles de dificultad, de Exprés a Maestro. Disfruta del sudoku clásico, desde tu primer candidato único hasta técnicas más avanzadas.\n\nAYUDA QUE EXPLICA\nLas pistas te guían paso a paso: observa las casillas relevantes, comprende el razonamiento y aplica la deducción. Aprende con cinco tutoriales interactivos, disponibles directamente desde tu partida.\n\nTU PROGRESO CONTINÚA\nAcepta el reto diario o recorre las 25 etapas del Viaje. Las partidas se guardan por separado para cada modo: cambia de reto y vuelve a tu cuadrícula con sus notas. Después de una victoria, pasa directamente al siguiente desafío.\n\nJUEGA A TU MANERA\nToma notas, deshaz una jugada, haz una pausa y elige seleccionar el número antes que la casilla. Personaliza el ambiente con los temas disponibles y los ajustes de sonido y animación.\n\nTU PEQUEÑO COMPAÑERO\nAvanza en el Viaje para desbloquear un recuerdo en forma de estrella que Poulpi puede llevar.\n\nJuega sin conexión y sin necesidad de una cuenta. Lisa Sudoku está disponible en francés, inglés, alemán, español y ruso."
+    },
+    {
+      "id": "keywords",
+      "value": "lógica,rompecabezas,números,relax,sin conexión,notas,diario,aprender,clásico"
+    },
+    {
+      "id": "copyright",
+      "value": "2026 Xavier Valentin"
+    },
+    {
+      "id": "notes",
+      "value": "No se necesita una cuenta ni credenciales de demostración. Las partidas y el progreso se guardan localmente. El juego funciona sin conexión. Las pistas progresivas y los cinco tutoriales están disponibles desde una partida. La estrella de Poulpi se desbloquea tras cinco etapas del Viaje. No hay compras dentro de la app ni publicidad. No está activada ninguna clasificación de Game Center en producción. La extensión Lisa Stickers ofrece cuatro stickers para Mensajes."
+    }
+  ]
+}

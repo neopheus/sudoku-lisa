@@ -1,0 +1,188 @@
+{
+  "device": "iPhone Duo, open",
+  "runtime": "iOS 27.1",
+  "display": 3,
+  "native": true,
+  "captures": [
+    {
+      "file": "fr-FR/01-partie.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "4ed113119d155eeb5e1c0ad3abf2b914711ced09397ebe499c5d27e3b3bfa345"
+    },
+    {
+      "file": "fr-FR/02-accueil.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "dc2dcadb1882d610f08d2262a924758ac148ad18f2aec313159db48d4b1d83fb"
+    },
+    {
+      "file": "fr-FR/03-indice.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "0f0bc5e3b53475b0ecffd34964092161aaf955911e647a272cc7ab59c24b1eb0"
+    },
+    {
+      "file": "fr-FR/04-tutoriel.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "48e83258ec808d66a2489e0dded03d4ba68657730c85c86d868eda01c53d5bc4"
+    },
+    {
+      "file": "fr-FR/05-voyage.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "bac72c8d86b6149fbb85df3117b6c5bcfc2fd1db00a3e1492a73ba9359e2d151"
+    },
+    {
+      "file": "fr-FR/06-poulpi.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "f7ddcc31a2c7046af97a9d1f709ba97f493d4be7a80c654cbf45ff0b9ee9bda3"
+    },
+    {
+      "file": "en-US/01-partie.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "e72912539db57186a47de5ca765b0ce23a1cc84aaf8690f431d85739bfaaf625"
+    },
+    {
+      "file": "en-US/02-accueil.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "846b4eb9cd9f04f04947291af2e466647295cf8ff8843fbd7d99e9b1f1f18a21"
+    },
+    {
+      "file": "en-US/03-indice.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "c62c0adba28ed654ee0744f011e3163f2dcba749ce9648dcb728fb731b5a768b"
+    },
+    {
+      "file": "en-US/04-tutoriel.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "a4a7178d8dc16831dc151c53c1b6d2bdde5b1e9e2e8afc534292df168216b119"
+    },
+    {
+      "file": "en-US/05-voyage.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "cc99341a8f3772cad8981687f7ad942e7ce49824f3b14da25c7873103fd30e13"
+    },
+    {
+      "file": "en-US/06-poulpi.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "3c15b83c2ba7ad88bf25195a582e9c5b14f3c82fb52061b80c6769a74d660883"
+    },
+    {
+      "file": "de-DE/01-partie.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "7f6204027c017364a80fbd3f6b860ae6965a0070b546ca0195f75de4957abf8b"
+    },
+    {
+      "file": "de-DE/02-accueil.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "c650a1c1e13485f3098f335d837183cd2ab5c3df60bf39b3da6df9fed23974bc"
+    },
+    {
+      "file": "de-DE/03-indice.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "74ef4a974cd2c2ec9de769b5b2e3d92a15038a49ee842f31468fbda5a11cdc7f"
+    },
+    {
+      "file": "de-DE/04-tutoriel.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "da5715e38e677a7515f0269f55701cf537f226c42dc285f26c2e9b4278def0fb"
+    },
+    {
+      "file": "de-DE/05-voyage.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "6c732706dd04b40fcd13d982d15688f4d2c81f8ebb1484c64cb7ce2420242cb5"
+    },
+    {
+      "file": "de-DE/06-poulpi.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "5860cad160b6d968df0bbc47c3193f693dc4503d0a855626d82e96b0bf6f50dd"
+    },
+    {
+      "file": "es-ES/01-partie.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "ff19e826b094d92cd9003cf5b41890710a8613f2f46317607af1d63369d3f0b5"
+    },
+    {
+      "file": "es-ES/02-accueil.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "f987a40fda4088102e29ad489df2588c197bad1b200c0cfa204e2fce1946d28f"
+    },
+    {
+      "file": "es-ES/03-indice.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "0f1bfef1b8439f3d7b8b615b69433c30a5a1874794fde3ae4ce86b4b09920d76"
+    },
+    {
+      "file": "es-ES/04-tutoriel.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "9fb4c99d70e039c3187aadb8a5330a464452c1de8eada44b8586cde6d6d526c4"
+    },
+    {
+      "file": "es-ES/05-voyage.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "8984515805406308e3598c1f0fc972123bd1fb147fe45e7a14ecad20fd166cc8"
+    },
+    {
+      "file": "es-ES/06-poulpi.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "92b5f0e4b77ec453e3c45cad89a4170385f11a42b053153c9e57aafb3e0a391c"
+    },
+    {
+      "file": "ru/01-partie.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "e5b2cf131a75a8094bbfc874e7dc69be5e600ec7f787053d5964a42202a99699"
+    },
+    {
+      "file": "ru/02-accueil.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "c253889b066d95488305fcd1e91ac7d54863b835bfb4a3634472928f2d6a8c22"
+    },
+    {
+      "file": "ru/03-indice.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "9e0051e1fcdada72a0e7e1137aa31e3b7435295b48bacf39ed2d1f4fc3855337"
+    },
+    {
+      "file": "ru/04-tutoriel.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "ea065845828e88bc07acf5079f532b6a558dde5ec4364b457c6046ff07360807"
+    },
+    {
+      "file": "ru/05-voyage.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "f4a667fd89b3a3acaccd5f470db4f7ee4aeabb024e68e30fbfa8936f1f4618cf"
+    },
+    {
+      "file": "ru/06-poulpi.png",
+      "width": 2853,
+      "height": 2007,
+      "sha256": "24e42b1f4aaa26239e43306e03c910e7dcf84ee28f014a85b5fbffe17b1fa61a"
+    }
+  ]
+}

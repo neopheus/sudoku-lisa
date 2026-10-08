@@ -1,0 +1,306 @@
+{
+  "captured_on": "2026-10-07",
+  "simulator_udid": "C5B6C10D-3B59-4A8B-8842-BEE177ED3422",
+  "result_bundle": "/tmp/lisa-localized-store-20261007.xcresult",
+  "test_summary": "4 tests passed; 0 failures",
+  "capture_source": "Native simctl framebuffer, no resize; PNG RGB",
+  "reused_imessage_source": "fr-FR/09-imessage.png, visually language-neutral; opaque alpha removed in localized copies",
+  "locales": {
+    "en-US": [
+      {
+        "file": "en-US/01-partie.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "d45a8397032c3ce41a02a8d50ef9b5d2d416d1edfd742b7757c0389fe6655a0b",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "en-US/02-accueil.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "33afa605b96f1e06fa5daa79c997bdd211fb6d5c8fd184b314cd04d0c15936f8",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "en-US/03-indice.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "322fa41c26f0268579ba909441cf55eeaa10d572246fda0d01814bf6ab5080f3",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "en-US/04-tutoriel.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "59e54bad53f4b9dab89fc7453ca316f905668b40809bdb40cf3b8f6267869729",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "en-US/05-voyage.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "c758e181339a68e0f9195001b51b19ef3b1d59f5e4a653082614afafb1a91a32",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "en-US/06-poulpi.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "5faabeb79bdb1c70e78ef427e4d0484e363c03ccbf0cbef1747f691dcf07539f",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "en-US/07-entete.png",
+        "width": 5244,
+        "height": 2950,
+        "mode": "RGB",
+        "sha256": "0fe5a380a80906ceff10b5140d48e9c335eb76cfb88fca62b762f899a98500ca",
+        "source": "marketing artwork produced separately"
+      },
+      {
+        "file": "en-US/08-recherche.png",
+        "width": 1920,
+        "height": 1280,
+        "mode": "RGB",
+        "sha256": "d40b571accefdfd52569836f0c7366b3c6e58743899fc9ad7a4fc1c0fc33a779",
+        "source": "marketing artwork produced separately"
+      },
+      {
+        "file": "en-US/09-imessage.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "27a736d03dc15bdc781c88382dc36d1bc95167a405c50da36bc02d0c19d84eb6",
+        "source": "reused language-neutral native iMessage capture"
+      }
+    ],
+    "de-DE": [
+      {
+        "file": "de-DE/01-partie.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "a5cd505fa4143d553d51947d707573c5660930235dae28a5194cf8be7c29b3dc",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "de-DE/02-accueil.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "c8c18c75381581bddb9e5bd2cb2218868053517bbe01b0fd9c2524bab376b6ad",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "de-DE/03-indice.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "c3db637661db630ff162d36267810334033925c0f16507a4cc8089401af032f1",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "de-DE/04-tutoriel.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "36c825dcb425ec0872271c5885a91b7e591bc2a2ab7136955d42b41df674f3cb",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "de-DE/05-voyage.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "e0d67292473359628f6a30beda73bbacaf840c3f422f889390d52d522c70a780",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "de-DE/06-poulpi.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "d322ee423c0bde590241409e547bcdcf9a782ddd65500a228dfb684b19eb3f50",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "de-DE/07-entete.png",
+        "width": 5244,
+        "height": 2950,
+        "mode": "RGB",
+        "sha256": "0fe5a380a80906ceff10b5140d48e9c335eb76cfb88fca62b762f899a98500ca",
+        "source": "marketing artwork produced separately"
+      },
+      {
+        "file": "de-DE/08-recherche.png",
+        "width": 1920,
+        "height": 1280,
+        "mode": "RGB",
+        "sha256": "d40b571accefdfd52569836f0c7366b3c6e58743899fc9ad7a4fc1c0fc33a779",
+        "source": "marketing artwork produced separately"
+      },
+      {
+        "file": "de-DE/09-imessage.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "27a736d03dc15bdc781c88382dc36d1bc95167a405c50da36bc02d0c19d84eb6",
+        "source": "reused language-neutral native iMessage capture"
+      }
+    ],
+    "es-ES": [
+      {
+        "file": "es-ES/01-partie.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "4379ba23d146924744f255edbb90870d9591c222f99ebe77fe9b53fa06176aa9",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "es-ES/02-accueil.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "60d728185f28b582815e23048d55ce017cf5302e0fbbd9a7f945d328fc6c4c23",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "es-ES/03-indice.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "875f238ebebd06c04b20dda52166760371ca93f8303ab04c89cb0576913fc5a2",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "es-ES/04-tutoriel.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "298033b30b6da5fd9e18208292a3120efd2a94a80acacf0aa981d3cc76ae4cd8",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "es-ES/05-voyage.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "04623972f29a9b2cd0c459329644a38087ac972f11c9f66542b9cdc0b7268ca5",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "es-ES/06-poulpi.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "051f7d4321712b66ea0f683446bcfbfea5f210fbb2fcca856539ef30695b31e9",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "es-ES/07-entete.png",
+        "width": 5244,
+        "height": 2950,
+        "mode": "RGB",
+        "sha256": "0fe5a380a80906ceff10b5140d48e9c335eb76cfb88fca62b762f899a98500ca",
+        "source": "marketing artwork produced separately"
+      },
+      {
+        "file": "es-ES/08-recherche.png",
+        "width": 1920,
+        "height": 1280,
+        "mode": "RGB",
+        "sha256": "d40b571accefdfd52569836f0c7366b3c6e58743899fc9ad7a4fc1c0fc33a779",
+        "source": "marketing artwork produced separately"
+      },
+      {
+        "file": "es-ES/09-imessage.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "27a736d03dc15bdc781c88382dc36d1bc95167a405c50da36bc02d0c19d84eb6",
+        "source": "reused language-neutral native iMessage capture"
+      }
+    ],
+    "ru": [
+      {
+        "file": "ru/01-partie.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "cc6faed4cd8e7a404ac61555f373f1c57e43baf1b6c73bf59de188f2feba0bd3",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "ru/02-accueil.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "520c54aa4c76b989f22266abf86f3e246bef7d95087d6b52a36b5a26e98dc21d",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "ru/03-indice.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "9e4777cd836b6681b9ad8001f510adacc9f65efe928f8e97f105f08247104f21",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "ru/04-tutoriel.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "96a94528f51907920d47025e464e43075cd1363c577efd628c12052dff5e3612",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "ru/05-voyage.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "bb92b746559a3296c61d6c406da5969ef1b834604339c6eb412ce4d71eac856c",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "ru/06-poulpi.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "527f4516d100323ac5abced015db05f967377ced47cb61ae52178613eb71ddeb",
+        "source": "actual localized app native screenshot"
+      },
+      {
+        "file": "ru/07-entete.png",
+        "width": 5244,
+        "height": 2950,
+        "mode": "RGB",
+        "sha256": "0fe5a380a80906ceff10b5140d48e9c335eb76cfb88fca62b762f899a98500ca",
+        "source": "marketing artwork produced separately"
+      },
+      {
+        "file": "ru/08-recherche.png",
+        "width": 1920,
+        "height": 1280,
+        "mode": "RGB",
+        "sha256": "d40b571accefdfd52569836f0c7366b3c6e58743899fc9ad7a4fc1c0fc33a779",
+        "source": "marketing artwork produced separately"
+      },
+      {
+        "file": "ru/09-imessage.png",
+        "width": 1179,
+        "height": 2556,
+        "mode": "RGB",
+        "sha256": "27a736d03dc15bdc781c88382dc36d1bc95167a405c50da36bc02d0c19d84eb6",
+        "source": "reused language-neutral native iMessage capture"
+      }
+    ]
+  }
+}

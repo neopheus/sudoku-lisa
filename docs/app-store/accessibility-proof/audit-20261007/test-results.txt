@@ -1,0 +1,27 @@
+Main run: tests completed as below; xcodebuild stalled during finalization, interrupted; xcresult incomplete.
+Test Case '-[LisaUITests.AccessibilityTests testDarkInterfaceGameAndProgressiveHint]' passed (76.314 seconds).
+Test Case '-[LisaUITests.AccessibilityTests testLargestTextGameEntryAndVictory]' passed (26.747 seconds).
+Test Case '-[LisaUITests.AccessibilityTests testLargestTextHomeSettingsAndPoulpiControls]' passed (12.451 seconds).
+Test Case '-[LisaUITests.AccessibilityTests testLargestTextLessonCandidatesRemainReachable]' passed (26.541 seconds).
+	 Executed 4 tests, with 0 failures (0 unexpected) in 142.052 (142.055) seconds
+Test Case '-[LisaUITests.LargeTextPlayabilityTests testLargestTextKeepsBoardAndEveryDigitVisibleDuringEntry]' passed (20.980 seconds).
+	 Executed 5 tests, with 0 failures (0 unexpected) in 163.032 (163.037) seconds
+	 Executed 5 tests, with 0 failures (0 unexpected) in 163.032 (163.037) seconds
+ACCESSIBILITY font height: 19.333333333333332 -> 54.0, ratio 2.793103448275862
+ACCESSIBILITY font height: 28.666666666666664 -> 68.33333333333333, ratio 2.3837209302325584
+Test Case '-[LisaStoreTests.LisaThemeTests testRoundedBodyFontScalesWithViewEnvironment]' passed (0.005 seconds).
+ACCESSIBILITY minimum tested theme contrast: 4.531224738784355
+Test Case '-[LisaStoreTests.LisaThemeTests testTextContrastOnCandySurfaces]' passed (0.001 seconds).
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.006 (0.007) seconds
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.006 (0.008) seconds
+	 Executed 2 tests, with 0 failures (0 unexpected) in 0.006 (0.009) seconds
+
+
+/tmp/lisa-accessibility-audit-se-20261007.log
+Test Case '-[LisaUITests.LargeTextPlayabilityTests testLargestTextKeepsBoardAndEveryDigitVisibleDuringEntry]' passed (19.965 seconds).
+Test Case '-[LisaUITests.LisaUITests testZenModeStillAllowsVictory]' failed (14.228 seconds).
+** TEST FAILED **
+
+/tmp/lisa-audit-motion-iphone16-20261007.log
+Test Case '-[LisaUITests.LisaUITests testZenModeStillAllowsVictory]' passed (19.784 seconds).
+** TEST EXECUTE SUCCEEDED **
