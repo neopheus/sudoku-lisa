@@ -18,7 +18,7 @@ Merci de tester une partie complète, les notes, les indices, l’annulation, la
 
 ## Notes pour l’examen Apple
 
-Aucun compte utilisateur ni identifiant de démonstration n’est nécessaire. Le jeu et sa progression fonctionnent localement. Les tournois Game Center ne sont pas activés dans cette bêta : aucun classement de production n’est configuré. L’extension Lisa Stickers fournit quatre stickers pour Messages. Aucun achat intégré ni publicité.
+Le sudoku solo et sa progression fonctionnent localement, sans compte ni identifiant de démonstration. Le mode Battle nécessite une connexion Game Center et deux à quatre joueurs sur des appareils distincts. Depuis l’accueil, ouvrir Battle, inviter des amis, se déclarer prêt puis laisser l’hôte lancer la manche. Chaque joueur reçoit la même grille avec un départ commun et voit la progression des autres. Aucun indice en Battle. La personnalisation de Poulpi est accessible depuis son écran ; les couleurs sont gratuites et certains accessoires se débloquent en jouant. L’extension Lisa Stickers fournit quatre stickers pour Messages. Aucun achat intégré ni publicité.
 
 Les coordonnées du contact de bêta doivent être saisies dans App Store Connect par le titulaire ou confirmées avant utilisation ; ne pas inventer d’adresse ou de téléphone.
 
@@ -89,3 +89,19 @@ La seconde commande Xcode **envoie le build à Apple**. Créer auparavant la fic
 ### Notes de bêta à enregistrer après traitement
 
 Cette version améliore la lisibilité et les commandes d'accessibilité. Merci de tester une partie avec la taille de texte iOS maximale : sélection d'une case, saisie, notes, annulation, indice et tutoriel. Le bouton Info affiche les détails de la partie en grand texte. Essayez également le thème Nuit, Réduire les animations, Différencier sans couleur et les commandes de rotation/zoom de Poulpi. Les retours sur VoiceOver, Contrôle vocal, clavier et braille sont particulièrement utiles ; indiquez le modèle d'iPhone, la version iOS et l'étape rencontrée. Vérifiez enfin la sauvegarde/reprise et la continuation après victoire.
+
+## Préparation 1.0 (8) — 8 octobre 2026
+
+- Battle entre deux à quatre amis via Game Center : même grille, départ synchronisé, statistiques en direct, podium et revanche. Personnalisation de Poulpi avec six couleurs et accessoires gagnés en jouant.
+- Validation locale : 68 tests moteur, 28 tests applicatifs, trois scénarios UI Battle/personnalisation/accessibilité réussis ; contrôles ciblés supplémentaires après les dernières corrections. Traductions vérifiées dans cinq langues (574 clés).
+- Les échanges Game Center entre appareils physiques restent à valider. Les scénarios UI utilisent des participants simulés.
+
+### Parcours de test Battle
+
+1. Installer cette même build TestFlight sur deux iPhone, avec deux comptes Game Center distincts, amis entre eux.
+2. Ouvrir Battle sur le premier appareil et inviter le second. Accepter l’invitation, choisir la difficulté et mettre chaque joueur prêt. L’hôte indiqué dans le salon lance la manche.
+3. Vérifier la même grille et le départ commun, puis saisir quelques chiffres : les statistiques adverses doivent évoluer. Tester notes, effacement et annulation ; les indices sont désactivés.
+4. Terminer la manche, comparer le podium et lancer une revanche. Tester aussi un abandon et une interruption réseau, puis refaire une partie à quatre.
+5. Dans Poulpi, changer de couleur, relancer l’app et vérifier sa conservation. Terminer une battle pour débloquer le bandeau ; cinq victoires débloquent la couronne. Vérifier que la sauvegarde solo est conservée.
+
+Signaler le modèle d’iPhone, iOS, numéro de build, comptes distincts, étape et capture via TestFlight.

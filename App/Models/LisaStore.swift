@@ -17,9 +17,10 @@ struct LisaSettings: Codable, Sendable {
     var showTimer = true
     var numberFirst = false
     var poulpiStarEquipped = false
+    var poulpiAppearance = PoulpiAppearance()
 
     init() {}
-    private enum CodingKeys: String, CodingKey { case sound, music, musicTrack, animatedDecor, haptics, autoCheck, highlightPeers, highlightDuplicates, errorLimit, darkMode, paperMode, showTimer, numberFirst, poulpiStarEquipped }
+    private enum CodingKeys: String, CodingKey { case sound, music, musicTrack, animatedDecor, haptics, autoCheck, highlightPeers, highlightDuplicates, errorLimit, darkMode, paperMode, showTimer, numberFirst, poulpiStarEquipped, poulpiAppearance }
     init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         sound = try c.decodeIfPresent(Bool.self, forKey: .sound) ?? true
@@ -37,6 +38,9 @@ struct LisaSettings: Codable, Sendable {
         showTimer = try c.decodeIfPresent(Bool.self, forKey: .showTimer) ?? true
         numberFirst = try c.decodeIfPresent(Bool.self, forKey: .numberFirst) ?? false
         poulpiStarEquipped = try c.decodeIfPresent(Bool.self, forKey: .poulpiStarEquipped) ?? false
+        poulpiAppearance = try c.decodeIfPresent(PoulpiAppearance.self, forKey: .poulpiAppearance)
+            ?? PoulpiAppearance(accessory: poulpiStarEquipped ? .star : .none)
+        poulpiStarEquipped = poulpiAppearance.accessory == .star
     }
 }
 
@@ -74,6 +78,7 @@ private struct SaveData: Codable, Sendable {
     var activeEvent: String?
     var activeTournament: String?
     var savedGames: [String: SavedModeGame]?
+    var battleRewards: PoulpiBattleRewards?
 }
 
 @MainActor
@@ -95,6 +100,7 @@ final class LisaStore: ObservableObject {
     @Published var history: [FinishedGame] = []
     @Published var completedDays: Set<String> = []
     @Published var eventWins = 0
+    @Published private(set) var battleRewards = PoulpiBattleRewards()
     @Published var eventMedals: Set<String> = []
     @Published var activeEvent: String?
     @Published var activeTournament: String?
@@ -165,6 +171,7 @@ final class LisaStore: ObservableObject {
                 history = data.history
                 completedDays = data.completedDays
                 eventWins = data.eventWins
+                battleRewards = data.battleRewards ?? PoulpiBattleRewards()
                 eventMedals = data.eventMedals ?? []
                 activeEvent = data.activeEvent
                 activeTournament = data.activeTournament
@@ -225,7 +232,7 @@ final class LisaStore: ObservableObject {
         var snapshot = session
         snapshot?.elapsedSeconds = clock.seconds
         if let snapshot { savedGames[mode] = currentSavedGame(snapshot) }
-        let data = SaveData(session: snapshot, settings: settings, history: history, completedDays: completedDays, eventWins: eventWins, mode: mode, activeDay: activeDay, eventMedals: eventMedals, activeEvent: activeEvent, activeTournament: activeTournament, savedGames: savedGames)
+        let data = SaveData(session: snapshot, settings: settings, history: history, completedDays: completedDays, eventWins: eventWins, mode: mode, activeDay: activeDay, eventMedals: eventMedals, activeEvent: activeEvent, activeTournament: activeTournament, savedGames: savedGames, battleRewards: battleRewards)
         writer.submit(data)
     }
 
@@ -450,11 +457,45 @@ final class LisaStore: ObservableObject {
     }
 
     var hasPoulpiStarReward: Bool { eventWins >= 5 }
-    var poulpiStarEquipped: Bool { hasPoulpiStarReward && settings.poulpiStarEquipped }
+    var poulpiStarEquipped: Bool { poulpiAppearance.accessory == .star }
+    var poulpiAppearance: PoulpiAppearance {
+        var appearance = settings.poulpiAppearance
+        if !isPoulpiAccessoryUnlocked(appearance.accessory) { appearance.accessory = .none }
+        return appearance
+    }
+
+    func isPoulpiAccessoryUnlocked(_ accessory: PoulpiAccessory) -> Bool {
+        battleRewards.isUnlocked(accessory, journeyWins: eventWins)
+    }
+
+    func selectPoulpiColor(_ color: PoulpiColor) {
+        guard canPersist else { saveError = Self.loadFailureMessage; return }
+        settings.poulpiAppearance.color = color
+    }
+
+    func equipPoulpiAccessory(_ accessory: PoulpiAccessory) {
+        guard canPersist else { saveError = Self.loadFailureMessage; return }
+        guard isPoulpiAccessoryUnlocked(accessory) else { return }
+        var updated = settings
+        updated.poulpiAppearance.accessory = accessory
+        updated.poulpiStarEquipped = accessory == .star
+        settings = updated
+    }
+
+    /// Call only for a finalized round which the local player actually finished.
+    /// Cancellation and leaving a battle do not award completion or cosmetics.
+    @discardableResult
+    func recordBattleResult(roundID: UUID, won: Bool) -> Bool {
+        guard canPersist else { saveError = Self.loadFailureMessage; return false }
+        var rewards = battleRewards
+        guard rewards.record(roundID: roundID, won: won) else { return false }
+        battleRewards = rewards
+        save()
+        return true
+    }
 
     func equipPoulpiStar(_ equipped: Bool) {
-        guard !equipped || hasPoulpiStarReward else { return }
-        settings.poulpiStarEquipped = equipped
+        equipPoulpiAccessory(equipped ? .star : .none)
     }
 
     func startJourney() {

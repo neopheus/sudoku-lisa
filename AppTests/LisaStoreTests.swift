@@ -105,6 +105,68 @@ final class LisaStoreTests: XCTestCase {
         XCTAssertNil(reopened.saveError)
     }
 
+    @MainActor func testLegacyEquippedStarMigratesWithoutRewritingAndPersistsWithColor() async throws {
+        let url = try temporarySave()
+        var data = try XCTUnwrap(JSONSerialization.jsonObject(with: fixture()) as? [String: Any])
+        var settings = try XCTUnwrap(data["settings"] as? [String: Any])
+        settings["poulpiStarEquipped"] = true
+        data["settings"] = settings
+        let original = try JSONSerialization.data(withJSONObject: data)
+        try original.write(to: url)
+        let store = LisaStore(saveURL: url)
+        XCTAssertEqual(store.poulpiAppearance, PoulpiAppearance(accessory: .star))
+        await store.flushPendingSaves()
+        XCTAssertEqual(try Data(contentsOf: url), original)
+        store.selectPoulpiColor(.mint)
+        await store.flushPendingSaves()
+        let reopened = LisaStore(saveURL: url)
+        XCTAssertEqual(reopened.poulpiAppearance, PoulpiAppearance(color: .mint, accessory: .star))
+        XCTAssertTrue(reopened.settings.poulpiStarEquipped)
+        XCTAssertEqual(reopened.session?.notes[4], [7])
+        XCTAssertEqual(reopened.clock.seconds, 123)
+    }
+
+    @MainActor func testBattleRewardsPersistAndOnlyOneUnlockedAccessoryCanBeEquipped() async throws {
+        let url = try temporarySave()
+        let store = LisaStore(saveURL: url)
+        store.equipPoulpiAccessory(.crown)
+        XCTAssertEqual(store.poulpiAppearance.accessory, .none)
+        let round = UUID()
+        XCTAssertTrue(store.recordBattleResult(roundID: round, won: false))
+        XCTAssertFalse(store.recordBattleResult(roundID: round, won: true))
+        store.equipPoulpiAccessory(.headband)
+        store.selectPoulpiColor(.coral)
+        await store.flushPendingSaves()
+        let reopened = LisaStore(saveURL: url)
+        XCTAssertEqual(reopened.battleRewards.finishedRounds, 1)
+        XCTAssertEqual(reopened.battleRewards.wins, 0)
+        XCTAssertFalse(reopened.recordBattleResult(roundID: round, won: true))
+        XCTAssertEqual(reopened.poulpiAppearance, PoulpiAppearance(color: .coral, accessory: .headband))
+        for _ in 0..<5 { reopened.recordBattleResult(roundID: UUID(), won: true) }
+        reopened.equipPoulpiAccessory(.crown)
+        XCTAssertEqual(reopened.poulpiAppearance.accessory, .crown)
+        XCTAssertFalse(reopened.settings.poulpiStarEquipped)
+        reopened.equipPoulpiAccessory(.none)
+        XCTAssertEqual(reopened.poulpiAppearance.accessory, .none)
+        await reopened.flushPendingSaves()
+        let final = LisaStore(saveURL: url)
+        XCTAssertTrue(final.isPoulpiAccessoryUnlocked(.crown))
+        XCTAssertEqual(final.battleRewards.wins, 5)
+    }
+
+    @MainActor func testCustomizationAndBattleCannotOverwriteUnreadableSave() async throws {
+        let url = try temporarySave()
+        let original = Data("unreadable progression".utf8)
+        try original.write(to: url)
+        let store = LisaStore(saveURL: url)
+        store.selectPoulpiColor(.gold)
+        store.equipPoulpiAccessory(.none)
+        XCTAssertFalse(store.recordBattleResult(roundID: UUID(), won: true))
+        await store.flushPendingSaves()
+        XCTAssertEqual(try Data(contentsOf: url), original)
+        XCTAssertEqual(store.battleRewards.finishedRounds, 0)
+    }
+
     private static func puzzle(_ difficulty: Difficulty, _ seed: UInt64) -> Puzzle {
         let solution = (0..<81).map { ($0 / 9 * 3 + $0 / 27 + $0 % 9) % 9 + 1 }
         var givens = solution

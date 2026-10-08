@@ -630,7 +630,7 @@ struct VictoryView: View {
                         LisaMagicHalo(strong: true).frame(width: 225, height: 225)
                         Circle().fill(LisaTheme.yellow.opacity(0.35)).frame(width: 175, height: 175)
                         Circle().strokeBorder(.white.opacity(0.75), style: StrokeStyle(lineWidth: 3, dash: [4, 8])).frame(width: 190, height: 190)
-                        LisaMascot(size: 140, celebrating: true, mood: .happy)
+                        LisaMascot(size: 140, celebrating: true, mood: .happy, appearance: store.poulpiAppearance)
                     }
                     VStack(spacing: 8) {
                         Text(L10n.text("Bien joué, vous !"))
@@ -773,7 +773,7 @@ private struct LisaGameTimer: View {
     }
 }
 
-private struct SudokuCellContent: View, Equatable {
+struct SudokuCellContent: View, Equatable {
     let value: Int
     let notes: Set<Int>
     let given: Bool

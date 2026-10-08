@@ -13,6 +13,7 @@ struct LisaMascot: View {
     var mood: LisaMascotMood = .idle
     var reactionToken: Int = 0
     var animationEnabled = true
+    var appearance = PoulpiAppearance()
     @Environment(\.lisaMotionAllowed) private var motionAllowed
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
@@ -24,7 +25,8 @@ struct LisaMascot: View {
         OctopusSceneView(
             mood: celebrating ? .celebrating : mood,
             reactionToken: reactionToken,
-            animated: animationEnabled && motionAllowed && visible && onScreen && scenePhase == .active && !reduceMotion
+            animated: animationEnabled && motionAllowed && visible && onScreen && scenePhase == .active && !reduceMotion,
+            appearance: appearance
         )
         // SceneKit can fail to create a drawable for fractional SwiftUI dimensions.
         // Whole-point bounds keep the live Metal surface reliable at compact sizes.
@@ -60,7 +62,7 @@ struct LisaCompanion: View {
             waving = true
             store.feedback(.hello)
         } label: {
-            LisaMascot(size: size, mood: waving ? .happy : .idle, reactionToken: greeting, animationEnabled: animationEnabled)
+            LisaMascot(size: size, mood: waving ? .happy : .idle, reactionToken: greeting, animationEnabled: animationEnabled, appearance: store.poulpiAppearance)
                 .overlay(alignment: .bottom) {
                     if waving {
                         Text(greetings[(greeting - 1) % greetings.count])
@@ -69,9 +71,6 @@ struct LisaCompanion: View {
                             .background(LisaTheme.paper, in: Capsule())
                             .fixedSize().offset(y: 5)
                     }
-                }
-                .overlay(alignment: .topTrailing) {
-                    if store.poulpiStarEquipped { PoulpiStarBadge(size: max(20, size * 0.24)).allowsHitTesting(false) }
                 }
                 .contentShape(Rectangle())
         }
@@ -200,7 +199,7 @@ struct LisaGameCompanion: View {
     }
     var body: some View {
         OctopusSceneView(mood: mood == .idle ? antic : mood,
-                         reactionToken: reaction + token, animated: running, spatial: true, occlusionRect: occlusionRect)
+                         reactionToken: reaction + token, animated: running, spatial: true, occlusionRect: occlusionRect, appearance: store.poulpiAppearance)
         .allowsHitTesting(false).accessibilityHidden(true)
         .onChange(of: requestToken) { _, _ in perform() }
         .onChange(of: message, initial: true) { _, value in onMessage(value.isEmpty ? L10n.text("Au repos") : value) }

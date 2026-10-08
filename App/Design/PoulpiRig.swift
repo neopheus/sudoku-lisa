@@ -31,6 +31,11 @@ final class PoulpiRig: @unchecked Sendable {
     private var lastExpression: (activity: Float, mood: LisaMascotMood)?
     private let mouth = SCNNode()
     private let cupsNode = SCNNode()
+    private var skinMaterial: SCNMaterial?
+    private var coloredFaceMaterials: [SCNMaterial] = []
+    private let accessoryNode: SCNNode = { let node = SCNNode(); node.name = "poulpi-accessory"; return node }()
+    private var appearance = PoulpiAppearance()
+
 
     private static let inspectionBlink: Float? = {
         #if DEBUG
@@ -189,7 +194,8 @@ final class PoulpiRig: @unchecked Sendable {
         // Rest-space grain follows the articulated skin without stretched UVs.
         // Derivative filtering removes subpixel pores in distant passes.
         skin.shaderModifiers = [.geometry: Self.grainGeometryModifier,
-                                .surface: Self.grainSurfaceModifier(strength: "mix(0.70,2.10,smoothstep(0.40,0.80,in.sculptPosition.y))") + """
+                                .surface: Self.grainSurfaceModifier(strength: "mix(0.70,2.10,smoothstep(0.40,0.80,in.sculptPosition.y))")
+                                    .replacingOccurrences(of: "#pragma body", with: "#pragma arguments\nfloat3 poulpiPigment;\n#pragma body") + """
         float3 p=in.sculptPosition;
         float crown=smoothstep(0.25,0.80,p.y);
         _surface.diffuse.rgb *= mix(float3(0.50,1.0,1.0),float3(0.98,0.76,1.0),crown);
@@ -219,6 +225,9 @@ final class PoulpiRig: @unchecked Sendable {
         float blush=exp(-pow((abs(p.x)-0.47)/0.105,2.0)-pow((p.y-0.155)/0.070,2.0))*front;
         _surface.diffuse.rgb=mix(_surface.diffuse.rgb,float3(0.45,0.045,0.46),blush*0.40);
         """]
+        skin.shaderModifiers?[.surface]?.append("\n_surface.diffuse.rgb *= poulpiPigment;\n_surface.emission.rgb *= poulpiPigment;\n")
+        skin.setValue(NSValue(scnVector3: SCNVector3(1, 1, 1)), forKey: "poulpiPigment")
+        skinMaterial = skin
         attach(Self.resources.skin, material: skin, to: SCNNode())
         let cups = Self.material(UIColor(red:0.78,green:0.73,blue:0.62,alpha:1),roughness:0.52)
         cups.emission.contents = UIColor(red:0.35,green:0.30,blue:0.22,alpha:1)
@@ -236,8 +245,103 @@ final class PoulpiRig: @unchecked Sendable {
         """]
         attach(Self.resources.cups, material:cups, to:cupsNode)
         buildFace()
+        bones[0].addChildNode(accessoryNode)
         node.scale = SCNVector3(0.90,1,1)
     }
+    /// Palette changes touch only pigment; geometry, AO, pores, cups and the
+    /// supplied iris image remain exactly the validated sculpt.
+    func setAppearance(_ value: PoulpiAppearance) {
+        guard value != appearance else { return }
+        let previousAccessory = appearance.accessory
+        appearance = value
+        let rgb = value.color.pigment
+        // UIColor pigment is specified in sRGB, while a physically based
+        // SceneKit surface modifier receives linear light. Divide linearized
+        // colors so a warm gold does not retain the original blue energy.
+        let target = Self.linearPigment(rgb)
+        let original = Self.linearPigment(SIMD3(0.37, 0.32, 0.76))
+        let multiplier = SCNVector3(Float(target.x / original.x), Float(target.y / original.y), Float(target.z / original.z))
+        skinMaterial?.setValue(NSValue(scnVector3: multiplier), forKey: "poulpiPigment")
+        for (index, material) in coloredFaceMaterials.enumerated() {
+            let base: SIMD3<Double> = index == 0 ? SIMD3(0.29, 0.24, 0.69) : SIMD3(0.30, 0.23, 0.70)
+            material.diffuse.contents = UIColor(red: min(1, base.x * rgb.x / 0.37),
+                                                green: min(1, base.y * rgb.y / 0.32),
+                                                blue: min(1, base.z * rgb.z / 0.76), alpha: 1)
+        }
+        purple.diffuse.contents = value.color == .pink
+            ? UIColor(red: 0.16, green: 0.10, blue: 0.38, alpha: 1)
+            : UIColor(red: rgb.x * 0.43, green: rgb.y * 0.31, blue: rgb.z * 0.5, alpha: 1)
+        if previousAccessory != value.accessory { rebuildAccessory(value.accessory) }
+    }
+
+    private static func linearPigment(_ srgb: SIMD3<Double>) -> SIMD3<Double> {
+        func linear(_ channel: Double) -> Double {
+            channel <= 0.04045 ? channel / 12.92 : pow((channel + 0.055) / 1.055, 2.4)
+        }
+        return SIMD3(linear(srgb.x), linear(srgb.y), linear(srgb.z))
+    }
+
+    private func rebuildAccessory(_ accessory: PoulpiAccessory) {
+        accessoryNode.childNodes.forEach { $0.removeFromParentNode() }
+        let gold = Self.material(UIColor(red: 1, green: 0.72, blue: 0.16, alpha: 1), roughness: 0.30)
+        gold.metalness.contents = 0.35
+        let ribbon = Self.material(UIColor(red: 0.96, green: 0.31, blue: 0.39, alpha: 1), roughness: 0.65)
+        switch accessory {
+        case .none: break
+        case .star:
+            let path = UIBezierPath()
+            for index in 0..<10 {
+                let angle = CGFloat(index) * .pi / 5 - .pi / 2
+                let radius: CGFloat = index.isMultiple(of: 2) ? 0.16 : 0.075
+                let point = CGPoint(x: cos(angle) * radius, y: sin(angle) * radius)
+                if index == 0 { path.move(to: point) } else { path.addLine(to: point) }
+            }
+            path.close()
+            let shape = SCNShape(path: path, extrusionDepth: 0.045)
+            shape.chamferRadius = 0.009
+            shape.firstMaterial = gold
+            let star = SCNNode(geometry: shape)
+            star.position = SCNVector3(0.49, 0.88, 0.46)
+            star.eulerAngles = SCNVector3(0, 0.36, -0.18)
+            accessoryNode.addChildNode(star)
+        case .headband:
+            let band = SCNTorus(ringRadius: 0.69, pipeRadius: 0.055)
+            band.ringSegmentCount = 40; band.pipeSegmentCount = 8; band.firstMaterial = ribbon
+            let ring = SCNNode(geometry: band)
+            ring.position = SCNVector3(0, 0.84, -0.03); ring.scale = SCNVector3(1.05, 1, 0.76)
+            accessoryNode.addChildNode(ring)
+            let knot = SCNSphere(radius: 0.085); knot.segmentCount = 12; knot.firstMaterial = ribbon
+            let knotNode = SCNNode(geometry: knot)
+            knotNode.position = SCNVector3(-0.66, 0.84, 0.25)
+            accessoryNode.addChildNode(knotNode)
+            for side: Float in [-1, 1] {
+                let tail = SCNCapsule(capRadius: 0.028, height: 0.28)
+                tail.radialSegmentCount = 8; tail.firstMaterial = ribbon
+                let tailNode = SCNNode(geometry: tail)
+                tailNode.position = SCNVector3(-0.68 + side * 0.055, 0.73, 0.30)
+                tailNode.eulerAngles.z = side * 0.35 - 0.2
+                accessoryNode.addChildNode(tailNode)
+            }
+        case .crown:
+            let band = SCNTorus(ringRadius: 0.40, pipeRadius: 0.042)
+            band.ringSegmentCount = 32; band.pipeSegmentCount = 8; band.firstMaterial = gold
+            let ring = SCNNode(geometry: band); ring.position = SCNVector3(0, 1.08, -0.035); ring.scale.z = 0.77
+            accessoryNode.addChildNode(ring)
+            for index in 0..<5 {
+                let angle = Float(index) * .pi * 2 / 5
+                let spike = SCNCone(topRadius: 0.016, bottomRadius: 0.10, height: 0.25)
+                spike.radialSegmentCount = 4; spike.firstMaterial = gold
+                let spikeNode = SCNNode(geometry: spike)
+                spikeNode.position = SCNVector3(sin(angle) * 0.34, 1.18, cos(angle) * 0.27 - 0.035)
+                accessoryNode.addChildNode(spikeNode)
+                let gem = SCNSphere(radius: 0.037); gem.segmentCount = 8; gem.firstMaterial = gold
+                let gemNode = SCNNode(geometry: gem)
+                gemNode.position = SCNVector3(sin(angle) * 0.34, 1.31, cos(angle) * 0.27 - 0.035)
+                accessoryNode.addChildNode(gemNode)
+            }
+        }
+    }
+
     private func eyeShell(_ radius: CGFloat, _ scale: SCNVector3, _ position: SCNVector3, _ material: SCNMaterial, parent: SCNNode) -> SCNNode {
         let g = Self.eyeShellGeometry.copy() as! SCNGeometry
         g.firstMaterial = material
@@ -353,6 +457,7 @@ final class PoulpiRig: @unchecked Sendable {
         let lidMaterial=Self.material(UIColor(red:0.30,green:0.23,blue:0.70,alpha:1),roughness:0.70)
         lidMaterial.shaderModifiers=[.geometry:Self.grainGeometryModifier,
                                      .surface:Self.grainSurfaceModifier(strength:"0.65")]
+        coloredFaceMaterials = [browMaterial, lidMaterial]
         for side: Float in [-1,1] {
             let eyeRoot = SCNNode(); eyeRoot.position = SCNVector3(side * 0.380, 0.434, 0.555); bones[0].addChildNode(eyeRoot)
             eyeRoot.eulerAngles.y = side * 0.20

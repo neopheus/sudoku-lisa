@@ -12,6 +12,7 @@ struct OctopusSceneView: UIViewRepresentable {
     var yaw: Double = 0
     var pitch: Double = 0
     var zoom: Double = 1
+    var appearance = PoulpiAppearance()
     @ObservedObject private var budget = LisaRenderBudget.shared
 
     func sizeThatFits(_ proposal: ProposedViewSize, uiView: OctopusHostView, context: Context) -> CGSize {
@@ -20,6 +21,7 @@ struct OctopusSceneView: UIViewRepresentable {
 
     func makeUIView(context: Context) -> OctopusHostView { OctopusHostView() }
     func updateUIView(_ view: OctopusHostView, context: Context) {
+        view.renderer.setAppearance(appearance)
         view.renderer.setSpatial(spatial)
         view.renderer.setPortrait(interactive: interactivePortrait, yaw: yaw, pitch: pitch, zoom: zoom)
         view.renderer.setOcclusion(occlusionRect)
@@ -57,6 +59,7 @@ final class OctopusHostView: UIView {
 final class OctopusRenderView: SCNView {
     private let companion = OctopusModel()
     var wantsAnimation = false
+    private var previousAppearance: PoulpiAppearance?
     private var previousMood: LisaMascotMood?
     private var previousReaction: Int?
     private var playbackRunning: Bool?
@@ -102,6 +105,12 @@ final class OctopusRenderView: SCNView {
         if running { play(nil) } else { pause(nil) }
         setNeedsDisplay()
         layer.setNeedsDisplay()
+    }
+    func setAppearance(_ appearance: PoulpiAppearance) {
+        guard previousAppearance != appearance else { return }
+        previousAppearance = appearance
+        companion.setAppearance(appearance)
+        setNeedsDisplay()
     }
     func setSpatial(_ enabled: Bool) {
         guard spatial != enabled else { return }
@@ -241,6 +250,8 @@ final class OctopusModel {
         }
         #endif
     }
+
+    func setAppearance(_ appearance: PoulpiAppearance) { rig.setAppearance(appearance) }
 
     func setPortrait(interactive: Bool, yaw: Double, pitch: Double, zoom: Double) {
         guard interactive, !spatial else { return }

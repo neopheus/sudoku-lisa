@@ -6,12 +6,17 @@ import UIKit
 /// Optional, real Game Center integration. Requires an App Store Connect
 /// recurring leaderboard, weekly Monday 00:00 UTC, ascending elapsed seconds.
 @MainActor
-final class GameCenterService: NSObject, ObservableObject, GKGameCenterControllerDelegate {
+final class GameCenterService: NSObject, ObservableObject, GKGameCenterControllerDelegate, GKLocalPlayerListener {
     static let shared = GameCenterService()
     @Published private(set) var isAuthenticated = false
     @Published private(set) var isAuthenticating = false
     @Published private(set) var isSubmitting = false
     @Published private(set) var statusMessage: String?
+
+    override private init() {
+        super.init()
+        GKLocalPlayer.local.register(self)
+    }
 
     private var leaderboardID: String? {
         guard let id = Bundle.main.object(forInfoDictionaryKey: "LisaLeaderboardID") as? String,
@@ -22,7 +27,7 @@ final class GameCenterService: NSObject, ObservableObject, GKGameCenterControlle
     var playerName: String? { isAuthenticated ? GKLocalPlayer.local.displayName : nil }
 
     func authenticate() {
-        guard isConfigured, !isAuthenticating else { return }
+        guard !isAuthenticating else { return }
         isAuthenticating = true
         statusMessage = nil
         GKLocalPlayer.local.authenticateHandler = { [weak self] controller, error in
@@ -40,7 +45,9 @@ final class GameCenterService: NSObject, ObservableObject, GKGameCenterControlle
                     self.isAuthenticated = GKLocalPlayer.local.isAuthenticated
                     if error != nil || !self.isAuthenticated {
                         self.statusMessage = "Connexion indisponible. Vous pouvez continuer à jouer en solo."
-                    } else { self.statusMessage = "Vous êtes prêt pour le tournoi !" }
+                    } else {
+                        self.statusMessage = "Vous êtes prêt pour le tournoi !"
+                    }
                 }
             }
         }
@@ -83,7 +90,11 @@ final class GameCenterService: NSObject, ObservableObject, GKGameCenterControlle
         Task { @MainActor in gameCenterViewController.dismiss(animated: true) }
     }
 
-    private var presenter: UIViewController? {
+    nonisolated func player(_ player: GKPlayer, didAccept invite: GKInvite) {
+        Task { @MainActor in BattleService.shared.accept(invite: invite) }
+    }
+
+    var presenter: UIViewController? {
         let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
         let window = scenes.first(where: { $0.activationState == .foregroundActive })?.windows.first(where: \.isKeyWindow)
         var controller = window?.rootViewController
