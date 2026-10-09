@@ -138,3 +138,8 @@ Signaler le modèle d’iPhone, iOS, numéro de build, comptes distincts, étape
 ### Notes de test du build 10
 
 Battle : nouvelles pastilles rondes avec pourcentage de progression et erreurs. Testez à 2–4 joueurs, avec des noms longs et de grands caractères. Vérifiez les animations quand un adversaire progresse, les compteurs sous les chiffres 1–9, le verrouillage par appui long, les notes, l’effacement, l’annulation et les surbrillances. Vérifiez également que votre partie solo est conservée.
+
+
+### Correction des commandes Battle — build 11 en préparation
+
+Les boutons 1–9 restent fixés en bas de l’écran pendant la course. La grille est réduite sur écran court pour afficher le plateau et garder les commandes à portée de doigt. En très grands caractères, le clavier reste dans le défilement afin de conserver des commandes lisibles. Une compilation simulateur a réussi ; archive et envoi Apple sont en cours.

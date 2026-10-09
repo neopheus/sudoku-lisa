@@ -18,6 +18,7 @@ struct BattleView: View {
 
     var body: some View {
         NavigationStack {
+            GeometryReader { screen in
             ZStack {
                 LisaBackground(motionEnabled: false, quiet: true)
                 ScrollView {
@@ -36,7 +37,7 @@ struct BattleView: View {
                             BattleLobby(battle: battle)
                                 .transition(.opacity.combined(with: .offset(y: 12)))
                         case .playing:
-                            BattlePlayView(battle: battle)
+                            BattlePlayView(battle: battle, maximumBoardSide: max(220, screen.size.height - 410))
                                 .transition(.opacity.combined(with: .offset(y: 12)))
                         case .finished:
                             BattlePodium(battle: battle)
@@ -62,6 +63,18 @@ struct BattleView: View {
                             .background(LisaTheme.background)
                     }
                 }
+                .safeAreaInset(edge: .bottom, spacing: 0) {
+                    if battle.state == .playing && !typeSize.isAccessibilitySize, let game = battle.session, !game.isComplete,
+                       battle.participants.first(where: { $0.id == battle.localPlayerID })?.status != .didNotFinish {
+                        BattleKeypad(battle: battle, canUndo: game.canUndo)
+                            .frame(maxWidth: 500)
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 8)
+                            .frame(maxWidth: .infinity)
+                            .background(.regularMaterial)
+                    }
+                }
+            }
             }
             .navigationTitle(L10n.text("Battle entre amis"))
             .navigationBarTitleDisplayMode(.inline)
@@ -216,6 +229,7 @@ private struct BattleParticipantRow: View {
 
 private struct BattlePlayView: View {
     @ObservedObject var battle: BattleService
+    let maximumBoardSide: CGFloat
     @Environment(\.dynamicTypeSize) private var typeSize
     var body: some View {
         VStack(spacing: 14) {
@@ -238,10 +252,15 @@ private struct BattlePlayView: View {
                 } else {
                     if !battle.canEdit { Label(L10n.text("Reconnexion en cours…"), systemImage: "wifi.exclamationmark") }
                     GeometryReader { geometry in
-                        BattleBoard(game: game, selection: battle.selection, width: geometry.size.width, onSelect: battle.select)
-                    }.aspectRatio(1, contentMode: .fit).frame(maxWidth: 500)
+                        let side = min(geometry.size.width, maximumBoardSide, 500)
+                        BattleBoard(game: game, selection: battle.selection, width: side, onSelect: battle.select)
+                            .frame(width: side, height: side)
+                            .frame(maxWidth: .infinity)
+                    }.frame(height: min(maximumBoardSide, 500))
                         .disabled(!battle.canEdit)
-                    BattleKeypad(battle: battle, canUndo: game.canUndo).frame(maxWidth: 500)
+                    if typeSize.isAccessibilitySize {
+                        BattleKeypad(battle: battle, canUndo: game.canUndo).frame(maxWidth: 500)
+                    }
                     Text(L10n.text("Le chronomètre continue si vous quittez l’écran."))
                         .font(.caption).foregroundStyle(LisaTheme.muted)
                 }
