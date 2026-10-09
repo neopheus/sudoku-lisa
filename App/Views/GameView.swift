@@ -102,7 +102,7 @@ struct GameView: View {
             if paused {
                 Color.black.opacity(0.3).ignoresSafeArea()
                 LisaPauseCard { paused = false }
-                    .environment(\.lisaMotionAllowed, mascotUncovered)
+                    .environment(\.lisaMotionAllowed, store.settings.animatedDecor && mascotUncovered)
                     .transition(.opacity.combined(with: .scale(scale: 0.96)))
                     .accessibilityHidden(store.isGenerating)
             }
@@ -120,7 +120,7 @@ struct GameView: View {
         .onPreferenceChange(LisaBoardFrameKey.self) { boardFrame = $0 }
         .preferredColorScheme(store.settings.darkMode ? .dark : .light)
         .saturation(store.settings.paperMode ? 0 : 1)
-        .environment(\.lisaMotionAllowed, !paused && mascotUncovered)
+        .environment(\.lisaMotionAllowed, store.settings.animatedDecor && !paused && mascotUncovered)
         .task(id: timerRunning) {
             guard timerRunning else { return }
             while !Task.isCancelled {
@@ -170,9 +170,9 @@ struct GameView: View {
             do { try await Task.sleep(for: .milliseconds(reduceMotion ? 100 : 480)) } catch { return }
             victoryPresented = true
         }
-        .task(id: mascotReaction) {
-            guard mascotReaction > 0 else { return }
-            do { try await Task.sleep(for: .seconds(2.4)) } catch { return }
+        .task(id: "\(mascotReaction)-\(scenePhase == .active && !paused && mascotUncovered)") {
+            guard mascotReaction > 0, scenePhase == .active, !paused, mascotUncovered else { return }
+            do { try await Task.sleep(for: .seconds(mascotMood.reactionDuration + 0.2)) } catch { return }
             mascotMood = .idle
         }
         .onChange(of: languagePreference) { _, _ in
@@ -191,7 +191,7 @@ struct GameView: View {
         }
         .onChange(of: store.settings.numberFirst) { _, _ in lockedDigit = nil }
         .sheet(isPresented: $learning) {
-            LearnView(initialTechnique: lessonTechnique).environment(\.lisaMotionAllowed, scenePhase == .active)
+            LearnView(initialTechnique: lessonTechnique).environment(\.lisaMotionAllowed, store.settings.animatedDecor && scenePhase == .active)
         }
         .overlay { GenerationOverlay() }
         .alert(L10n.text("Préparation de la grille"), isPresented: Binding(get: { store.generationError != nil }, set: { if !$0 { store.generationError = nil } })) {
@@ -206,7 +206,7 @@ struct GameView: View {
                 store.showVictory = false
                 continueRequested = true
                 victoryPresented = false
-            }).environment(\.lisaMotionAllowed, scenePhase == .active).interactiveDismissDisabled()
+            }).environment(\.lisaMotionAllowed, store.settings.animatedDecor && scenePhase == .active).interactiveDismissDisabled()
         }
         .alert(L10n.text("On respire, puis on reprend ?"), isPresented: $errorPresented) {
             Button(L10n.text("Continuer sans limite")) { store.settings.errorLimit = false }

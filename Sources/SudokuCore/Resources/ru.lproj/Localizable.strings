@@ -589,3 +589,26 @@
 "La préparation du duel a expiré." = "Время подготовки дуэли истекло.";
 "Le départ a été interrompu." = "Старт был прерван.";
 "Un ami a quitté le groupe. Créez une nouvelle invitation." = "Друг покинул группу. Создайте новое приглашение.";
+
+/* Poulpi expressions */
+"Surpris" = "Удивлённый";
+"Nerveux" = "Нервничающий";
+"Confus" = "Растерянный";
+"Amoureux" = "Влюблённый";
+"Fier" = "Гордый";
+
+// Poulpi animation playground
+"Acrobaties" = "Акробатика";
+"Aperçu compact" = "Компактный просмотр";
+"Arrêter la boucle" = "Остановить повтор";
+"En lecture" = "Воспроизведение";
+"En pause" = "Пауза";
+"Grand aperçu" = "Крупный просмотр";
+"Jouer en boucle" = "Повторять выбранное";
+"Mettre l’animation en pause" = "Приостановить анимацию";
+"Ralenti" = "Замедленно";
+"Rejouer l’animation" = "Повторить анимацию";
+"Reprendre l’animation" = "Продолжить анимацию";
+"Vitesse normale" = "Обычная скорость";
+"Émotions" = "Эмоции";
+"Glissez pour tourner et pincez pour zoomer." = "Проведите, чтобы повернуть, и сведите или разведите пальцы для изменения масштаба.";

@@ -160,3 +160,14 @@ L’aperçu iPhone SE du build 11 a révélé un chevauchement du pourcentage et
 - Source : commit `c05d101`. Archive Release signée `/tmp/lisa-release-20261009-b13.xcarchive`, signature vérifiée, application et extension en 1.0 (13). Envoi accepté par Apple le 9 octobre 2026 (`Upload succeeded`, `EXPORT SUCCEEDED`, `/tmp/lisa-release-20261009-b13-upload.log`).
 - Traitement Apple terminé. Build associé aux trois groupes existants **Lisa — Interne**, **Lisa — Externe** et **Liens à partager** ; App Store Connect affiche **En cours de test**. Notes de test enregistrées. Installation sur iPhone physique non vérifiée.
 - [Build 13](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/e2814278-9dde-40bc-998f-bc3ce5ce72ce) · [Lien public TestFlight](https://testflight.apple.com/join/tWFCgtQF).
+
+## Poulpi animé et paupières corrigées — build 14
+
+- Expressions enrichies et animations partagées dans l’application ; rubrique Poulpi avec rejeu, boucle, pause, ralenti et aperçu compact.
+- Iris adaptés à la surface courbe des yeux ; paupières supérieure et inférieure aux coins fixes, fermeture courbe et clin d’œil complet, sans faux pli indépendant.
+- Validation locale : 69 tests moteur, 49 tests applicatifs sur simulateur ; parcours des commandes Poulpi en portrait/paysage réussi. Gros plans des yeux aux fermetures 0/25/50/75/100 %, contrôles de courbure, coins fixes et pic du clin d’œil. Traductions vérifiées dans cinq langues.
+- Build 1.0 (14) préparé pour TestFlight. Le statut d’envoi et de distribution sera consigné après vérification ; aucun essai sur iPhone physique revendiqué.
+
+### Notes de test du build 14
+
+Poulpi est plus expressif : yeux, regard, paupières, bouche, tête et tentacules animés. Dans la rubrique Poulpi, essayez les émotions et acrobaties, le rejeu, la boucle, la pause, le ralenti et l’aperçu compact. Vérifiez particulièrement les clignements, le clin d’œil, les transitions entre expressions et le rendu de profil. Signalez tout débordement, saccade ou problème de paupière avec le modèle d’iPhone. Vérifiez aussi les animations pendant une partie et l’option Réduire les animations.

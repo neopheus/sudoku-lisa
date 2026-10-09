@@ -3,6 +3,7 @@ import SwiftUI
 
 /// Always available from the library; a hint can open the matching lesson directly.
 struct LearnView: View {
+  @EnvironmentObject private var store: LisaStore
   @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
   @Environment(\.dismiss) private var dismiss
   @Environment(\.scenePhase) private var scenePhase
@@ -82,7 +83,7 @@ struct LearnView: View {
             .accessibilityIdentifier("lesson-close")
         }
       }
-      .environment(\.lisaMotionAllowed, motionAllowed && !reduceMotion && scenePhase == .active)
+      .environment(\.lisaMotionAllowed, motionAllowed && store.settings.animatedDecor && !reduceMotion && scenePhase == .active)
       .task {
         guard lessons.isEmpty, !loadingFailed else { return }
         let preparation = Task.detached(priority: .userInitiated) { SudokuLessons.makeLibrary() }

@@ -5,9 +5,10 @@ import SudokuCore
 /// A welded sculpt with 24 arm joints. Skin and cups share the same GPU skinning.
 final class PoulpiRig: @unchecked Sendable {
     let node = SCNNode()
-    private let lock = NSLock()
+    // SceneKit action callbacks and SwiftUI updates can arrive on different
+    // threads. One recursive lock serializes pose state and node writes.
+    private let lock = NSRecursiveLock()
     private var mood: LisaMascotMood = .idle
-    private var activity: Float = 0
     private var swimming: CompanionFlight.SwimPose?
     private var swimWeight: Float = 0
     private var bends = Array(repeating: Float(0), count: 24)
@@ -24,17 +25,70 @@ final class PoulpiRig: @unchecked Sendable {
     private var pupils: [SCNNode] = []
     private var brows: [SCNNode] = []
     private var eyelids: [SCNMorpher] = []
-    private var lidCreases: [SCNNode] = []
-    private var eyelidClosure: Float = -1
+    private var lidMaterials: [SCNMaterial] = []
+    private var eyelidClosure = [Float]([-1, -1])
     private var lastBodyScale: SIMD3<Float>?
-    private var lastGaze: SIMD2<Float>?
-    private var lastExpression: (activity: Float, mood: LisaMascotMood)?
+    private var lastFace: FacePose?
+    private var transitionFace: FacePose?
+    private var reactionElapsed: Float = 0
+    private var phaseTime: Float = 0
+    private var lastJointOrientations = Array<simd_quatf?>(repeating: nil, count: 24)
     private let mouth = SCNNode()
+    private let mouthCavity = SCNNode()
+    private var mouthMaterial: SCNMaterial?
     private let cupsNode = SCNNode()
     private var skinMaterial: SCNMaterial?
     private var coloredFaceMaterials: [SCNMaterial] = []
     private let accessoryNode: SCNNode = { let node = SCNNode(); node.name = "poulpi-accessory"; return node }()
     private var appearance = PoulpiAppearance()
+
+    private struct FacePose: Equatable {
+        var lids: SIMD2<Float> = .zero
+        var gaze: SIMD2<Float> = .zero
+        var brows: SIMD2<Float> = .zero
+        var smile: Float = 0
+        var opening: Float = 0
+        var roundness: Float = 0
+        var pupilScale: Float = 1
+        var headTilt: Float = 0
+        var armEnergy: Float = 0.06
+    }
+
+    // Values describe a held expression. The common reaction envelope below
+    // adds anticipation, an accent and a short settle without allocating actions.
+    private static func expression(for mood: LisaMascotMood) -> FacePose {
+        switch mood {
+        case .idle: FacePose(gaze: SIMD2(0, -0.01), smile: 0.12, armEnergy: 0.04)
+        case .happy: FacePose(lids: SIMD2(0.12, 0.12), gaze: SIMD2(0, 0.01), brows: SIMD2(0.02, 0.02), smile: 0.8, opening: 0.32, armEnergy: 0.16)
+        case .thinking: FacePose(lids: SIMD2(0.12, 0), gaze: SIMD2(-0.025, 0.015), brows: SIMD2(0.045, -0.005), smile: -0.15, headTilt: -0.045, armEnergy: 0.07)
+        case .encouraging: FacePose(lids: SIMD2(0.18, 0), gaze: SIMD2(0.016, 0.005), brows: SIMD2(0.02, 0.045), smile: 0.65, opening: 0.22, headTilt: 0.045, armEnergy: 0.15)
+        case .sleepy: FacePose(lids: SIMD2(0.95, 0.92), gaze: SIMD2(0, -0.015), brows: SIMD2(-0.025, -0.025), opening: 0.10, roundness: 0.6, headTilt: -0.06, armEnergy: 0.02)
+        case .celebrating: FacePose(lids: SIMD2(0.2, 0.18), gaze: SIMD2(0, 0.02), brows: SIMD2(0.07, 0.07), smile: 1, opening: 0.70, armEnergy: 0.28)
+        case .pirouette: FacePose(lids: SIMD2(0.1, 0.28), gaze: SIMD2(0.025, 0.005), brows: SIMD2(0.02, 0.05), smile: 0.66, opening: 0.27, headTilt: 0.12, armEnergy: 0.24)
+        case .wobble: FacePose(lids: SIMD2(0.3, 0.08), gaze: SIMD2(0.024, -0.015), brows: SIMD2(-0.02, 0.045), smile: -0.25, opening: 0.25, roundness: 0.35, headTilt: -0.09, armEnergy: 0.20)
+        case .peek: FacePose(lids: SIMD2(0.78, 0.12), gaze: SIMD2(-0.025, 0.012), brows: SIMD2(-0.03, 0.04), smile: 0.35, headTilt: -0.07, armEnergy: 0.13)
+        case .jelly: FacePose(lids: SIMD2(0.22, 0.26), gaze: SIMD2(0.015, -0.012), brows: SIMD2(0.02, 0.015), smile: 0.42, opening: 0.30, armEnergy: 0.30)
+        case .swim: FacePose(lids: SIMD2(0.10, 0.10), gaze: SIMD2(0, 0.017), brows: SIMD2(0.01, 0.01), smile: 0.35, opening: 0.13, armEnergy: 0.19)
+        case .bow: FacePose(lids: SIMD2(0.42, 0.42), gaze: SIMD2(0, -0.021), brows: SIMD2(-0.01, -0.01), smile: 0.45, headTilt: -0.15, armEnergy: 0.10)
+        case .curious: FacePose(lids: SIMD2(0, 0.18), gaze: SIMD2(0.025, 0.020), brows: SIMD2(0.065, -0.015), smile: 0.20, opening: 0.15, roundness: 0.55, headTilt: 0.075, armEnergy: 0.11)
+        case .giggle: FacePose(lids: SIMD2(0.48, 0.35), gaze: SIMD2(-0.012, 0), brows: SIMD2(0.03, 0.035), smile: 1, opening: 0.48, headTilt: -0.04, armEnergy: 0.22)
+        case .rocket: FacePose(lids: SIMD2(0.18, 0.18), gaze: SIMD2(0, 0.025), brows: SIMD2(-0.012, -0.012), smile: 0.55, opening: 0.36, armEnergy: 0.28)
+        case .chase: FacePose(lids: SIMD2(0.12, 0.28), gaze: SIMD2(0.028, 0.005), brows: SIMD2(-0.005, 0.012), smile: 0.48, opening: 0.27, headTilt: 0.05, armEnergy: 0.25)
+        case .moonwalk: FacePose(lids: SIMD2(0.10, 0.52), gaze: SIMD2(-0.020, 0.008), brows: SIMD2(0.035, 0.005), smile: 0.70, headTilt: -0.09, armEnergy: 0.21)
+        case .juggle: FacePose(lids: SIMD2(0.05, 0.05), gaze: SIMD2(0, 0.025), brows: SIMD2(0.05, 0.05), smile: 0.60, opening: 0.24, roundness: 0.18, armEnergy: 0.26)
+        case .cloudHide: FacePose(lids: SIMD2(0.68, 0.70), gaze: SIMD2(-0.015, -0.018), brows: SIMD2(-0.035, -0.025), smile: -0.18, headTilt: -0.10, armEnergy: 0.11)
+        case .sneeze: FacePose(lids: SIMD2(0.83, 0.80), gaze: SIMD2(0, -0.018), brows: SIMD2(-0.045, -0.045), opening: 0.74, roundness: 0.76, headTilt: -0.12, armEnergy: 0.30)
+        case .tumble: FacePose(lids: SIMD2(0.28, 0.05), gaze: SIMD2(0.025, -0.015), brows: SIMD2(0.005, 0.055), smile: 0.42, opening: 0.36, roundness: 0.25, headTilt: 0.12, armEnergy: 0.28)
+        case .balance: FacePose(lids: SIMD2(0.08, 0.26), gaze: SIMD2(-0.020, -0.005), brows: SIMD2(0.04, -0.015), smile: -0.05, opening: 0.12, headTilt: -0.085, armEnergy: 0.16)
+        case .dizzy: FacePose(lids: SIMD2(0.42, 0.15), gaze: SIMD2(0.025, 0.020), brows: SIMD2(0.045, -0.025), opening: 0.45, roundness: 0.55, headTilt: 0.13, armEnergy: 0.24)
+        case .superhero: FacePose(lids: SIMD2(0.12, 0.12), gaze: SIMD2(0, 0.018), brows: SIMD2(-0.015, -0.015), smile: 0.60, opening: 0.18, headTilt: 0.045, armEnergy: 0.25)
+        case .surprised: FacePose(gaze: SIMD2(0, 0.024), brows: SIMD2(0.075, 0.075), opening: 0.72, roundness: 1, pupilScale: 1.28, armEnergy: 0.22)
+        case .nervous: FacePose(lids: SIMD2(0.30, 0.16), gaze: SIMD2(0.026, -0.012), brows: SIMD2(-0.025, 0.035), smile: -0.42, opening: 0.16, pupilScale: 0.88, headTilt: 0.045, armEnergy: 0.20)
+        case .confused: FacePose(lids: SIMD2(0.18, 0.35), gaze: SIMD2(-0.025, 0), brows: SIMD2(0.075, -0.025), smile: -0.28, opening: 0.20, roundness: 0.35, pupilScale: 1.08, headTilt: -0.07, armEnergy: 0.13)
+        case .loved: FacePose(lids: SIMD2(0.34, 0.34), gaze: SIMD2(0, -0.006), brows: SIMD2(0.04, 0.04), smile: 0.85, opening: 0.30, pupilScale: 1.18, headTilt: 0.055, armEnergy: 0.13)
+        case .proud: FacePose(lids: SIMD2(0.22, 0.20), gaze: SIMD2(0.010, 0.010), brows: SIMD2(0.055, 0.055), smile: 0.65, opening: 0.12, pupilScale: 1.08, headTilt: 0.045, armEnergy: 0.18)
+        }
+    }
 
 
     private static let inspectionBlink: Float? = {
@@ -183,8 +237,9 @@ final class PoulpiRig: @unchecked Sendable {
         target.geometry = g; target.skinner = skinner; node.addChildNode(target)
     }
     init() {
-        for joint in Self.resources.joints {
+        for (index, joint) in Self.resources.joints.enumerated() {
             let b = SCNNode()
+            b.name = index == 0 ? "poulpi-head" : "poulpi-arm-\((index - 1) / 3)-joint-\((index - 1) % 3)"
             let p = joint.parent >= 0 ? Self.resources.joints[joint.parent].position : [0,0,0]
             b.position = SCNVector3(joint.position[0]-p[0], joint.position[1]-p[1], joint.position[2]-p[2])
             if joint.parent >= 0 { bones[joint.parent].addChildNode(b) } else { node.addChildNode(b) }
@@ -251,6 +306,7 @@ final class PoulpiRig: @unchecked Sendable {
     /// Palette changes touch only pigment; geometry, AO, pores, cups and the
     /// supplied iris image remain exactly the validated sculpt.
     func setAppearance(_ value: PoulpiAppearance) {
+        lock.lock(); defer { lock.unlock() }
         guard value != appearance else { return }
         let previousAccessory = appearance.accessory
         appearance = value
@@ -371,9 +427,85 @@ final class PoulpiRig: @unchecked Sendable {
         let g=SCNGeometry(sources:[SCNGeometrySource(vertices:vertices),SCNGeometrySource(normals:normals)],elements:[PoulpiRig.triangleElement(indices)])
         return g
     }()
-    /// Iris and pupil follow the ivory shell instead of intersecting it as
-    /// flattened spheres. Their small relief also fits inside the closing lid.
-    private func eyeDisc(radius:Float, side:Float, lift:Float, material:SCNMaterial, parent:SCNNode) {
+    /// Coordinates shared by the immutable iris mesh and its GPU deformation.
+    /// Rotate on a sphere before mapping onto the tapered eye: translating a
+    /// pre-curved cap would bury one edge and lift the opposite edge off the eye.
+    enum EyeSurface {
+        static let radius = SIMD3<Float>(0.226, 0.25764, 0.07458)
+        static let relief: Float = 0.002
+
+        static func angularScale(for pupilScale: Float) -> Float {
+            // The source contains the entire iris and its catchlights, so an
+            // expression may only enlarge this artwork subtly as a whole.
+            max(0.97, min(1.05, 1 + (pupilScale - 1) * 0.2))
+        }
+
+        static func rotation(for gaze: SIMD2<Float>, eyeOrientation: simd_quatf) -> simd_quatf {
+            let horizontal = simd_quatf(angle: gaze.x / radius.x, axis: SIMD3(0, 1, 0))
+            let vertical = simd_quatf(angle: -gaze.y / radius.y, axis: SIMD3(1, 0, 0))
+            // Both eyes follow the same head-space direction despite their
+            // opposite mounting yaw and roll.
+            return eyeOrientation.inverse * horizontal * vertical * eyeOrientation
+        }
+
+        static func direction(_ point: SIMD2<Float>, side: Float) -> SIMD3<Float> {
+            let y = (point.y - 0.004) / radius.y
+            let x = (point.x - side * 0.096) / (radius.x * (1 - 0.15 * y))
+            return SIMD3(x, y, sqrt(max(0, 1 - x * x - y * y)))
+        }
+
+        static func projectedPoint(_ point: SIMD2<Float>, side: Float,
+                                   rotation: simd_quatf, angularScale: Float) -> SIMD3<Float> {
+            let center = direction(.zero, side: side)
+            let source = direction(point, side: side)
+            let cosine = max(-1, min(1, simd_dot(center, source)))
+            let tangent = source - center * cosine
+            let sine = simd_length(tangent)
+            let angle = atan2(sine, cosine) * angularScale
+            let expanded = simd_normalize(center * cos(angle) + tangent / max(sine, 0.000001) * sin(angle))
+            let d = rotation.act(expanded)
+            let taper = 1 - 0.15 * d.y
+            let position = SIMD3(radius.x * d.x * taper, radius.y * d.y - 0.006, 0.012 + radius.z * d.z)
+            let normal = simd_normalize(SIMD3(d.x / (radius.x * taper),
+                                              (d.y + 0.15 * d.x * d.x / taper) / radius.y,
+                                              d.z / radius.z))
+            return position + normal * relief
+        }
+
+        static let geometryModifier = """
+        #pragma arguments
+        float irisSide;
+        float4 irisRotation;
+        float irisAngularScale;
+        #pragma varyings
+        float irisRadius;
+        #pragma body
+        float2 point = _geometry.position.xy;
+        out.irisRadius = length(point / float2(0.125, 0.1625));
+        float3 radii = float3(0.226, 0.25764, 0.07458);
+        float cy = -0.004 / radii.y;
+        float cx = -irisSide * 0.096 / (radii.x * (1.0 - 0.15 * cy));
+        float3 center = float3(cx, cy, sqrt(max(0.0, 1.0 - cx*cx - cy*cy)));
+        float sy = (point.y - 0.004) / radii.y;
+        float sx = (point.x - irisSide * 0.096) / (radii.x * (1.0 - 0.15 * sy));
+        float3 source = float3(sx, sy, sqrt(max(0.0, 1.0 - sx*sx - sy*sy)));
+        float cosine = clamp(dot(center, source), -1.0, 1.0);
+        float3 tangent = source - center * cosine;
+        float sine = length(tangent);
+        float angle = atan2(sine, cosine) * irisAngularScale;
+        float3 d = normalize(center * cos(angle) + tangent / max(sine, 0.000001) * sin(angle));
+        d += 2.0 * cross(irisRotation.xyz, cross(irisRotation.xyz, d) + irisRotation.w * d);
+        float taper = 1.0 - 0.15 * d.y;
+        float3 normal = normalize(float3(d.x / (radii.x * taper),
+                                       (d.y + 0.15*d.x*d.x/taper) / radii.y,
+                                       d.z / radii.z));
+        _geometry.position.xyz = float3(radii.x*d.x*taper, radii.y*d.y - 0.006,
+                                       0.012 + radii.z*d.z) + normal * 0.002;
+        _geometry.normal = normal;
+        """
+    }
+
+    private func eyeDisc(radius: Float, side: Float, material: SCNMaterial, parent: SCNNode) {
         let rings=18,columns=64
         var vertices:[SCNVector3]=[],normals:[SCNVector3]=[],indices:[UInt32]=[]
         var uv:[CGPoint]=[]
@@ -382,15 +514,9 @@ final class PoulpiRig: @unchecked Sendable {
             for col in 0...columns {
                 let angle=Float(col)/Float(columns)*2 * .pi
                 let x=r*cos(angle),y=r*sin(angle)*1.30
-                let sx=x-side*0.096,sy=y-0.004,ry:Float=0.25764,rx:Float=0.226
-                let taper=1-0.15*sy/ry
-                let q=sx*sx/(rx*rx*taper*taper)+sy*sy/(ry*ry)
-                let dome=sqrt(max(0.005,1-q))
-                let z=0.012+0.07458*dome+lift-0.065
-                let dx = -0.07458*sx/(rx*rx*taper*taper*dome)
-                let dy = -0.07458*(sy/(ry*ry)+0.15*sx*sx/(ry*rx*rx*taper*taper*taper))/dome
-                let n=simd_normalize(SIMD3<Float>(-dx,-dy,1))
-                vertices.append(SCNVector3(x,y,z));normals.append(SCNVector3(n.x,n.y,n.z))
+                // Source coordinates remain immutable for the original UV crop.
+                // The geometry modifier maps them onto the eye every frame.
+                vertices.append(SCNVector3(x,y,0));normals.append(SCNVector3(0,0,1))
                 let centerX:Float=side < 0 ? 491 : 759
                 let centerY:Float=side < 0 ? 471 : 472
                 let radiusY:Float=side < 0 ? 71 : 70
@@ -403,7 +529,13 @@ final class PoulpiRig: @unchecked Sendable {
             }
         }
         let g=SCNGeometry(sources:[SCNGeometrySource(vertices:vertices),SCNGeometrySource(normals:normals),SCNGeometrySource(textureCoordinates:uv)],elements:[PoulpiRig.triangleElement(indices)])
-        g.firstMaterial=material;parent.addChildNode(SCNNode(geometry:g))
+        // SceneKit cannot infer bounds from the shader's spherical deformation.
+        g.boundingBox = (SCNVector3(-0.27,-0.27,-0.08), SCNVector3(0.27,0.26,0.10))
+        let eyeMaterial = material.copy() as! SCNMaterial
+        eyeMaterial.setValue(NSNumber(value: side), forKey: "irisSide")
+        eyeMaterial.setValue(NSValue(scnVector4: SCNVector4(0,0,0,1)), forKey: "irisRotation")
+        eyeMaterial.setValue(NSNumber(value: Float(1)), forKey: "irisAngularScale")
+        g.firstMaterial=eyeMaterial;parent.addChildNode(SCNNode(geometry:g))
     }
     private func buildFace() {
         let ivory = Self.material(UIColor(red: 0.685, green: 0.68, blue: 0.64, alpha: 1), roughness: 0.80)
@@ -436,12 +568,7 @@ final class PoulpiRig: @unchecked Sendable {
         iris.diffuse.contents=Self.referenceTexture
         // The supplied PNG has partial alpha even inside dark pupils. Iris
         // pigment is opaque; do not blend the ivory underneath into that colour.
-        iris.shaderModifiers = [.geometry: """
-        #pragma varyings
-        float irisRadius;
-        #pragma body
-        out.irisRadius=length(float2(_geometry.position.x/0.125,_geometry.position.y/0.1625));
-        """, .surface: """
+        iris.shaderModifiers = [.geometry: EyeSurface.geometryModifier, .surface: """
         #pragma transparent
         #pragma body
         // Filter only the geometric rim; dark pigment stays fully opaque inside.
@@ -455,9 +582,9 @@ final class PoulpiRig: @unchecked Sendable {
         let browMaterial=Self.material(UIColor(red:0.29,green:0.24,blue:0.69,alpha:1),roughness:0.62)
         browMaterial.shaderModifiers=[.geometry:Self.grainGeometryModifier,.surface:Self.grainSurfaceModifier(strength:"0.35")]
         let lidMaterial=Self.material(UIColor(red:0.30,green:0.23,blue:0.70,alpha:1),roughness:0.70)
-        lidMaterial.shaderModifiers=[.geometry:Self.grainGeometryModifier,
-                                     .surface:Self.grainSurfaceModifier(strength:"0.65")]
-        coloredFaceMaterials = [browMaterial, lidMaterial]
+        lidMaterial.shaderModifiers = [.geometry: Self.lidGeometryModifier,
+                                       .surface: Self.grainSurfaceModifier(strength: "0.65") + Self.lidEdgeSurfaceModifier]
+        coloredFaceMaterials = [browMaterial]
         for side: Float in [-1,1] {
             let eyeRoot = SCNNode(); eyeRoot.position = SCNVector3(side * 0.380, 0.434, 0.555); bones[0].addChildNode(eyeRoot)
             eyeRoot.eulerAngles.y = side * 0.20
@@ -468,20 +595,22 @@ final class PoulpiRig: @unchecked Sendable {
             eyeIvory.setValue(NSNumber(value:side < 0 ? 0.08 : -0.08),forKey:"ivoryBlueFill")
             if side > 0 { eyeIvory.diffuse.contents = UIColor(red:0.71,green:0.66,blue:0.57,alpha:1) }
             _ = eyeShell(0.226, SCNVector3(1,1.14,0.33), SCNVector3(0,-0.006,0.012), eyeIvory, parent: eyeRoot)
-            let gaze = SCNNode(); gaze.position = SCNVector3(-side * 0.096,-0.010,0.065); eyeRoot.addChildNode(gaze); pupils.append(gaze)
-            eyeDisc(radius:0.125,side:side,lift:0.010,material:iris,parent:gaze)
-            let lid=SCNNode(geometry:Self.openLid.copy() as? SCNGeometry)
-            lid.geometry?.firstMaterial=lidMaterial
-            let morph=SCNMorpher();morph.targets=Self.lidTargets;morph.calculationMode = .normalized
-            lid.morpher=morph;eyeRoot.addChildNode(lid);eyelids.append(morph)
-            let seam=tube(points:(0...24).map { step in
-                let x=Float(step)/24*0.32-0.16
-                let y = -0.025+0.032*pow(x/0.16,2)
-                let taper = 1-0.15*y/0.268
-                let z = 0.016+Self.lidDepth*sqrt(max(0,1-pow(x/(0.244*taper),2)-pow(y/0.268,2)))
-                return SCNVector3(x,y,z)
-            },radius:0.004,material:Self.material(UIColor(red:0.22,green:0.13,blue:0.53,alpha:1)))
-            seam.opacity=0;eyeRoot.addChildNode(seam);lidCreases.append(seam)
+            let gaze = SCNNode(); gaze.name = side < 0 ? "poulpi-pupil-left" : "poulpi-pupil-right"
+            eyeRoot.addChildNode(gaze); pupils.append(gaze)
+            eyeDisc(radius:0.125,side:side,material:iris,parent:gaze)
+            let lid = SCNNode(geometry: Self.openLid.copy() as? SCNGeometry)
+            lid.name = side < 0 ? "poulpi-lids-left" : "poulpi-lids-right"
+            let eyeLidMaterial = lidMaterial.copy() as! SCNMaterial
+            eyeLidMaterial.setValue(NSNumber(value: Float(0)), forKey: "lidClosure")
+            lid.geometry?.firstMaterial = eyeLidMaterial
+            lidMaterials.append(eyeLidMaterial)
+            coloredFaceMaterials.append(eyeLidMaterial)
+            let morph = SCNMorpher()
+            morph.targets = Self.lidTargets
+            morph.calculationMode = .normalized
+            lid.morpher = morph
+            eyeRoot.addChildNode(lid)
+            eyelids.append(morph)
             let brow = tube(points: (0...48).map { step in
                 let t=Float(step)/48
                 return SCNVector3(-0.138+t*0.276, 0.014*sin(t * .pi), 0)
@@ -490,6 +619,7 @@ final class PoulpiRig: @unchecked Sendable {
                 let blend = inward*inward*(3-2*inward)
                 return 0.92+0.23*blend
             })
+            brow.name = side < 0 ? "poulpi-brow-left" : "poulpi-brow-right"
             brow.position = SCNVector3(side*0.375,0.77,0.435); brow.eulerAngles.z = -side*0.34; brow.eulerAngles.y = side*0.35
             bones[0].addChildNode(brow); brows.append(brow)
         }
@@ -500,40 +630,121 @@ final class PoulpiRig: @unchecked Sendable {
         orange.diffuse.magnificationFilter = .linear
         orange.diffuse.mipFilter = .linear
         orange.diffuse.maxAnisotropy=8
-        orange.shaderModifiers=[.surface: """
+        orange.shaderModifiers=[.geometry: """
+        #pragma varyings
+        float2 mouthPoint;
         #pragma body
-        _surface.diffuse.a=1.0;
+        out.mouthPoint = _geometry.position.xy;
+        """, .surface: """
+        #pragma arguments
+        float mouthOpen;
+        float mouthRound;
+        float mouthSmile;
+        #pragma transparent
+        #pragma body
+        float width = mix(0.105, 0.065, mouthRound);
+        float height = 0.065 * mouthOpen;
+        float smileCurve = mouthSmile * 0.022 * pow(in.mouthPoint.x / 0.17, 2.0);
+        float2 p = float2(in.mouthPoint.x / width, (in.mouthPoint.y + 0.010 - smileCurve) / max(height, 0.001));
+        float edge = length(p);
+        float softness = max(0.025, fwidth(edge) * 1.5);
+        float aperture = smoothstep(0.015, 0.08, mouthOpen);
+        _surface.diffuse.a = 1.0 - aperture * (1.0 - smoothstep(1.0-softness, 1.0+softness, edge));
         """]
+        orange.setValue(NSNumber(value: Float(0)), forKey: "mouthOpen")
+        orange.setValue(NSNumber(value: Float(0)), forKey: "mouthRound")
+        orange.setValue(NSNumber(value: Float(0)), forKey: "mouthSmile")
+        mouthMaterial = orange
+        let cavityMaterial = Self.material(UIColor(red: 0.14, green: 0.055, blue: 0.18, alpha: 1), roughness: 0.9)
+        cavityMaterial.lightingModel = .constant
+        let cavity = SCNSphere(radius: 1)
+        cavity.segmentCount = 32
+        cavity.firstMaterial = cavityMaterial
+        mouthCavity.name = "poulpi-mouth-cavity"
+        mouthCavity.geometry = cavity
+        mouthCavity.position = SCNVector3(0, -0.010, 0.022)
+        mouthCavity.scale = SCNVector3(0.10, 0.001, 0.012)
+        mouthCavity.isHidden = true
+        mouth.addChildNode(mouthCavity)
         let lips=SCNNode(geometry:Self.resources.mouth)
         lips.geometry = lips.geometry?.copy() as? SCNGeometry
         lips.geometry?.firstMaterial=orange; lips.scale=SCNVector3(1.05,1.158,1); mouth.addChildNode(lips)
+        mouth.name = "poulpi-mouth"
         mouth.position = SCNVector3(-0.0033,0.179,0.601); bones[0].addChildNode(mouth)
     }
-    // The upper eyelid closes over the eye instead of flattening the eyeball.
-    // Closely spaced poses keep interpolated chords outside the curved iris.
-    // Only the two neighbouring targets are active; topology stays shared.
-    private static let lidDepth: Float = 0.112
-    nonisolated(unsafe) private static let openLid = lidGeometry(angle:0.057)
-    nonisolated(unsafe) private static let lidTargets = (1...16).map { lidGeometry(angle:Float($0) * .pi/16) }
-    private static func lidGeometry(angle:Float) -> SCNGeometry {
-        let rows=18, columns=24
-        var vertices:[SCNVector3]=[], normals:[SCNVector3]=[], indices:[UInt32]=[]
-        for row in 0...rows {
-            let theta=(0.001+Float(row)/Float(rows)*(angle-0.002))
-            for col in 0...columns {
-                let phi=Float(col)/Float(columns) * Float.pi
-                let y=0.268*cos(theta)
-                let x=0.244*sin(theta)*cos(phi)*(1-0.15*y/0.268),z=0.012+lidDepth*sin(theta)*sin(phi)
-                vertices.append(SCNVector3(x,y,z))
-                let n=simd_normalize(SIMD3<Float>(x/(0.244*0.244),y/(0.268*0.268),(z-0.012)/(lidDepth*lidDepth)))
-                normals.append(SCNVector3(n.x,n.y,n.z))
-                if row<rows && col<columns {
-                    let a=UInt32(row*(columns+1)+col),b=a+1,c=a+UInt32(columns+1),d=c+1
-                    indices += [a,b,c,b,d,c]
+    // The two membranes share fixed corners and converge on the same curved
+    // edge. A closed eye therefore has one real seam, not a painted line above
+    // a second, still-open boundary. Both membranes follow the ivory surface.
+    nonisolated(unsafe) private static let openLid = lidGeometry(closure: 0)
+    nonisolated(unsafe) private static let lidTargets = (1...16).map { lidGeometry(closure: Float($0) / 16) }
+    private static let lidGeometryModifier = """
+        #pragma arguments
+        float lidClosure;
+        #pragma varyings
+        float3 sculptPosition;
+        float lidEdgeDistance;
+        #pragma body
+        out.sculptPosition = _geometry.position.xyz;
+        float u = _geometry.texcoords[0].x;
+        float span = max(0.001, acos(clamp(1.0 - lidClosure, 0.0, 1.0)));
+        out.lidEdgeDistance = _geometry.texcoords[0].y * span * 0.16 * sqrt(max(0.0, 1.0-u*u));
+        """
+    private static let lidEdgeSurfaceModifier = """
+
+        // Pigment follows the actual free edge of each membrane. At complete
+        // closure both edges coincide, so no independent floating crease exists.
+        float edgeWidth = max(0.0022, fwidth(in.lidEdgeDistance));
+        float edgePigment = 1.0 - smoothstep(0.0, edgeWidth, in.lidEdgeDistance);
+        _surface.diffuse.rgb *= 1.0 - 0.24 * edgePigment;
+        """
+
+    private static func lidGeometry(closure: Float) -> SCNGeometry {
+        let rows = 24, columns = 64
+        let radius = EyeSurface.radius
+        var vertices: [SCNVector3] = [], normals: [SCNVector3] = []
+        var uv: [CGPoint] = [], indices: [UInt32] = []
+        for lower in [false, true] {
+            let offset = UInt32(vertices.count)
+            for row in 0...rows {
+                let progress = Float(row) / Float(rows)
+                for col in 0...columns {
+                    // Cosine spacing gives smooth corners without narrow slivers
+                    // from a uniformly spaced horizontal grid.
+                    let u = -cos(Float(col) / Float(columns) * .pi)
+                    let span = sqrt(max(0, 1 - u * u))
+                    let meetingHeight = -0.019 / radius.y * span
+                    let openHeight: Float = lower ? -0.99998 : 0.99998
+                    let edgeHeight = openHeight + (meetingHeight - openHeight) * closure
+                    let edgeAngle = acos(max(-1, min(1, edgeHeight)))
+                    let theta = lower ? edgeAngle + (.pi - edgeAngle) * progress : edgeAngle * progress
+                    let direction = SIMD3<Float>(u, span * cos(theta), span * sin(theta))
+                    let taper = 1 - 0.15 * direction.y
+                    let normal = simd_normalize(SIMD3<Float>(
+                        direction.x / (radius.x * taper),
+                        (direction.y + 0.15 * direction.x * direction.x / taper) / radius.y,
+                        direction.z / radius.z
+                    ))
+                    let surface = SIMD3<Float>(radius.x * direction.x * taper,
+                                               radius.y * direction.y - 0.006,
+                                               0.012 + radius.z * direction.z)
+                    // Thin skin follows the eye; it does not inflate into a
+                    // larger enclosing globe as the old upper-only cap did.
+                    let point = surface + normal * 0.0045
+                    vertices.append(SCNVector3(point.x, point.y, point.z))
+                    normals.append(SCNVector3(normal.x, normal.y, normal.z))
+                    uv.append(CGPoint(x: CGFloat(u), y: CGFloat(lower ? progress : 1 - progress)))
+                    if row < rows && col < columns {
+                        let a = offset + UInt32(row * (columns + 1) + col)
+                        let b = a + 1, c = a + UInt32(columns + 1), d = c + 1
+                        indices += [a, c, b, b, c, d]
+                    }
                 }
             }
         }
-        return SCNGeometry(sources:[SCNGeometrySource(vertices:vertices),SCNGeometrySource(normals:normals)],elements:[PoulpiRig.triangleElement(indices)])
+        return SCNGeometry(sources: [SCNGeometrySource(vertices: vertices),
+                                    SCNGeometrySource(normals: normals),
+                                    SCNGeometrySource(textureCoordinates: uv)],
+                           elements: [triangleElement(indices)])
     }
 
     // A single closed lip cushion, with the smile pressed into the surface.
@@ -600,46 +811,157 @@ final class PoulpiRig: @unchecked Sendable {
         return SCNNode(geometry:g)
     }
 
-    private func closeEyelids(_ amount:Float) {
+    #if DEBUG
+    /// Drives the real closure path for deterministic front/profile rendering checks.
+    func setInspectionEyelids(_ closure: Float) {
         lock.lock(); defer { lock.unlock() }
+        for index in 0..<2 { closeEyelid(closure, index: index) }
+    }
+    #endif
+
+    private func closeEyelid(_ amount: Float, index: Int) {
         let closure=max(0,min(1,amount))
-        guard abs(closure-eyelidClosure)>0.0001 else { return }
-        eyelidClosure=closure
-        for seam in lidCreases { seam.opacity=CGFloat(pow(closure,4)) }
+        guard abs(closure-eyelidClosure[index])>0.0001 else { return }
+        eyelidClosure[index]=closure
+        lidMaterials[index].setValue(NSNumber(value: closure), forKey: "lidClosure")
         let targetCount=Self.lidTargets.count
         let phase=closure*Float(targetCount)
         let segment=min(targetCount-1,Int(phase)), progress=phase-Float(segment)
-        for lid in eyelids {
-            for index in 0..<targetCount {
-                let weight=index==segment ? progress : (index==segment-1 ? 1-progress : 0)
-                lid.setWeight(CGFloat(weight),forTargetAt:index)
+        for target in 0..<targetCount {
+            let weight=target==segment ? progress : (target==segment-1 ? 1-progress : 0)
+            eyelids[index].setWeight(CGFloat(weight),forTargetAt:target)
+        }
+    }
+
+    private func applyFace(_ face: FacePose) {
+        let old = lastFace
+        for index in 0..<2 where old?.lids[index] != face.lids[index] {
+            closeEyelid(face.lids[index], index: index)
+        }
+        if old?.gaze != face.gaze || old?.pupilScale != face.pupilScale {
+            for pupil in pupils {
+                guard let eye = pupil.parent, let material = pupil.childNodes.first?.geometry?.firstMaterial else { continue }
+                let rotation = EyeSurface.rotation(for: face.gaze, eyeOrientation: eye.simdOrientation).vector
+                material.setValue(NSValue(scnVector4: SCNVector4(rotation.x, rotation.y, rotation.z, rotation.w)), forKey: "irisRotation")
+                material.setValue(NSNumber(value: EyeSurface.angularScale(for: face.pupilScale)), forKey: "irisAngularScale")
             }
         }
+        if old?.brows != face.brows {
+            for (index, brow) in brows.enumerated() {
+                let side: Float = index == 0 ? -1 : 1
+                let lift = face.brows[index]
+                brow.position = SCNVector3(side * 0.375, 0.77 + lift, 0.435 - max(0, lift) * 0.18)
+                brow.eulerAngles.z = -side * (0.34 + lift * 1.6)
+            }
+        }
+        if old?.opening != face.opening || old?.roundness != face.roundness || old?.smile != face.smile {
+            mouthMaterial?.setValue(NSNumber(value: face.opening), forKey: "mouthOpen")
+            mouthMaterial?.setValue(NSNumber(value: face.roundness), forKey: "mouthRound")
+            mouthMaterial?.setValue(NSNumber(value: face.smile), forKey: "mouthSmile")
+            mouthCavity.isHidden = face.opening < 0.015
+            mouthCavity.scale = SCNVector3(0.106 - face.roundness * 0.038,
+                                           max(0.001, face.opening * 0.063), 0.012)
+            mouth.scale = SCNVector3(1 + face.smile * 0.09 - face.roundness * 0.08,
+                                     1 + face.opening * 0.07, 1)
+        }
+        if old?.headTilt != face.headTilt {
+            bones[0].simdOrientation = simd_quatf(angle: face.headTilt, axis: SIMD3(0, 0, 1))
+        }
+        lastFace = face
     }
 
     func play(_ mood: LisaMascotMood, animated: Bool) {
         #if DEBUG
         let animated = animated && !(ProcessInfo.processInfo.arguments.contains("--octopus-preview") && ProcessInfo.processInfo.arguments.contains("--octopus-still"))
         #endif
-        lock.lock(); self.mood = mood; lock.unlock()
+        lock.lock(); defer { lock.unlock() }
+        transitionFace = animated ? lastFace : nil
+        self.mood = mood; reactionElapsed = 0
         if !animated {
             // Static poses write these nodes directly; the next animated frame
             // must restore every channel, even when its cached value matches.
-            lastBodyScale = nil; lastGaze = nil; lastExpression = nil
+            lastBodyScale = nil; lastFace = nil
             node.removeAction(forKey:"rig")
-            activity = 0; swimWeight = 0; previousTime = 0
+            swimWeight = 0
+            previousTime = 0; phaseTime = 0
             bends = Array(repeating: 0, count: 24)
             twists = Array(repeating: 0, count: 24)
-            for b in bones { b.eulerAngles = SCNVector3Zero }; bones[0].scale=SCNVector3(1,1,1)
-            closeEyelids(mood == .sleepy ? 1 : 0)
-            for (i,pupil) in pupils.enumerated() { pupil.position.x = i==0 ? 0.096 : -0.096; pupil.position.y = -0.010 }
-            for (i,brow) in brows.enumerated() { brow.position.y=0.77;brow.position.z=0.435;brow.eulerAngles.z = i==0 ? 0.34 : -0.34 }
-            mouth.scale=SCNVector3(1,1,1)
+            for b in bones { b.eulerAngles = SCNVector3Zero }
+            lastJointOrientations = Array(repeating: nil, count: 24)
+            bones[0].scale=SCNVector3(1,1,1)
+            applyFace(Self.expression(for: mood))
             return
         }
         guard node.action(forKey:"rig") == nil else { return }
         node.runAction(.repeatForever(.customAction(duration:24) { [weak self] _,time in self?.animate(time) }),forKey:"rig")
     }
+
+    private struct ReactionEnvelope {
+        let anticipation: Float
+        let accent: Float
+        let settle: Float
+    }
+
+    private static func envelope(elapsed: Float, duration: Float) -> ReactionEnvelope {
+        let phase = max(0, min(1, elapsed / max(duration, 0.1)))
+        let anticipation = phase < 0.18 ? sin(phase / 0.18 * .pi) : 0
+        let accentPhase = max(0, min(1, (phase - 0.14) / 0.66))
+        let accent = sin(accentPhase * .pi)
+        let settle = phase > 0.58 ? sin((phase - 0.58) * 12) * exp(-(phase - 0.58) * 8) : 0
+        return ReactionEnvelope(anticipation: anticipation, accent: accent, settle: settle)
+    }
+
+    private static func animatedFace(_ mood: LisaMascotMood, time: Float, envelope: ReactionEnvelope) -> FacePose {
+        var face = expression(for: mood)
+        let strength = 0.65 + envelope.accent * 0.45 - envelope.anticipation * 0.12 + envelope.settle * 0.06
+        face.lids *= strength
+        if mood == .sleepy { face.lids = simd_max(face.lids, SIMD2(repeating: 0.84)) }
+        face.brows *= strength
+        face.smile *= strength
+        face.opening = max(0, min(1, face.opening * strength))
+        face.headTilt = face.headTilt * strength + sin(time * 2.2) * face.armEnergy * 0.07
+        face.gaze += SIMD2(sin(time * 0.9) * 0.008, cos(time * 1.3) * 0.006)
+        switch mood {
+        case .giggle, .celebrating:
+            face.opening *= 0.67 + 0.33 * pow(sin(time * 7), 2)
+            face.brows += SIMD2(repeating: sin(time * 7) * 0.008)
+        case .sleepy:
+            face.opening = max(face.opening, 0.48 * envelope.accent)
+            face.roundness = 0.9
+        case .nervous:
+            face.gaze += SIMD2(sin(time * 16) * 0.007, cos(time * 13) * 0.005)
+        case .dizzy:
+            face.gaze += SIMD2(cos(time * 5), sin(time * 5)) * 0.020
+        default: break
+        }
+        let local = time.truncatingRemainder(dividingBy: 4)
+        let blink = local > 3.65 ? pow(sin((local - 3.65) / 0.35 * .pi), 2) : 0
+        face.lids = simd_max(face.lids, SIMD2(repeating: blink))
+        if mood == .peek || mood == .encouraging || mood == .moonwalk {
+            face.lids.x = max(face.lids.x, min(1, envelope.accent * 1.08))
+        }
+        if mood == .sneeze { face.lids = simd_max(face.lids, SIMD2(repeating: envelope.accent)) }
+        if let forced = inspectionBlink { face.lids = SIMD2(repeating: forced) }
+        return face
+    }
+
+    private static func blend(_ source: FacePose, _ target: FacePose, progress: Float) -> FacePose {
+        let t = max(0, min(1, progress))
+        let eased = t * t * (3 - 2 * t)
+        func mix(_ a: Float, _ b: Float) -> Float { a + (b - a) * eased }
+        return FacePose(
+            lids: source.lids + (target.lids - source.lids) * eased,
+            gaze: source.gaze + (target.gaze - source.gaze) * eased,
+            brows: source.brows + (target.brows - source.brows) * eased,
+            smile: mix(source.smile, target.smile),
+            opening: mix(source.opening, target.opening),
+            roundness: mix(source.roundness, target.roundness),
+            pupilScale: mix(source.pupilScale, target.pupilScale),
+            headTilt: mix(source.headTilt, target.headTilt),
+            armEnergy: mix(source.armEnergy, target.armEnergy)
+        )
+    }
+
     /// Distinct, bounded poses blend into the swim instead of replacing it.
     private func armGesture(_ mood: LisaMascotMood, arm: Int, joint: Int, time: Float) -> (bend: Float, twist: Float) {
         let tip = Float(joint) / 2
@@ -648,6 +970,17 @@ final class PoulpiRig: @unchecked Sendable {
         let wave = sin(time * 5 - Float(joint) * 0.6 + Float(arm) * 0.8)
         switch mood {
         case .idle, .sleepy: return (0, 0)
+        case .surprised:
+            return (-0.30 - tip * 0.12 + wave * 0.06, side * 0.12)
+        case .nervous:
+            let tremor = sin(time * 17 + Float(arm) * 1.7 + Float(joint))
+            return (tremor * 0.12, tremor * side * 0.10)
+        case .confused:
+            return arm == 1 ? (-0.32 - tip * 0.10, side * 0.10) : (-0.03, 0)
+        case .loved:
+            return front ? (-0.24 - tip * 0.08 + wave * 0.05, side * 0.08) : (-0.02, 0)
+        case .proud:
+            return (arm == 1 ? -0.32 : 0.20 + tip * 0.08, arm == 1 ? -0.18 : 0)
         case .happy, .encouraging:
             return arm == 1 ? (-0.20 - tip * 0.16 + wave * 0.12, sin(time * 6) * 0.18 * (1-tip)) : (0, 0)
         case .thinking, .curious:
@@ -677,11 +1010,21 @@ final class PoulpiRig: @unchecked Sendable {
         }
     }
     func animate(_ time: CGFloat) {
-        lock.lock(); let mood = self.mood; let swimming = self.swimming; lock.unlock()
-        let dt = Float(time >= previousTime ? min(0.05,time-previousTime) : 1/60); previousTime=time
-        let target: Float = mood == .idle || mood == .thinking || mood == .sleepy ? 0 : 1
-        activity += (target-activity)*(1-exp(-dt/0.28))
-        let t=Float(time), cycle=t * .pi/12
+        lock.lock(); defer { lock.unlock() }
+        let mood = self.mood, swimming = self.swimming
+        let elapsed = Float(time >= previousTime ? time - previousTime : max(0, 24 - previousTime + time))
+        previousTime = time
+        reactionElapsed += elapsed
+        // All facial frequencies are multiples of 0.1 rad/s, so 20π is an
+        // exact common period. This stays continuous across the 24s action loop.
+        phaseTime = (phaseTime + elapsed).truncatingRemainder(dividingBy: 20 * .pi)
+        let reactionElapsed = self.reactionElapsed
+        let dt = min(0.05, elapsed)
+        let t=phaseTime, cycle=Float(time) * .pi/12
+        let envelope = Self.envelope(elapsed: reactionElapsed, duration: Float(mood.reactionDuration))
+        let targetFace = Self.animatedFace(mood, time: t, envelope: envelope)
+        let face = transitionFace.map { Self.blend($0, targetFace, progress: reactionElapsed / 0.22) } ?? targetFace
+        if reactionElapsed >= 0.22 { transitionFace = nil }
         let blend = 1 - exp(-dt / 0.13)
         swimWeight += ((swimming == nil ? 0 : 1) - swimWeight) * blend
         let stroke = Float(swimming?.phase ?? Double(t * .pi))
@@ -706,7 +1049,12 @@ final class PoulpiRig: @unchecked Sendable {
                 let gesture = mood == .idle || mood == .sleepy
                     ? (bend: Float(0), twist: Float(0))
                     : armGesture(mood, arm: i, joint: j, time: gestureTime)
-                let target = idle * (1 - swimWeight * 0.7) + swimWeight * (paddle + fan + jointSteering) + gesture.bend
+                let sharedGesture = sin(t * 4.4 - Float(i) * 0.45 - joint * 0.5)
+                    * face.armEnergy * (0.35 + joint * 0.18)
+                let anticipation = -envelope.anticipation * face.armEnergy * (0.34 + joint * 0.12)
+                let accent = envelope.accent * sharedGesture
+                let target = idle * (1 - swimWeight * 0.7) + swimWeight * (paddle + fan + jointSteering)
+                    + gesture.bend + sharedGesture * 0.35 + anticipation + accent
                 let index = i * 3 + j
                 bends[index] += (target - bends[index]) * blend
                 let twist = (j == 0 ? baseTwist : 0) + gesture.twist
@@ -714,41 +1062,23 @@ final class PoulpiRig: @unchecked Sendable {
                 // Compose rotations once: do not mix Euler writes with axis-angle.
                 let curl = simd_quatf(angle: bends[index], axis: Self.curlAxes[i])
                 let sweep = simd_quatf(angle: twists[index], axis: SIMD3(0, 1, 0))
-                bones[1+index].simdOrientation = sweep * curl
+                let orientation = sweep * curl
+                if lastJointOrientations[index]?.vector != orientation.vector {
+                    bones[1+index].simdOrientation = orientation
+                    lastJointOrientations[index] = orientation
+                }
             }
         }
         let breath = (mood == .sleepy ? Float(0.025) : 0.012) * sin(cycle * (mood == .sleepy ? 3 : 6))
         let contraction = swimWeight * Float(swimming?.propulsion ?? 0) * 0.045
-        let bodyScale = SIMD3<Float>(1 + breath - contraction,
-                                     1 + (mood == .sleepy ? breath * 1.2 : 0.015 * sin(cycle * 6)) + contraction * 0.7,
-                                     1 + breath - contraction)
+        let recoil = (envelope.accent - envelope.anticipation * 0.7 + envelope.settle * 0.2) * face.armEnergy * 0.08
+        let bodyScale = SIMD3<Float>(1 + breath - contraction + recoil,
+                                     1 + (mood == .sleepy ? breath * 1.2 : 0.015 * sin(cycle * 6)) + contraction * 0.7 - recoil * 0.7,
+                                     1 + breath - contraction + recoil)
         if lastBodyScale != bodyScale {
             bones[0].scale = SCNVector3(bodyScale.x, bodyScale.y, bodyScale.z)
             lastBodyScale = bodyScale
         }
-        // Smooth blink every four seconds, with no sprite substitutions.
-        let local=t.truncatingRemainder(dividingBy:4)
-        let blink=local>3.65 ? pow(sin((local-3.65)/0.35 * .pi),2) : 0
-        let closure=Self.inspectionBlink ?? (mood == .sleepy ? 1 : blink)
-        closeEyelids(closure)
-        if lastExpression?.activity != activity || lastExpression?.mood != mood {
-            for (i,brow) in brows.enumerated() {
-                let side:Float=i==0 ? -1:1
-                let curious:Float=mood == .thinking && i==0 ? 0.022 : 0
-                brow.position = SCNVector3(brow.position.x, 0.77+activity*0.012+curious,
-                                          0.435-activity*0.008-curious*0.7)
-                brow.eulerAngles.z = -side*(0.34+activity*0.10)+curious*3
-            }
-            mouth.scale=SCNVector3(1+activity*0.08,1+activity*0.18,1)
-            lastExpression = (activity, mood)
-        }
-        let gaze = SIMD2<Float>(sin(cycle*2)*0.014, -0.010+cos(cycle*3)*0.009)
-        if lastGaze != gaze {
-            for (i,pupil) in pupils.enumerated() {
-                let side:Float=i==0 ? -1:1
-                pupil.position = SCNVector3(-side*0.096+gaze.x, gaze.y, 0.065)
-            }
-            lastGaze = gaze
-        }
+        applyFace(face)
     }
 }

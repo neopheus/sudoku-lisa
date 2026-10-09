@@ -55,7 +55,7 @@ struct RootView: View {
         .alert(L10n.text("Sauvegarde"), isPresented: Binding(get: { store.saveError != nil }, set: { if !$0 { store.saveError = nil } })) { Button(L10n.text("D’accord")) { store.saveError = nil } } message: { Text(L10n.text(store.saveError ?? "")) }
     }
     private func motionAllowed(tab index: Int) -> Bool {
-        tab == index && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil
+        store.settings.animatedDecor && tab == index && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil
     }
 }
 
@@ -93,7 +93,7 @@ struct HomeView: View {
 
     var body: some View {
         ZStack {
-            LisaBackground(motionEnabled: mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
+            LisaBackground(motionEnabled: store.settings.animatedDecor && mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
             ScrollView {
                 VStack(spacing: 18) {
                     HStack {
@@ -103,7 +103,7 @@ struct HomeView: View {
                     }
                     HStack(spacing: 24) {
                         LisaWordmark(size: 83).rotationEffect(.degrees(-5)).lisaFloat(amplitude: 5, tilt: 2, period: 4.5)
-                        LisaCompanion(size: 124, animationEnabled: mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
+                        LisaCompanion(size: 124, animationEnabled: store.settings.animatedDecor && mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
                             .rotationEffect(.degrees(6))
                             .background { LisaMagicHalo().frame(width: 185, height: 185) }
                             .lisaFloat(amplitude: 7, tilt: 2, period: 4, phase: 1.5)
@@ -165,7 +165,7 @@ struct HomeView: View {
                 }.frame(maxWidth: 720).padding(.horizontal, 22).padding(.top, 5).frame(maxWidth: .infinity)
             }
         }
-        .environment(\.lisaMotionAllowed, mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
+        .environment(\.lisaMotionAllowed, store.settings.animatedDecor && mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
         .onAppear { withAnimation(reduceMotion ? nil : .spring(response: 0.6, dampingFraction: 0.7)) { appeared = true } }
         .toolbarBackground(.hidden, for: .navigationBar)
         .sheet(isPresented: $difficultySheet) { DifficultyView().environment(\.lisaMotionAllowed, true) }

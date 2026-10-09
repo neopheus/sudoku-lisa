@@ -5,11 +5,12 @@ import XCTest
 
 final class WhatsAppStickerTests: XCTestCase {
     func testCatalogMatchesMascotMoods() {
-        XCTAssertEqual(PoulpiStickerCatalog.stickers.count, 24)
-        XCTAssertEqual(
-            Set(PoulpiStickerCatalog.stickers.map(\.id)),
-            Set(LisaMascotMood.allCases.map(\.rawValue))
-        )
+        let ids = PoulpiStickerCatalog.stickers.map(\.id)
+        XCTAssertEqual(ids.count, 24)
+        XCTAssertEqual(Set(ids).count, ids.count, "Sticker IDs must be unique")
+        for id in ids {
+            XCTAssertNotNil(LisaMascotMood(rawValue: id), "Sticker \(id) must resolve to a mascot mood")
+        }
     }
 
     func testPayloadUsesWhatsAppJSONContract() throws {

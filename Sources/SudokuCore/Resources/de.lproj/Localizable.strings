@@ -589,3 +589,26 @@
 "La préparation du duel a expiré." = "Die Vorbereitung des Duells ist abgelaufen.";
 "Le départ a été interrompu." = "Der Start wurde unterbrochen.";
 "Un ami a quitté le groupe. Créez une nouvelle invitation." = "Ein Freund hat die Gruppe verlassen. Erstelle eine neue Einladung.";
+
+/* Poulpi expressions */
+"Surpris" = "Überrascht";
+"Nerveux" = "Nervös";
+"Confus" = "Verwirrt";
+"Amoureux" = "Verliebt";
+"Fier" = "Stolz";
+
+// Poulpi animation playground
+"Acrobaties" = "Akrobatik";
+"Aperçu compact" = "Kompakte Vorschau";
+"Arrêter la boucle" = "Wiederholung beenden";
+"En lecture" = "Wiedergabe";
+"En pause" = "Pausiert";
+"Grand aperçu" = "Große Vorschau";
+"Jouer en boucle" = "Auswahl wiederholen";
+"Mettre l’animation en pause" = "Animation pausieren";
+"Ralenti" = "Zeitlupe";
+"Rejouer l’animation" = "Animation erneut abspielen";
+"Reprendre l’animation" = "Animation fortsetzen";
+"Vitesse normale" = "Normale Geschwindigkeit";
+"Émotions" = "Gefühle";
+"Glissez pour tourner et pincez pour zoomer." = "Zum Drehen ziehen und zum Zoomen zwei Finger auseinanderziehen.";

@@ -1,6 +1,7 @@
 #if DEBUG
 import SceneKit
 import UIKit
+import PoulpiStickers
 
 /// Renders the in-game sculpt into transparent, square art for Messages and sharing.
 @MainActor
@@ -13,7 +14,10 @@ enum PoulpiStickerExporter {
             let folder = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
                 .appendingPathComponent("PoulpiStickers", isDirectory: true)
             try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-            for mood in LisaMascotMood.allCases {
+            for sticker in PoulpiStickerCatalog.stickers {
+                guard let mood = LisaMascotMood(rawValue: sticker.id) else {
+                    throw ExportError.unknownMood(sticker.id)
+                }
                 let art = render(mood)
                 guard let data = art.pngData() else { throw ExportError.encoding(mood.rawValue) }
                 try data.write(to: folder.appendingPathComponent("poulpi-\(mood.rawValue).png"), options: .atomic)
@@ -33,7 +37,7 @@ enum PoulpiStickerExporter {
         }
     }
 
-    private enum ExportError: Error { case encoding(String) }
+    private enum ExportError: Error { case encoding(String), unknownMood(String) }
 
     private struct Style {
         let symbol: String

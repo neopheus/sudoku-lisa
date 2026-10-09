@@ -33,19 +33,16 @@ final class LisaUITests: XCTestCase {
         let controls = app.scrollViews["poulpiControlsScroll"]
         func revealControl(_ element: XCUIElement) {
             for _ in 0..<24 {
-                if element.isHittable { return }
-                if element.exists && element.frame.midY < controls.frame.midY {
-                    controls.swipeDown()
-                } else {
-                    controls.swipeUp()
-                }
+                if element.exists && element.isHittable { return }
+                let above = element.exists && element.frame.midY < controls.frame.minY
+                let from = controls.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: above ? 0.3 : 0.7))
+                let to = controls.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: above ? 0.7 : 0.3))
+                from.press(forDuration: 0.05, thenDragTo: to)
             }
+            XCTAssertTrue(element.isHittable)
         }
         let happy = app.buttons["poulpiAnimation-happy"]
-        for _ in 0..<6 {
-            if happy.isHittable && app.frame.contains(happy.frame) { break }
-            app.scrollViews.firstMatch.swipeUp()
-        }
+        revealControl(happy)
         happy.tap()
         for _ in 0..<6 {
             if stage.isHittable { break }
@@ -71,17 +68,7 @@ final class LisaUITests: XCTestCase {
         auto.tap()
         XCTAssertEqual(auto.value as? String, "Désactivé")
         let superhero = app.buttons["poulpiAnimation-superhero"]
-        for _ in 0..<6 {
-            if superhero.isHittable { break }
-            let animationList = app.scrollViews["poulpiAnimationList"]
-            let list = animationList.exists ? animationList : app.scrollViews.firstMatch
-            let visible = list.frame.intersection(app.frame)
-            print("Poulpi list frame: \(list.frame), visible: \(visible)")
-            let start = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: visible.midX, dy: min(visible.maxY - 55, app.frame.maxY - 100)))
-            let end = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: visible.midX, dy: visible.minY + 20))
-            start.press(forDuration: 0.05, thenDragTo: end)
-        }
-        XCTAssertTrue(superhero.isHittable)
+        revealControl(superhero)
         superhero.tap()
         // Only the controls scroll; Poulpi remains fixed and interactive.
         for _ in 0..<6 {

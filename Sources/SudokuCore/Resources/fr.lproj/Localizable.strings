@@ -589,3 +589,26 @@
 "La préparation du duel a expiré." = "La préparation du duel a expiré.";
 "Le départ a été interrompu." = "Le départ a été interrompu.";
 "Un ami a quitté le groupe. Créez une nouvelle invitation." = "Un ami a quitté le groupe. Créez une nouvelle invitation.";
+
+/* Poulpi expressions */
+"Surpris" = "Surpris";
+"Nerveux" = "Nerveux";
+"Confus" = "Confus";
+"Amoureux" = "Amoureux";
+"Fier" = "Fier";
+
+// Poulpi animation playground
+"Acrobaties" = "Acrobaties";
+"Aperçu compact" = "Aperçu compact";
+"Arrêter la boucle" = "Arrêter la boucle";
+"En lecture" = "En lecture";
+"En pause" = "En pause";
+"Grand aperçu" = "Grand aperçu";
+"Jouer en boucle" = "Jouer en boucle";
+"Mettre l’animation en pause" = "Mettre l’animation en pause";
+"Ralenti" = "Ralenti";
+"Rejouer l’animation" = "Rejouer l’animation";
+"Reprendre l’animation" = "Reprendre l’animation";
+"Vitesse normale" = "Vitesse normale";
+"Émotions" = "Émotions";
+"Glissez pour tourner et pincez pour zoomer." = "Glissez pour tourner et pincez pour zoomer.";

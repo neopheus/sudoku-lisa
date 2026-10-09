@@ -589,3 +589,26 @@
 "La préparation du duel a expiré." = "Se agotó el tiempo de preparación del duelo.";
 "Le départ a été interrompu." = "La salida se interrumpió.";
 "Un ami a quitté le groupe. Créez une nouvelle invitation." = "Un amigo salió del grupo. Crea una nueva invitación.";
+
+/* Poulpi expressions */
+"Surpris" = "Sorprendido";
+"Nerveux" = "Nervioso";
+"Confus" = "Confundido";
+"Amoureux" = "Enamorado";
+"Fier" = "Orgulloso";
+
+// Poulpi animation playground
+"Acrobaties" = "Acrobacias";
+"Aperçu compact" = "Vista compacta";
+"Arrêter la boucle" = "Detener bucle";
+"En lecture" = "Reproduciendo";
+"En pause" = "En pausa";
+"Grand aperçu" = "Vista grande";
+"Jouer en boucle" = "Repetir selección";
+"Mettre l’animation en pause" = "Pausar animación";
+"Ralenti" = "Cámara lenta";
+"Rejouer l’animation" = "Repetir animación";
+"Reprendre l’animation" = "Reanudar animación";
+"Vitesse normale" = "Velocidad normal";
+"Émotions" = "Emociones";
+"Glissez pour tourner et pincez pour zoomer." = "Desliza para girar y pellizca para ampliar.";

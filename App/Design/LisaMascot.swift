@@ -4,6 +4,50 @@ import SwiftUI
 enum LisaMascotMood: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     case idle, happy, thinking, encouraging, sleepy, celebrating, pirouette, wobble, peek, jelly, swim, bow, curious, giggle, rocket, chase, moonwalk, juggle, cloudHide, sneeze, tumble, balance, dizzy, superhero
+    case surprised, nervous, confused, loved, proud
+
+    var isAcrobatic: Bool {
+        switch self {
+        case .pirouette, .wobble, .jelly, .swim, .bow, .rocket, .chase, .moonwalk,
+             .juggle, .cloudHide, .sneeze, .tumble, .balance, .dizzy, .superhero: true
+        default: false
+        }
+    }
+
+    /// Shared by facial articulation, body gestures and the preview sequencer.
+    var reactionDuration: Double {
+        switch self {
+        case .chase, .moonwalk, .juggle, .cloudHide, .sneeze, .tumble, .balance, .dizzy, .superhero: 4.4
+        case .curious, .giggle, .peek, .surprised, .nervous, .confused, .loved, .proud: 1.8
+        case .sleepy: 3.2
+        case .idle: 4
+        default: 2.2
+        }
+    }
+}
+
+enum LisaMascotExpressionScheduler {
+    private static let idleExpressions: [LisaMascotMood] = [.curious, .giggle, .peek, .surprised, .nervous, .confused, .loved, .proud]
+    private static let thinkingExpressions: [LisaMascotMood] = [.curious, .confused, .peek]
+    private static let happyExpressions: [LisaMascotMood] = [.giggle, .loved, .proud]
+    private static let encouragingExpressions: [LisaMascotMood] = [.happy, .proud, .loved]
+
+    static func nextMood(baseMood: LisaMascotMood, previousMood: LisaMascotMood?, sequence: Int) -> LisaMascotMood? {
+        let expressions: [LisaMascotMood]
+        switch baseMood {
+        case .idle: expressions = idleExpressions
+        case .thinking: expressions = thinkingExpressions
+        case .happy: expressions = happyExpressions
+        case .encouraging: expressions = encouragingExpressions
+        default: return nil
+        }
+        let start = ((sequence % expressions.count) + expressions.count) % expressions.count
+        for offset in expressions.indices {
+            let candidate = expressions[(start + offset) % expressions.count]
+            if candidate != baseMood && candidate != previousMood { return candidate }
+        }
+        return nil
+    }
 }
 
 /// Articulated Poulpi sculpt with continuous scene-space movement.
@@ -19,13 +63,23 @@ struct LisaMascot: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var visible = false
     @State private var onScreen = true
+    @State private var ambientMood: LisaMascotMood?
+    @State private var ambientReaction = 0
     @Environment(\.lisaVisibleBounds) private var visibleBounds
+
+    private var animationRunning: Bool {
+        animationEnabled && motionAllowed && visible && onScreen && scenePhase == .active && !reduceMotion
+    }
+    private var ambientEnabled: Bool {
+        animationRunning && !celebrating && LisaMascotExpressionScheduler.nextMood(baseMood: mood, previousMood: nil, sequence: 0) != nil
+    }
+    private var ambientTaskID: String { "\(ambientEnabled)-\(mood.rawValue)-\(reactionToken)-\(celebrating)" }
 
     var body: some View {
         OctopusSceneView(
-            mood: celebrating ? .celebrating : mood,
-            reactionToken: reactionToken,
-            animated: animationEnabled && motionAllowed && visible && onScreen && scenePhase == .active && !reduceMotion,
+            mood: celebrating ? .celebrating : (ambientMood ?? mood),
+            reactionToken: reactionToken + ambientReaction,
+            animated: animationRunning,
             appearance: appearance
         )
         // SceneKit can fail to create a drawable for fractional SwiftUI dimensions.
@@ -42,6 +96,28 @@ struct LisaMascot: View {
         }
         .onAppear { visible = true }
         .onDisappear { visible = false }
+        .task(id: ambientTaskID) {
+            ambientMood = nil
+            guard ambientEnabled else { return }
+            var sequence = 0
+            var previousMood: LisaMascotMood?
+            do {
+                while !Task.isCancelled {
+                    try await Task.sleep(for: .seconds(Double.random(in: 5...9)))
+                    guard let nextMood = LisaMascotExpressionScheduler.nextMood(
+                        baseMood: mood, previousMood: previousMood, sequence: sequence
+                    ) else { continue }
+                    ambientMood = nextMood
+                    ambientReaction += 1
+                    previousMood = nextMood
+                    sequence += 1
+                    try await Task.sleep(for: .seconds(nextMood.reactionDuration))
+                    ambientMood = nil
+                }
+            } catch {
+                ambientMood = nil
+            }
+        }
     }
 }
 
@@ -173,7 +249,8 @@ struct LisaGameCompanion: View {
     @State private var token = 0
     @State private var turn = 0
     @State private var lastAntic = Date.distantPast
-    private var running: Bool { active && !reduceMotion && store.settings.animatedDecor }
+    @Environment(\.scenePhase) private var scenePhase
+    private var running: Bool { active && scenePhase == .active && !reduceMotion && store.settings.animatedDecor }
     private var message: String {
         switch antic {
         case .chase: return L10n.text("Reviens, papillon !")
@@ -194,6 +271,7 @@ struct LisaGameCompanion: View {
         case .curious: return L10n.text("Oh, par ici !")
         case .giggle: return L10n.text("Hi hi hi !")
         case .rocket: return L10n.text("Décollage !")
+        case .surprised, .nervous, .confused, .loved, .proud: return antic.title
         default: return ""
         }
     }
@@ -213,16 +291,16 @@ struct LisaGameCompanion: View {
                 }
             } catch { return }
         }
-        .task(id: token) {
-            guard token > 0 else { return }
-            do { try await Task.sleep(for: .seconds(4.8)) } catch { return }
+        .task(id: "\(token)-\(running)") {
+            guard token > 0, running else { return }
+            do { try await Task.sleep(for: .seconds(antic.reactionDuration + 0.3)) } catch { return }
             antic = .idle
         }
         .onChange(of: reaction) { _, _ in antic = .idle }
     }
     private func perform() {
         guard running, mood == .idle, antic == .idle else { return }
-        let antics: [LisaMascotMood] = [.chase, .moonwalk, .juggle, .cloudHide, .sneeze, .tumble, .balance, .dizzy, .superhero, .pirouette, .wobble, .peek, .jelly, .swim, .bow, .curious, .giggle, .rocket]
+        let antics: [LisaMascotMood] = [.chase, .moonwalk, .juggle, .cloudHide, .sneeze, .tumble, .balance, .dizzy, .superhero, .pirouette, .wobble, .peek, .jelly, .swim, .bow, .curious, .giggle, .rocket, .surprised, .nervous, .confused, .loved, .proud]
         antic = antics[turn % antics.count]
         turn += 1
         lastAntic = Date()

@@ -12,6 +12,8 @@ struct OctopusSceneView: UIViewRepresentable {
     var yaw: Double = 0
     var pitch: Double = 0
     var zoom: Double = 1
+    var playbackPaused = false
+    var playbackSpeed: Double = 1
     var appearance = PoulpiAppearance()
     @ObservedObject private var budget = LisaRenderBudget.shared
 
@@ -26,6 +28,7 @@ struct OctopusSceneView: UIViewRepresentable {
         view.renderer.setPortrait(interactive: interactivePortrait, yaw: yaw, pitch: pitch, zoom: zoom)
         view.renderer.setOcclusion(occlusionRect)
         view.renderer.setQuality(level: budget.level, frames: budget.frameRate)
+        view.renderer.setPlayback(paused: playbackPaused, speed: playbackSpeed)
         view.renderer.configure(mood: mood, reaction: reactionToken, animated: animated)
     }
     static func dismantleUIView(_ view: OctopusHostView, coordinator: ()) {
@@ -63,6 +66,8 @@ final class OctopusRenderView: SCNView {
     private var previousMood: LisaMascotMood?
     private var previousReaction: Int?
     private var playbackRunning: Bool?
+    private var playbackPaused = false
+    private var playbackSpeed: Double = 1
     private var detailLevel = -1
     private var spatial = false
     private var portraitState: PortraitState?
@@ -95,7 +100,7 @@ final class OctopusRenderView: SCNView {
     override func didMoveToWindow() { super.didMoveToWindow(); synchronizePlayback() }
 
     func synchronizePlayback() {
-        let running = wantsAnimation && window != nil
+        let running = wantsAnimation && !playbackPaused && window != nil
         guard playbackRunning != running else { return }
         playbackRunning = running
         frameProbe.configure(active: running, target: preferredFramesPerSecond)
@@ -105,6 +110,18 @@ final class OctopusRenderView: SCNView {
         if running { play(nil) } else { pause(nil) }
         setNeedsDisplay()
         layer.setNeedsDisplay()
+    }
+    /// Freezes the current scene pose without removing actions or resetting the rig.
+    func setPlayback(paused: Bool, speed: Double) {
+        let speed = speed.isFinite ? min(1, max(0.1, speed)) : 1
+        if playbackSpeed != speed {
+            playbackSpeed = speed
+            companion.setPlaybackSpeed(speed)
+        }
+        if playbackPaused != paused {
+            playbackPaused = paused
+            synchronizePlayback()
+        }
     }
     func setAppearance(_ appearance: PoulpiAppearance) {
         guard previousAppearance != appearance else { return }
@@ -153,6 +170,7 @@ final class OctopusRenderView: SCNView {
     }
     func configure(mood: LisaMascotMood, reaction: Int, animated: Bool) {
         guard previousMood != mood || previousReaction != reaction || wantsAnimation != animated else { return }
+        let resuming = animated && !wantsAnimation
         wantsAnimation = animated
         companion.setMotionEnabled(animated)
         let moodChanged = previousMood != mood
@@ -160,10 +178,11 @@ final class OctopusRenderView: SCNView {
             companion.setMood(mood, animated: animated)
             previousMood = mood
         }
-        if animated && ((previousReaction != nil && previousReaction != reaction) || (moodChanged && (mood == .happy || mood == .celebrating))) {
+        if animated && (previousReaction != reaction || moodChanged || resuming) {
             companion.react(mood)
         }
         self.previousReaction = reaction
+        companion.setPlaybackSpeed(playbackSpeed)
         synchronizePlayback()
     }
 }
@@ -194,6 +213,7 @@ final class OctopusModel {
     }()
     private var motionEnabled = true
     private var currentMood: LisaMascotMood = .idle
+    private var playbackSpeed: CGFloat = 1
 
     init() {
         scene.background.contents = UIColor.clear
@@ -252,6 +272,19 @@ final class OctopusModel {
     }
 
     func setAppearance(_ appearance: PoulpiAppearance) { rig.setAppearance(appearance) }
+
+    /// SceneKit action speed is local to each action, including the rig clock.
+    /// Apply it only when controls or actions change, never during a frame.
+    func setPlaybackSpeed(_ speed: Double) {
+        playbackSpeed = CGFloat(speed)
+        scene.rootNode.enumerateChildNodes { node, _ in
+            for key in node.actionKeys {
+                if let action = node.action(forKey: key), action.speed != self.playbackSpeed {
+                    action.speed = self.playbackSpeed
+                }
+            }
+        }
+    }
 
     func setPortrait(interactive: Bool, yaw: Double, pitch: Double, zoom: Double) {
         guard interactive, !spatial else { return }
@@ -317,6 +350,7 @@ final class OctopusModel {
             // Distant passes remain visually light over the puzzle.
             node.opacity = p.depth < -2 ? CGFloat(max(0.55, 1 + (p.depth + 2) * 0.12)) : 1
         }), forKey: "travel")
+        flight.action(forKey: "travel")?.speed = playbackSpeed
     }
 
     // Preserve the welded silhouette and cups at every quality level.
@@ -352,8 +386,7 @@ final class OctopusModel {
         let startRotation = gesture.presentation.eulerAngles
         let startScale = gesture.presentation.scale
         gesture.removeAllActions()
-        let playful: [LisaMascotMood] = [.chase, .moonwalk, .juggle, .cloudHide, .sneeze, .tumble, .balance, .dizzy, .superhero]
-        let duration = playful.contains(mood) ? 4.4 : 2.2
+        let duration = mood.reactionDuration
         gesture.runAction(.customAction(duration: duration) { node, elapsed in
             let t = min(1, Float(elapsed / duration))
             let envelope = pow(sin(.pi * t), 2)
@@ -364,6 +397,20 @@ final class OctopusModel {
             var pitch: Float = 0, yaw: Float = 0, roll: Float = 0
             var sx: Float = 1, sy: Float = 1
             switch mood {
+            case .surprised:
+                y = 0.075 * envelope
+                sx = 1 + 0.07 * envelope; sy = 1 - 0.06 * envelope
+            case .nervous:
+                roll = sin(phase * 5) * 0.08 * envelope
+                x = sin(phase * 6) * 0.025 * envelope
+            case .confused:
+                yaw = 0.28 * envelope; roll = -0.12 * envelope
+            case .loved:
+                y = 0.045 * envelope
+                roll = sin(phase * 2) * 0.06 * envelope
+            case .proud:
+                pitch = -0.13 * envelope; y = 0.045 * envelope
+                sx = 1 + 0.04 * envelope; sy = 1 + 0.02 * envelope
             case .chase:
                 yaw = sin(phase) * 0.45 * envelope
                 pitch = -0.16 * envelope
