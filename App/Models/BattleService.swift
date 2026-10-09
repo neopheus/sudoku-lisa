@@ -4,6 +4,29 @@ import UIKit
 import SudokuCore
 @preconcurrency import GameKit
 
+/// Prepared after each board edit so rendering never scans the grid per cell.
+struct BattleBoardSummary: Equatable {
+    let remaining: [Int]
+    let duplicates: Set<Int>
+
+    static let empty = BattleBoardSummary(remaining: Array(repeating: 9, count: 9), duplicates: [])
+
+    init(remaining: [Int], duplicates: Set<Int>) {
+        self.remaining = remaining
+        self.duplicates = duplicates
+    }
+
+    init(game: GameSession) {
+        var counts = Array(repeating: 0, count: 9)
+        for index in 0..<81 where game.values[index] == game.puzzle.solution[index] {
+            let digit = game.values[index]
+            if (1...9).contains(digit) { counts[digit - 1] += 1 }
+        }
+        remaining = counts.map { max(0, 9 - $0) }
+        duplicates = BoardConflicts.indices(in: game.values)
+    }
+}
+
 /// Ephemeral private-match owner. Never writes or replaces LisaStore's solo session.
 @MainActor
 final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControllerDelegate, GKMatchDelegate {
@@ -12,6 +35,8 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
     @Published private(set) var participants: [BattleParticipant] = []
     @Published private(set) var session: GameSession?
     @Published private(set) var selection: Int?
+    @Published private(set) var lockedDigit: Int?
+    @Published private(set) var boardSummary = BattleBoardSummary.empty
     @Published private(set) var difficulty: Difficulty = .easy
     @Published private(set) var errorMessage: String?
     @Published private(set) var countdown = 3
@@ -120,7 +145,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
     func startRound() {
         guard canStart else { return }
         state = .preparing; preparationStarted = now; roundID = UUID(); session = nil; results = []; ledger?.beginRound(roundID!); ledger?.markLoaded(localPlayerID)
-        startTime = nil; elapsed = 0; selection = nil; notesMode = false
+        startTime = nil; elapsed = 0; selection = nil; notesMode = false; lockedDigit = nil; boardSummary = .empty
         let selectedDifficulty = difficulty
         let previous = generation
         previous?.cancel()
@@ -135,7 +160,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
             guard let self, !Task.isCancelled, self.state == .preparing else { return }
             self.generation = nil
             switch result {
-            case .success(let puzzle): self.session = GameSession(puzzle: puzzle); self.send(.puzzle(puzzle)); self.maybeScheduleStart()
+            case .success(let puzzle): self.session = GameSession(puzzle: puzzle); self.refreshBoardSummary(); self.send(.puzzle(puzzle)); self.maybeScheduleStart()
             case .failure: self.cancel("La grille n’a pas pu être préparée. Réessayez avec vos amis.")
             }
         }
@@ -146,17 +171,36 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         startTime = now + 3; ledger?.acknowledgeStart(localPlayerID); countdown = 3; state = .countdown
         send(.start(startTime!))
     }
-    func select(_ index: Int) { guard canEdit, (0..<81).contains(index) else { return }; selection = index }
+    func select(_ index: Int) {
+        guard canEdit, (0..<81).contains(index) else { return }
+        selection = index
+        if let lockedDigit, session?.isEditable(index) == true { enter(lockedDigit) }
+    }
+    func lockDigit(_ digit: Int) {
+        guard canEdit, (1...9).contains(digit) else { return }
+        lockedDigit = digit
+    }
+    func unlockDigit() { lockedDigit = nil }
     func enter(_ digit: Int) {
         guard canEdit, let selection else { return }
+        let previousValue = session?.values[selection]
+        let previousNotes = session?.notes[selection]
         if notesMode { session?.toggleNote(digit, at: selection) } else { session?.enter(digit, at: selection) }
-        changed()
+        let enteredValue = !notesMode && previousValue != session?.values[selection]
+        guard enteredValue || previousNotes != session?.notes[selection] else { return }
+        changed(simulatePeerProgress: enteredValue)
     }
     func erase() { guard canEdit, let selection else { return }; session?.erase(at: selection); changed() }
     func undo() { guard canEdit else { return }; session?.undo(); changed() }
-    private func changed() {
+    private func changed(simulatePeerProgress: Bool = false) {
         guard let game = session else { return }
+        boardSummary = BattleBoardSummary(game: game)
         update(localPlayerID) { $0.progress = game.progress; $0.mistakes = game.mistakes }
+        #if DEBUG
+        if fixture, simulatePeerProgress, ProcessInfo.processInfo.arguments.contains("--uitest-battle-progress") {
+            update("peer-fixture") { $0.progress = min(0.95, $0.progress + 0.08) }
+        }
+        #endif
         if game.isComplete {
             let seconds = max(0, hostNow - (startTime ?? hostNow)); elapsed = seconds
             session?.elapsedSeconds = Int(seconds)
@@ -165,6 +209,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
             else { pendingFinish = seconds; lastFinishSent = now; send(.finish(values: game.values, elapsed: seconds)) }
         }
     }
+    private func refreshBoardSummary() { boardSummary = session.map(BattleBoardSummary.init(game:)) ?? .empty }
     func setActive(_ value: Bool) {
         if !value, inactiveSince == nil { inactiveSince = now }
         active = value
@@ -195,7 +240,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
             if isHost { send(.cancelled("L’hôte a quitté la partie. Le duel est annulé.")) }
             else { send(.active(false)) }
         }
-        cleanup(); state = .idle; session = nil; participants = []; results = []; roundID = nil; selection = nil; errorMessage = nil
+        cleanup(); state = .idle; session = nil; participants = []; results = []; roundID = nil; selection = nil; lockedDigit = nil; boardSummary = .empty; notesMode = false; errorMessage = nil
     }
     func rematch() {
         guard isHost, state == .finished else { return }
@@ -206,7 +251,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         roundID = UUID(); ledger?.beginRound(roundID!); resetLobby(); startLoop(); send(.lobby)
     }
     private func resetLobby() {
-        state = .lobby; results = []; session = nil; startTime = nil; elapsed = 0; selection = nil; notesMode = false
+        state = .lobby; results = []; session = nil; startTime = nil; elapsed = 0; selection = nil; notesMode = false; lockedDigit = nil; boardSummary = .empty
         participants.indices.forEach { participants[$0].ready = false; participants[$0].progress = 0; participants[$0].mistakes = 0; participants[$0].status = .connected }
         interrupted = [:]; pendingFinish = nil
     }
@@ -315,7 +360,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         case .difficulty(let level): guard sender == hostID, state == .lobby else { return }; difficulty = level; participants.indices.forEach { participants[$0].ready = false }
         case .puzzle(let puzzle):
             guard sender == hostID, state == .lobby, puzzle.difficulty == difficulty else { return }
-            state = .preparing; preparationStarted = now; session = GameSession(puzzle: puzzle); results = []; elapsed = 0; selection = nil; notesMode = false
+            state = .preparing; preparationStarted = now; session = GameSession(puzzle: puzzle); results = []; elapsed = 0; selection = nil; notesMode = false; lockedDigit = nil; refreshBoardSummary()
             send(.loaded)
         case .loaded: guard isHost, state == .preparing else { return }; ledger?.markLoaded(sender); maybeScheduleStart()
         case .ping(let sent): guard isHost, sent.isFinite else { return }; send(.pong(sent: sent, host: now), to: player)
@@ -434,6 +479,17 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
     nonisolated func match(_ match: GKMatch, shouldReinviteDisconnectedPlayer player: GKPlayer) -> Bool { true }
 
     #if DEBUG
+    /// Isolated model fixture for control tests; no network or timer.
+    func prepareControlsTestRound() {
+        leave(); fixture = true; state = .playing
+        let solution = (0..<81).map { ($0 / 9 * 3 + $0 / 27 + $0 % 9) % 9 + 1 }
+        var givens = solution
+        givens[0] = 0; givens[40] = 0
+        session = GameSession(puzzle: Puzzle(givens: givens, solution: solution, difficulty: .easy, seed: 42))
+        participants = [BattleParticipant(id: localPlayerID, name: "Lisa", appearance: appearance)]
+        refreshBoardSummary()
+    }
+
     /// Local UI fixture only; never authenticates, submits or creates a GameKit match.
     func prepareUITestRound() {
         guard ProcessInfo.processInfo.arguments.contains("--uitest-reset"), ProcessInfo.processInfo.arguments.contains("--uitest-battle") else { return }
@@ -441,7 +497,14 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         let solution = (0..<81).map { ($0 / 9 * 3 + $0 / 27 + $0 % 9) % 9 + 1 }
         var givens = solution; for index in [0, 40, 80] { givens[index] = 0 }
         session = GameSession(puzzle: Puzzle(givens: givens, solution: solution, difficulty: .easy, seed: 42))
+        refreshBoardSummary(); lockedDigit = nil; selection = nil; notesMode = false
         participants = [BattleParticipant(id: localPlayerID, name: "Lisa", appearance: appearance), BattleParticipant(id: "peer-fixture", name: "Ami")]
+        if ProcessInfo.processInfo.arguments.contains("--uitest-battle-four") {
+            let longNames = ProcessInfo.processInfo.arguments.contains("--uitest-battle-long-names")
+            participants[1].name = longNames ? "Camille aux mille tentacules" : "Camille"
+            participants.append(BattleParticipant(id: "peer-fixture-2", name: longNames ? "Alexandre des océans scintillants" : "Alex"))
+            participants.append(BattleParticipant(id: "peer-fixture-3", name: longNames ? "Dominique et son Poulpi arc-en-ciel" : "Noa"))
+        }
         participants.indices.forEach { participants[$0].ready = true }
         startTime = now + 3; state = .countdown; countdown = 3; elapsed = 0; startLoop()
     }

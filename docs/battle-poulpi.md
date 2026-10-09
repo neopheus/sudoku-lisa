@@ -8,6 +8,14 @@ Chaque participant indique qu’il est prêt. Une grille unique est générée p
 
 L’arrivée est validée contre la solution par l’organisateur. Les temps sont rapportés à une horloge monotone synchronisée ; les arrivées à moins d’une demi-seconde partagent leur rang. L’hôte doit rester jusqu’au podium même après avoir fini sa grille. Le classement est amical, sans protection contre un client modifié ni serveur arbitre.
 
+## Interface de la course
+
+Les participants apparaissent sous forme de pastilles circulaires avec un anneau de progression, le pourcentage et les erreurs. Leur ordre reste stable. Le bandeau reste visible pendant la saisie ; avec les tailles de texte d’accessibilité, il rejoint le contenu défilant pour laisser de la place à la grille. Les noms longs et les petits écrans utilisent une disposition adaptée.
+
+Une progression adverse déclenche un bref halo, une impulsion de l’avatar et l’affichage du gain en pourcentage. Ces effets respectent Réduire les animations et s’arrêtent hors écran ou en arrière-plan.
+
+La grille réutilise les cellules du mode solo et les réglages de surbrillance, doublons et vérification. Le clavier affiche les occurrences correctes restant à poser, permet le verrouillage par appui long et respecte le mode chiffre d’abord. Notes, effacement et annulation restent disponibles ; aucune aide de résolution ni pause ne sont ajoutées à la course.
+
 ## Isolation et réseau
 
 `BattleService` possède une `GameSession` distincte : aucune battle ne remplace une sauvegarde solo, ses notes, ses annulations ou son contexte. Game Center assure le transport ; aucune dépendance ou infrastructure serveur supplémentaire n’est nécessaire. La connexion Game Center est indépendante du classement hebdomadaire.
@@ -41,3 +49,11 @@ Avant distribution : essais de 2 puis 4 appareils avec comptes Game Center disti
 - Dernier contrôle visuel : correction sRGB → lumière linéaire pour les palettes ; les quatre tests de rendu repassent avec `TEST SUCCEEDED`. Rapport : `/tmp/lisa-validation/Logs/Test/Test-SudokuLisa-2026.10.08_12-43-46-+0200.xcresult`.
 
 - Validation de livraison : les 69 tests moteur passent en Release. Une référence de revanche au helper UI de débogage a été protégée par `#if DEBUG` ; l’archive Release signée compile ensuite avec succès.
+
+### Contrôles du clavier et des pastilles
+
+`BattleControlsTests` couvre le verrouillage avant sélection, les compteurs, les erreurs, les doublons, les notes et l’annulation. `BattlePolishUITests` couvre quatre joueurs, la progression adverse simulée, les chiffres donnés protégés, les compteurs et les très grands caractères. Ses options `--uitest-battle-four`, `--uitest-battle-long-names` et `--uitest-battle-progress` sont réservées au débogage et ne constituent pas un test réseau.
+
+Validation de cette passe : 69 tests moteur et 3 tests `BattleControlsTests` réussis ; parcours UI complet jusqu’au podium réussi sur Lisa Gameplay QA ; 3 tests `BattlePolishUITests` réussis sur le simulateur dédié iPhone SE 3 (iOS 18.5), y compris quatre participants et la taille de texte maximale. Rapport : `/tmp/lisa-validation/Logs/Test/Test-SudokuLisa-2026.10.08_19-03-43-+0200.xcresult`. Compilation Release pour simulateur et contrôle des traductions réussis. Aucun essai réseau Game Center sur appareils physiques lors de cette passe. Ces changements ne sont pas inclus dans le build TestFlight 9.
+
+Après le dernier ajustement de taille des commandes, le scénario à quatre joueurs repasse (`Test-SudokuLisa-2026.10.08_19-06-17-+0200.xcresult`) et la compilation Release repasse. Captures : `docs/screenshots/battle-circles-se.png` et `docs/screenshots/battle-keypad-accessibility.png`.

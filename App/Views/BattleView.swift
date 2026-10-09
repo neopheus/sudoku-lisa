@@ -8,6 +8,7 @@ struct BattleView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var battle = BattleService.shared
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var confirmLeave = false
     @State private var visible = false
 
@@ -51,6 +52,15 @@ struct BattleView: View {
                     }
                     .animation(motionEnabled ? .easeInOut(duration: 0.24) : nil, value: battle.state)
                     .padding(16).frame(maxWidth: 1000).frame(maxWidth: .infinity)
+                }
+                .accessibilityIdentifier("battleContentScroll")
+                .safeAreaInset(edge: .top, spacing: 0) {
+                    if battle.state == .playing && !typeSize.isAccessibilitySize {
+                        BattleParticipantsView(participants: battle.participants, localPlayerID: battle.localPlayerID)
+                            .padding(.horizontal, 16).padding(.vertical, 8)
+                            .frame(maxWidth: 1000).frame(maxWidth: .infinity)
+                            .background(LisaTheme.background)
+                    }
                 }
             }
             .navigationTitle(L10n.text("Battle entre amis"))
@@ -125,9 +135,7 @@ private struct BattleLobby: View {
     var body: some View {
         VStack(spacing: 20) {
             Text(L10n.text("Sur la ligne de départ")).font(LisaTheme.heading(26))
-            ForEach(battle.participants) { participant in
-                BattleParticipantRow(participant: participant, local: participant.id == battle.localPlayerID, rank: nil)
-            }
+            BattleParticipantsView(participants: battle.participants, localPlayerID: battle.localPlayerID, isLobby: true)
             if battle.state == .countdown {
                 Text("\(battle.countdown)").font(.system(size: 80, weight: .black, design: .rounded)).monospacedDigit()
                     .contentTransition(.numericText(countsDown: true))
@@ -216,26 +224,8 @@ private struct BattlePlayView: View {
                 Spacer()
                 Text(LisaStore.time(Int(battle.elapsed))).monospacedDigit().accessibilityIdentifier("battleTimer")
             }
-            let ranked = battle.participants.sorted {
-                if $0.progress != $1.progress { return $0.progress > $1.progress }
-                return $0.id < $1.id
-            }
             if typeSize.isAccessibilitySize {
-                VStack(spacing: 6) {
-                    ForEach(ranked) { participant in
-                        BattleParticipantRow(participant: participant, local: participant.id == battle.localPlayerID,
-                            rank: 1 + ranked.filter { $0.progress > participant.progress }.count)
-                    }
-                }
-            } else {
-                ScrollView(.horizontal) {
-                    HStack(spacing: 8) {
-                        ForEach(ranked) { participant in
-                            BattleParticipantRow(participant: participant, local: participant.id == battle.localPlayerID,
-                                rank: 1 + ranked.filter { $0.progress > participant.progress }.count).frame(width: 220)
-                        }
-                    }
-                }.scrollIndicators(.hidden)
+                BattleParticipantsView(participants: battle.participants, localPlayerID: battle.localPlayerID)
             }
             if let game = battle.session {
                 if battle.participants.first(where: { $0.id == battle.localPlayerID })?.status == .didNotFinish {
@@ -257,85 +247,6 @@ private struct BattlePlayView: View {
                 }
             }
         }
-    }
-}
-
-private struct BattleBoard: View {
-    let game: GameSession
-    let selection: Int?
-    let width: CGFloat
-    let onSelect: (Int) -> Void
-    @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.accessibilityDifferentiateWithoutColor) private var differentiate
-    var body: some View {
-        let inner = max(9, width - 16)
-        let side = inner / 9
-        let peers = selection.map { SudokuSolver.peers(of: $0) } ?? []
-        ZStack {
-            VStack(spacing: 0) {
-                ForEach(0..<9) { row in
-                    HStack(spacing: 0) {
-                        ForEach(0..<9) { column in
-                            let index = row * 9 + column
-                            Button { onSelect(index) } label: {
-                                SudokuCellContent(value: game.values[index], notes: game.notes[index], given: game.puzzle.givens[index] != 0,
-                                    wrong: game.isIncorrect(at: index), duplicate: false, isSelected: selection == index,
-                                    sameNumber: selection.map { game.values[$0] != 0 && game.values[$0] == game.values[index] } ?? false,
-                                    peer: peers.contains(index), inHintFocus: false, marks: [], side: side,
-                                    colorScheme: colorScheme, differentiateWithoutColor: differentiate).equatable()
-                            }.buttonStyle(.plain).accessibilityIdentifier("battleCell-\(index)")
-                                .accessibilityLabel(cellLabel(index))
-                                .accessibilityValue(selection == index ? L10n.text("Sélectionnée") : "")
-                                .accessibilityAddTraits(selection == index ? .isSelected : [])
-                        }
-                    }
-                }
-            }
-            Path { path in
-                for n in stride(from: 0, through: 9, by: 3) {
-                    let point = CGFloat(n) * side
-                    path.move(to: CGPoint(x: point, y: 0)); path.addLine(to: CGPoint(x: point, y: inner))
-                    path.move(to: CGPoint(x: 0, y: point)); path.addLine(to: CGPoint(x: inner, y: point))
-                }
-            }.stroke(LisaTheme.actionInk.opacity(0.65), lineWidth: 2).allowsHitTesting(false)
-        }.frame(width: inner, height: inner).background(LisaTheme.paper)
-            .clipShape(RoundedRectangle(cornerRadius: 8)).padding(8)
-            .background(LisaTheme.lavender, in: RoundedRectangle(cornerRadius: 16))
-    }
-    private func cellLabel(_ index: Int) -> String {
-        let notes = game.notes[index].sorted().map(String.init).formatted(.list(type: .and).locale(L10n.locale))
-        return L10n.text("Ligne %@, colonne %@, %@%@%@%@", String(index / 9 + 1), String(index % 9 + 1),
-            game.values[index] == 0 ? L10n.text("vide") : String(game.values[index]),
-            game.puzzle.givens[index] != 0 ? L10n.text(", chiffre donné") : "",
-            notes.isEmpty ? "" : L10n.text(", notes ") + notes,
-            game.isIncorrect(at: index) ? L10n.text(", erreur") : "")
-    }
-
-}
-
-private struct BattleKeypad: View {
-    @ObservedObject var battle: BattleService
-    let canUndo: Bool
-    @Environment(\.dynamicTypeSize) private var typeSize
-    var body: some View {
-        VStack(spacing: 12) {
-            (typeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 8)) : AnyLayout(HStackLayout(spacing: 12))) {
-                Button { battle.undo() } label: { Label(L10n.text("Annuler"), systemImage: "arrow.uturn.backward") }.disabled(!canUndo).accessibilityIdentifier("battleUndo")
-                Spacer(minLength: 0)
-                Button { battle.erase() } label: { Label(L10n.text("Effacer"), systemImage: "eraser") }.disabled(battle.selection == nil).accessibilityIdentifier("battleErase")
-                Spacer(minLength: 0)
-                Button { battle.notesMode.toggle() } label: { Label(L10n.text("Notes"), systemImage: battle.notesMode ? "pencil.circle.fill" : "pencil.circle") }
-                    .accessibilityValue(L10n.text(battle.notesMode ? "Activées" : "Désactivées")).accessibilityIdentifier("battleNotes")
-            }.font(.callout).buttonStyle(.bordered).controlSize(.regular)
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: typeSize.isAccessibilitySize ? 3 : 9), spacing: 6) {
-                ForEach(1...9, id: \.self) { value in
-                    Button { battle.enter(value) } label: {
-                        Text("\(value)").font(.title2.bold()).frame(maxWidth: .infinity, minHeight: 48)
-                            .background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 10))
-                    }.accessibilityIdentifier("battleDigit-\(value)").accessibilityLabel(L10n.text("Saisir %@", String(value)))
-                }
-            }
-        }.disabled(!battle.canEdit)
     }
 }
 
