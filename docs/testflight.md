@@ -149,4 +149,6 @@ Les boutons 1–9 restent fixés en bas de l’écran pendant la course. La gril
 
 ### Mise en page corrigée des statistiques Battle — build 12
 
-L’aperçu iPhone SE du build 11 a révélé un chevauchement du pourcentage et du nombre d’erreurs sous les pastilles. Ces deux informations sont de nouveau présentées sur deux lignes distinctes sous chaque avatar. La capture de référence iPhone SE est conservée dans `docs/screenshots/battle-clavier-fixe-iphone-se.png`. La correction passe sur le parcours UI simulé. Build 12 à archiver et envoyer.
+L’aperçu iPhone SE du build 11 a révélé un chevauchement du pourcentage et du nombre d’erreurs sous les pastilles. Ces deux informations sont de nouveau présentées sur deux lignes distinctes sous chaque avatar. La capture de référence iPhone SE est conservée dans `docs/screenshots/battle-clavier-fixe-iphone-se.png`. La correction passe sur le parcours UI simulé. Archive Release signée `/tmp/lisa-release-20261009-b12.xcarchive`. Envoi accepté par Apple le 9 octobre à 09 h 59 (`Upload succeeded`, `EXPORT SUCCEEDED`, `/tmp/lisa-release-20261009-b12-upload.log`). Le traitement et l’assignation aux groupes sont encore à vérifier dans App Store Connect.
+
+- Correction des statistiques et capture : commit `c9ae2e2`. Le test UI ciblé iPhone SE passe le 9 octobre (parcours quatre joueurs, clavier et progression adverse), rapport `/tmp/lisa-validation/Logs/Test/Test-SudokuLisa-2026.10.09_09-55-51-+0200.xcresult`.
