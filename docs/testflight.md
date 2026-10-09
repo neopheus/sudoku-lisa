@@ -125,3 +125,16 @@ Signaler le modèle d’iPhone, iOS, numéro de build, comptes distincts, étape
 - Envoi accepté le 8 octobre à 15 h 30 (Europe/Paris) : `Upload succeeded` et `EXPORT SUCCEEDED` dans `/tmp/lisa-release-20261008-b9-upload.log`. Traitement Apple terminé.
 - Build associé aux trois groupes existants : **Lisa — Interne** (3 testeurs), **Lisa — Externe** (1) et **Liens à partager** (1), puis soumis à vérification. État final confirmé dans App Store Connect : **En cours de test**. Notes de test et consignes de vérification enregistrées ; installation physique non vérifiée.
 - [Build 9](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/2ac4977f-d0c3-4066-a425-755d53493c97) · [Lien public TestFlight](https://testflight.apple.com/join/tWFCgtQF) · [Preuve](screenshots/testflight-build-9.png).
+
+## Livraison du 9 octobre 2026 — build 10
+
+- Sources : commit `f8caf94`, sans push Git. Pastilles Battle circulaires avec pourcentage/erreurs, bandeau visible pendant la saisie, animations adverses et commandes de grille enrichies.
+- Validation : 69 tests moteur réussis lors de la livraison ; traductions et `git diff --check` valides. Tests applicatifs et UI de cette même implémentation documentés dans `docs/battle-poulpi.md`.
+- Archive Release signée : `/tmp/lisa-release-20261009-b10.xcarchive` ; signature profonde vérifiée, app et extension en 1.0 (10), entitlement Game Center présent.
+- Envoi accepté le 9 octobre à 07 h 06 (Europe/Paris) : `Upload succeeded` et `EXPORT SUCCEEDED` dans `/tmp/lisa-release-20261009-b10-upload.log`. Apple indique que le paquet est en traitement.
+- La session navigateur App Store Connect a expiré : reconnexion demandée au titulaire. Fin du traitement, association aux groupes internes/externes et disponibilité du build 10 non vérifiées à ce stade. Aucun essai physique revendiqué.
+- À reprendre après reconnexion : ouvrir le build 10, renseigner les notes ci-dessous, associer Lisa — Interne, Lisa — Externe et Liens à partager, soumettre si nécessaire et vérifier l’état En cours de test.
+
+### Notes de test du build 10
+
+Battle : nouvelles pastilles rondes avec pourcentage de progression et erreurs. Testez à 2–4 joueurs, avec des noms longs et de grands caractères. Vérifiez les animations quand un adversaire progresse, les compteurs sous les chiffres 1–9, le verrouillage par appui long, les notes, l’effacement, l’annulation et les surbrillances. Vérifiez également que votre partie solo est conservée.
