@@ -8,6 +8,7 @@ struct BattleParticipantsView: View {
     var isLobby = false
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var selectedParticipantID: String?
 
     private var orderedParticipants: [BattleParticipant] {
         participants.sorted {
@@ -28,7 +29,10 @@ struct BattleParticipantsView: View {
             if canUseSingleRow {
                 HStack(alignment: .top, spacing: 6) {
                     ForEach(orderedParticipants) { participant in
-                        BattleParticipantBadge(participant: participant, isLocal: participant.id == localPlayerID, isLobby: isLobby, compact: true)
+                        BattleParticipantBadge(participant: participant, isLocal: participant.id == localPlayerID, isLobby: isLobby, compact: true,
+                            showsStats: selectedParticipantID == participant.id) {
+                                toggleStats(for: participant.id)
+                            }
                             .frame(width: 80)
                     }
                 }
@@ -39,12 +43,20 @@ struct BattleParticipantsView: View {
                 spacing: 8
             ) {
                 ForEach(orderedParticipants) { participant in
-                    BattleParticipantBadge(participant: participant, isLocal: participant.id == localPlayerID, isLobby: isLobby, compact: false)
+                    BattleParticipantBadge(participant: participant, isLocal: participant.id == localPlayerID, isLobby: isLobby, compact: false,
+                        showsStats: selectedParticipantID == participant.id) {
+                            toggleStats(for: participant.id)
+                        }
                 }
             }
         }
         .frame(maxWidth: .infinity)
-        .accessibilityIdentifier("battleParticipants")
+    }
+
+    private func toggleStats(for participantID: String) {
+        withAnimation(.easeInOut(duration: 0.2)) {
+            selectedParticipantID = selectedParticipantID == participantID ? nil : participantID
+        }
     }
 }
 
@@ -53,11 +65,13 @@ private struct BattleParticipantBadge: View {
     let isLocal: Bool
     let isLobby: Bool
     let compact: Bool
+    let showsStats: Bool
+    let onSelect: () -> Void
 
     @Environment(\.lisaMotionAllowed) private var motionAllowed
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
-    @State private var pulse = false
+    @State private var reaction: BattleParticipantReaction = .none
     @State private var progressGain: Int?
     @State private var resetTask: Task<Void, Never>?
 
@@ -81,46 +95,51 @@ private struct BattleParticipantBadge: View {
     }
 
     var body: some View {
-        Group {
-            if compact {
-                VStack(spacing: 3) {
-                    BattleParticipantAvatar(appearance: participant.appearance, fraction: fraction,
-                        isLocal: isLocal, pulse: pulse, progressGain: progressGain, canAnimate: canAnimate, compact: compact)
-                    BattleParticipantDetails(participant: participant, status: status,
-                        percent: percent, isLocal: isLocal, isLobby: isLobby, compact: true)
+        Button(action: onSelect) {
+            Group {
+                if compact {
+                    VStack(spacing: 3) {
+                        BattleParticipantAvatar(appearance: participant.appearance, fraction: fraction,
+                            isLocal: isLocal, reaction: reaction, progressGain: progressGain, canAnimate: canAnimate,
+                            compact: compact, participantID: participant.id)
+                        BattleParticipantDetails(participant: participant, status: status,
+                            percent: percent, isLocal: isLocal, isLobby: isLobby, compact: true,
+                            showsStats: showsStats)
+                    }
+                    .frame(maxWidth: .infinity)
+                } else {
+                    HStack(alignment: .center, spacing: 9) {
+                        BattleParticipantAvatar(appearance: participant.appearance, fraction: fraction,
+                            isLocal: isLocal, reaction: reaction, progressGain: progressGain, canAnimate: canAnimate,
+                            compact: compact, participantID: participant.id)
+                        BattleParticipantDetails(participant: participant, status: status,
+                            percent: percent, isLocal: isLocal, isLobby: isLobby, compact: false,
+                            showsStats: showsStats)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .frame(maxWidth: .infinity)
-            } else {
-                HStack(alignment: .center, spacing: 9) {
-                    BattleParticipantAvatar(appearance: participant.appearance, fraction: fraction,
-                        isLocal: isLocal, pulse: pulse, progressGain: progressGain, canAnimate: canAnimate, compact: compact)
-                    BattleParticipantDetails(participant: participant, status: status,
-                        percent: percent, isLocal: isLocal, isLobby: isLobby, compact: false)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .accessibilityElement(children: .contain)
+        .buttonStyle(.plain)
         .accessibilityIdentifier("battleParticipant-\(participant.id)")
+        .accessibilityHint(L10n.text("Touchez un joueur pour afficher ou masquer sa progression et ses erreurs."))
         .onChange(of: participant.progress) { oldValue, newValue in
             guard !isLobby, !isLocal, canAnimate, participant.status == .connected || participant.status == .finished,
                   oldValue.isFinite, newValue.isFinite, newValue > oldValue else { return }
             let gain = Int((newValue * 100).rounded()) - Int((oldValue * 100).rounded())
             guard gain > 0 else { return }
             resetTask?.cancel()
-            withAnimation(.easeOut(duration: 0.18)) {
-                progressGain = gain
-                pulse = true
-            }
-            resetTask = Task { @MainActor in
-                try? await Task.sleep(for: .milliseconds(650))
-                guard !Task.isCancelled else { return }
-                withAnimation(.easeOut(duration: 0.2)) {
-                    progressGain = nil
-                    pulse = false
-                }
-            }
+            animate(.progress, gain: gain, duration: 650)
+        }
+        .onChange(of: participant.mistakes) { oldValue, newValue in
+            guard !isLobby, canAnimate, newValue > oldValue,
+                  participant.status == .connected else { return }
+            animate(.mistake, duration: 700)
+        }
+        .onChange(of: participant.status) { oldValue, newValue in
+            guard canAnimate, oldValue != .finished, newValue == .finished else { return }
+            animate(.celebration, duration: 900)
         }
         .onChange(of: canAnimate) { _, enabled in
             if !enabled { stopAnimation() }
@@ -132,54 +151,102 @@ private struct BattleParticipantBadge: View {
         resetTask?.cancel()
         resetTask = nil
         progressGain = nil
-        pulse = false
+        reaction = .none
     }
+
+    private func animate(_ newReaction: BattleParticipantReaction, gain: Int? = nil, duration: Int) {
+        resetTask?.cancel()
+        withAnimation(.spring(response: 0.28, dampingFraction: 0.55)) {
+            reaction = newReaction
+            progressGain = gain
+        }
+        resetTask = Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(duration))
+            guard !Task.isCancelled else { return }
+            withAnimation(.easeOut(duration: 0.22)) {
+                reaction = .none
+                progressGain = nil
+            }
+        }
+    }
+}
+
+private enum BattleParticipantReaction: Equatable {
+    case none, progress, mistake, celebration
 }
 
 private struct BattleParticipantAvatar: View {
     let appearance: PoulpiAppearance
     let fraction: Double
     let isLocal: Bool
-    let pulse: Bool
+    let reaction: BattleParticipantReaction
     let progressGain: Int?
     let canAnimate: Bool
     let compact: Bool
+    let participantID: String
+
+    private var pulse: Bool { reaction != .none }
+
+    private var progressColor: Color {
+        if fraction >= 1 { LisaTheme.yellow }
+        else if fraction >= 0.68 { LisaTheme.coral }
+        else if fraction >= 0.30 { LisaTheme.actionInk }
+        else { LisaTheme.mint }
+    }
+
+    private var avatarScale: CGFloat {
+        switch reaction {
+        case .none: 1
+        case .progress: 1.10
+        case .mistake: 0.91
+        case .celebration: 1.14
+        }
+    }
 
     var body: some View {
         ZStack {
             Circle().stroke(isLocal ? LisaTheme.actionInk.opacity(0.65) : LisaTheme.line.opacity(0.55), lineWidth: 4)
             Circle()
                 .trim(from: 0, to: fraction)
-                .stroke(LisaTheme.actionInk, style: StrokeStyle(lineWidth: 4, lineCap: .round))
+                .stroke(progressColor, style: StrokeStyle(lineWidth: 4, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(canAnimate ? .easeOut(duration: 0.35) : nil, value: fraction)
+                .animation(canAnimate ? .easeInOut(duration: 0.3) : nil, value: progressColor)
             if pulse {
                 Circle()
-                    .stroke(LisaTheme.actionInk.opacity(0.55), lineWidth: 3)
-                    .scaleEffect(1.18)
+                    .stroke(reaction == .mistake ? LisaTheme.coral.opacity(0.72) : progressColor.opacity(0.62), lineWidth: 3)
+                    .scaleEffect(reaction == .celebration ? 1.28 : 1.18)
                     .transition(.opacity.combined(with: .scale(scale: 0.75)))
             }
+            if reaction == .celebration {
+                Image(systemName: "sparkles")
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundStyle(LisaTheme.yellow)
+                    .offset(x: compact ? 16 : 19, y: compact ? -15 : -18)
+                    .transition(.scale.combined(with: .opacity))
+            }
             PoulpiAvatar(appearance: appearance, size: compact ? 38 : 43)
-                .scaleEffect(pulse ? 1.08 : 1)
+                .scaleEffect(avatarScale)
+                .rotationEffect(.degrees(reaction == .mistake ? -7 : reaction == .progress ? 4 : reaction == .celebration ? -5 : 0))
+                .offset(y: reaction == .progress || reaction == .celebration ? -3 : 0)
+                .animation(canAnimate ? .spring(response: 0.26, dampingFraction: 0.48) : nil, value: reaction)
+                .accessibilityHidden(true)
         }
         .frame(width: compact ? 46 : 54, height: compact ? 46 : 54)
         .overlay(alignment: .topTrailing) {
             if let progressGain {
-                Label {
-                    Text(Double(progressGain) / 100, format: .percent.precision(.fractionLength(0)))
-                } icon: {
-                    Image(systemName: "arrow.up")
-                }
-                .font(.caption2.weight(.bold))
+                Text("+\(progressGain)%")
+                .font(.system(size: 9, weight: .bold, design: .rounded))
+                .fixedSize()
                 .foregroundStyle(LisaTheme.actionInk)
-                .padding(.horizontal, 5)
+                .padding(.horizontal, 6)
                 .padding(.vertical, 2)
                 .background(LisaTheme.paper, in: Capsule())
-                .offset(x: 8, y: -7)
+                .offset(x: 4, y: -18)
                 .transition(.opacity.combined(with: .scale(scale: 0.8)))
+                .accessibilityIdentifier("battleGain-\(participantID)")
             }
         }
-        .accessibilityHidden(true)
     }
 }
 
@@ -190,27 +257,42 @@ private struct BattleParticipantDetails: View {
     let isLocal: Bool
     let isLobby: Bool
     let compact: Bool
+    let showsStats: Bool
 
     var body: some View {
         VStack(alignment: compact ? .center : .leading, spacing: 2) {
             Text(isLocal ? L10n.text("%@ · vous", participant.name) : participant.name)
-                .font(.subheadline.weight(.semibold))
+                .font((compact ? Font.caption : Font.subheadline).weight(.semibold))
                 .foregroundStyle(LisaTheme.ink)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
                 .multilineTextAlignment(compact ? .center : .leading)
                 .fixedSize(horizontal: false, vertical: true)
-            if !isLobby {
-                if compact {
-                    progress
-                    mistakes
-                } else {
-                    HStack(spacing: 5) {
-                        progress
-                        Text("·").accessibilityHidden(true)
-                        mistakes
+            if showsStats && !isLobby {
+                HStack(spacing: 6) {
+                    Text("\(percent)%")
+                        .monospacedDigit()
+                        .accessibilityIdentifier("battleProgress-\(participant.id)")
+                    Text("·").accessibilityHidden(true)
+                    Label {
+                        Text("\(participant.mistakes)").monospacedDigit()
+                    } icon: {
+                        Image(systemName: "xmark").font(.system(size: 7, weight: .bold))
                     }
+                    .accessibilityLabel(L10n.text("Erreurs : %@", String(participant.mistakes)))
+                    .accessibilityIdentifier("battleMistakes-\(participant.id)")
                 }
+                .font(.system(size: 10, weight: .bold, design: .rounded))
+                .foregroundStyle(LisaTheme.actionInk)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(LisaTheme.paper, in: Capsule())
+                .overlay(Capsule().stroke(LisaTheme.line, lineWidth: 1))
+                .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                .accessibilityElement(children: .contain)
+                .accessibilityIdentifier("battleStats-\(participant.id)")
             }
-            if status != L10n.text("En course") {
+            if isLobby || (!compact && status != L10n.text("En course")) {
                 Text(status)
             }
         }
@@ -220,14 +302,4 @@ private struct BattleParticipantDetails: View {
         .fixedSize(horizontal: false, vertical: true)
     }
 
-    private var progress: some View {
-        Text(Double(percent) / 100, format: .percent.precision(.fractionLength(0)))
-            .monospacedDigit()
-            .accessibilityIdentifier("battleProgress-\(participant.id)")
-    }
-
-    private var mistakes: some View {
-        Text(L10n.text("Erreurs : %@", String(participant.mistakes)))
-            .accessibilityIdentifier("battleMistakes-\(participant.id)")
-    }
 }

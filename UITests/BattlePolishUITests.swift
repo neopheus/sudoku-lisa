@@ -4,24 +4,31 @@ import XCTest
 final class BattlePolishUITests: XCTestCase {
     func testFourParticipantsProgressAndDigitInformation() {
         let app = launch()
-        let progress = app.staticTexts["battleProgress-peer-fixture"]
-        XCTAssertTrue(progress.waitForExistence(timeout: 8))
+        let selectedPlayer = app.buttons["battleParticipant-peer-fixture"]
+        XCTAssertTrue(selectedPlayer.waitForExistence(timeout: 8))
         for id in ["peer-fixture", "peer-fixture-2", "peer-fixture-3"] {
-            let item = app.staticTexts["battleProgress-\(id)"]
-            XCTAssertTrue(item.exists)
-            XCTAssertGreaterThanOrEqual(item.frame.minX, 0)
-            XCTAssertLessThanOrEqual(item.frame.maxX, app.frame.width)
-            XCTAssertTrue(app.staticTexts["battleMistakes-\(id)"].exists)
+            XCTAssertTrue(app.buttons["battleParticipant-\(id)"].exists)
+            XCTAssertFalse(app.descendants(matching: .any)["battleStats-\(id)"].exists)
         }
         attach(app, "Battle-4-Pastilles")
+        selectedPlayer.tap()
+        let playerStats = app.descendants(matching: .any)["battleStats-peer-fixture"]
+        XCTAssertTrue(playerStats.waitForExistence(timeout: 2))
+        XCTAssertTrue(app.staticTexts["battleProgress-peer-fixture"].exists)
+        XCTAssertTrue(app.descendants(matching: .any)["battleMistakes-peer-fixture"].exists)
+        selectedPlayer.tap()
         tap(app.buttons["battleCell-0"], in: app)
         let one = app.buttons["battleDigit-1"]
         reveal(one, in: app)
         XCTAssertTrue(one.label.contains("restant"))
         attach(app, "Battle-Clavier-Compteurs")
         one.tap()
-        reveal(progress, in: app)
-        XCTAssertTrue(progress.label.contains("8"), "A simulated opponent update must reach its progress badge")
+        selectedPlayer.tap()
+        let updatedStats = app.descendants(matching: .any)["battleStats-peer-fixture"]
+        XCTAssertTrue(updatedStats.waitForExistence(timeout: 2))
+        let updatedProgress = app.staticTexts["battleProgress-peer-fixture"]
+        XCTAssertTrue(updatedProgress.label.contains("8"), "A simulated opponent update must reach the selected player's stats")
+        attach(app, "Battle-Stats-Joueur")
         attach(app, "Battle-Progression-Adverse")
         app.terminate()
     }
@@ -50,7 +57,11 @@ final class BattlePolishUITests: XCTestCase {
 
     func testFourParticipantsAtAccessibilitySize() {
         let app = launch(large: true)
-        let last = app.staticTexts["battleMistakes-peer-fixture-3"]
+        let lastPlayer = app.buttons["battleParticipant-peer-fixture-3"]
+        reveal(lastPlayer, in: app)
+        XCTAssertTrue(lastPlayer.isHittable)
+        lastPlayer.tap()
+        let last = app.descendants(matching: .any)["battleStats-peer-fixture-3"]
         reveal(last, in: app)
         XCTAssertTrue(last.isHittable)
         XCTAssertLessThanOrEqual(last.frame.maxX, app.frame.width)

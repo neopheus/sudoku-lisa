@@ -37,7 +37,7 @@ struct BattleView: View {
                             BattleLobby(battle: battle)
                                 .transition(.opacity.combined(with: .offset(y: 12)))
                         case .playing:
-                            BattlePlayView(battle: battle, maximumBoardSide: max(190, screen.size.height - 410))
+                            BattlePlayView(battle: battle, maximumBoardSide: max(210, screen.size.height - 380))
                                 .transition(.opacity.combined(with: .offset(y: 12)))
                         case .finished:
                             BattlePodium(battle: battle)
@@ -232,12 +232,18 @@ private struct BattlePlayView: View {
     let maximumBoardSide: CGFloat
     @Environment(\.dynamicTypeSize) private var typeSize
     var body: some View {
-        VStack(spacing: 14) {
-            HStack {
-                Text(battle.difficulty.label).font(.headline)
+        VStack(spacing: typeSize.isAccessibilitySize ? 14 : 10) {
+            HStack(spacing: 8) {
+                Label(battle.difficulty.label, systemImage: "square.grid.3x3")
+                    .font(.subheadline.weight(.semibold))
                 Spacer()
-                Text(LisaStore.time(Int(battle.elapsed))).monospacedDigit().accessibilityIdentifier("battleTimer")
+                Label(LisaStore.time(Int(battle.elapsed)), systemImage: "timer")
+                    .font(.subheadline.monospacedDigit().weight(.medium))
+                    .accessibilityIdentifier("battleTimer")
+                    .accessibilityHint(L10n.text("Le chronomètre continue si vous quittez l’écran."))
             }
+            .padding(.horizontal, 12).padding(.vertical, 7)
+            .background(LisaTheme.paper.opacity(0.82), in: Capsule())
             if typeSize.isAccessibilitySize {
                 BattleParticipantsView(participants: battle.participants, localPlayerID: battle.localPlayerID)
             }
@@ -261,8 +267,6 @@ private struct BattlePlayView: View {
                     if typeSize.isAccessibilitySize {
                         BattleKeypad(battle: battle, canUndo: game.canUndo).frame(maxWidth: 500)
                     }
-                    Text(L10n.text("Le chronomètre continue si vous quittez l’écran."))
-                        .font(.caption).foregroundStyle(LisaTheme.muted)
                 }
             }
         }

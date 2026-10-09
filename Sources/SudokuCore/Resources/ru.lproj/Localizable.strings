@@ -520,6 +520,7 @@
 "%@ · vous" = "%@ · вы";
 "Place %@ · %@ %%" = "Место %@ · %@ %%";
 "Erreurs : %@" = "Ошибки: %@";
+"Touchez un joueur pour afficher ou masquer sa progression et ses erreurs." = "Нажмите на игрока, чтобы показать или скрыть прогресс и ошибки.";
 "Bravo ! Les autres Poulpi sont encore en course." = "Молодец! Остальные Пульпи ещё в гонке.";
 "Gardez la battle ouverte jusqu’au podium." = "Не закрывайте батл до награждения.";
 "Reconnexion en cours…" = "Повторное подключение…";

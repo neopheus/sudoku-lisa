@@ -520,6 +520,7 @@
 "%@ · vous" = "%@ · you";
 "Place %@ · %@ %%" = "Rank %@ · %@ %%";
 "Erreurs : %@" = "Mistakes: %@";
+"Touchez un joueur pour afficher ou masquer sa progression et ses erreurs." = "Tap a player to show or hide their progress and mistakes.";
 "Bravo ! Les autres Poulpi sont encore en course." = "Well done! The other Poulpi are still racing.";
 "Gardez la battle ouverte jusqu’au podium." = "Keep the battle open until the podium.";
 "Reconnexion en cours…" = "Reconnecting…";

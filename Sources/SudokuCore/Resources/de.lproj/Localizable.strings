@@ -520,6 +520,7 @@
 "%@ · vous" = "%@ · du";
 "Place %@ · %@ %%" = "Platz %@ · %@ %%";
 "Erreurs : %@" = "Fehler: %@";
+"Touchez un joueur pour afficher ou masquer sa progression et ses erreurs." = "Tippe auf einen Spieler, um Fortschritt und Fehler ein- oder auszublenden.";
 "Bravo ! Les autres Poulpi sont encore en course." = "Gut gemacht! Die anderen Poulpi sind noch im Rennen.";
 "Gardez la battle ouverte jusqu’au podium." = "Lass die Battle bis zum Podium geöffnet.";
 "Reconnexion en cours…" = "Verbindung wird wiederhergestellt…";
