@@ -152,3 +152,11 @@ Les boutons 1–9 restent fixés en bas de l’écran pendant la course. La gril
 L’aperçu iPhone SE du build 11 a révélé un chevauchement du pourcentage et du nombre d’erreurs sous les pastilles. Ces deux informations sont de nouveau présentées sur deux lignes distinctes sous chaque avatar. La capture de référence iPhone SE est conservée dans `docs/screenshots/battle-clavier-fixe-iphone-se.png`. La correction passe sur le parcours UI simulé. Archive Release signée `/tmp/lisa-release-20261009-b12.xcarchive`. Envoi accepté par Apple le 9 octobre à 09 h 59 (`Upload succeeded`, `EXPORT SUCCEEDED`, `/tmp/lisa-release-20261009-b12-upload.log`). Le traitement et l’assignation aux groupes sont encore à vérifier dans App Store Connect.
 
 - Correction des statistiques et capture : commit `c9ae2e2`. Le test UI ciblé iPhone SE passe le 9 octobre (parcours quatre joueurs, clavier et progression adverse), rapport `/tmp/lisa-validation/Logs/Test/Test-SudokuLisa-2026.10.09_09-55-51-+0200.xcresult`.
+
+### Statistiques Battle interactives — build 13
+
+- Les statistiques de progression et d’erreurs ne sont plus affichées en permanence sous les avatars. Touchez un joueur pour les afficher à côté de lui ; la pastille temporaire de gain reste au-dessus de l’avatar concerné.
+- Vérifications locales : 69 tests moteur réussis ; tests UI iPhone SE pour l’ouverture des statistiques et les très grands caractères réussis ; 575 clés de localisation et cinq langues vérifiées ; `git diff --check` réussi.
+- Source : commit `c05d101`. Archive Release signée `/tmp/lisa-release-20261009-b13.xcarchive`, signature vérifiée, application et extension en 1.0 (13). Envoi accepté par Apple le 9 octobre 2026 (`Upload succeeded`, `EXPORT SUCCEEDED`, `/tmp/lisa-release-20261009-b13-upload.log`).
+- Traitement Apple terminé. Build associé aux trois groupes existants **Lisa — Interne**, **Lisa — Externe** et **Liens à partager** ; App Store Connect affiche **En cours de test**. Notes de test enregistrées. Installation sur iPhone physique non vérifiée.
+- [Build 13](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/e2814278-9dde-40bc-998f-bc3ce5ce72ce) · [Lien public TestFlight](https://testflight.apple.com/join/tWFCgtQF).
