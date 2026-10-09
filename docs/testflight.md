@@ -166,7 +166,9 @@ L’aperçu iPhone SE du build 11 a révélé un chevauchement du pourcentage et
 - Expressions enrichies et animations partagées dans l’application ; rubrique Poulpi avec rejeu, boucle, pause, ralenti et aperçu compact.
 - Iris adaptés à la surface courbe des yeux ; paupières supérieure et inférieure aux coins fixes, fermeture courbe et clin d’œil complet, sans faux pli indépendant.
 - Validation locale : 69 tests moteur, 49 tests applicatifs sur simulateur ; parcours des commandes Poulpi en portrait/paysage réussi. Gros plans des yeux aux fermetures 0/25/50/75/100 %, contrôles de courbure, coins fixes et pic du clin d’œil. Traductions vérifiées dans cinq langues.
-- Build 1.0 (14) préparé pour TestFlight. Le statut d’envoi et de distribution sera consigné après vérification ; aucun essai sur iPhone physique revendiqué.
+- Sources : commit `93ad76f`, sans push Git. Archive Release signée `/tmp/lisa-release-20261009-b14.xcarchive`, signature profonde et versions app/extension vérifiées en 1.0 (14).
+- Envoi accepté par Apple le 9 octobre à 15 h 56 : `Upload succeeded` et `EXPORT SUCCEEDED` dans `/tmp/lisa-release-20261009-b14-upload.log`. Traitement Apple terminé ; build associé à **Lisa — Interne**, **Lisa — Externe** et **Liens à partager**, notes enregistrées et soumission TestFlight effectuée. État final constaté : **En cours de test**, trois groupes associés. Aucun essai sur iPhone physique revendiqué.
+- [Build 14](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/6799c71f-d133-4a43-952c-0232fab6053e) · [Preuve](screenshots/testflight-build-14.jpg) · [Lien public TestFlight](https://testflight.apple.com/join/tWFCgtQF).
 
 ### Notes de test du build 14
 
