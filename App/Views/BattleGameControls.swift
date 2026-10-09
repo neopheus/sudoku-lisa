@@ -122,7 +122,7 @@ struct BattleKeypad: View {
                                 .fixedSize(horizontal: false, vertical: true)
                         }
                         .foregroundStyle(remaining == 0 ? LisaTheme.muted : LisaTheme.ink)
-                        .frame(maxWidth: .infinity, minHeight: typeSize.isAccessibilitySize ? 68 : 56)
+                        .frame(maxWidth: .infinity, minHeight: typeSize.isAccessibilitySize ? 68 : 48)
                         .background(LisaTheme.paper, in: RoundedRectangle(cornerRadius: 10))
                         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(battle.lockedDigit == value ? LisaTheme.ink : .clear, lineWidth: 2))
                     }

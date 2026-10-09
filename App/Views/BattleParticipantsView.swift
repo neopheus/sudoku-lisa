@@ -85,7 +85,7 @@ private struct BattleParticipantBadge: View {
             if compact {
                 VStack(spacing: 3) {
                     BattleParticipantAvatar(appearance: participant.appearance, fraction: fraction,
-                        isLocal: isLocal, pulse: pulse, progressGain: progressGain, canAnimate: canAnimate)
+                        isLocal: isLocal, pulse: pulse, progressGain: progressGain, canAnimate: canAnimate, compact: compact)
                     BattleParticipantDetails(participant: participant, status: status,
                         percent: percent, isLocal: isLocal, isLobby: isLobby, compact: true)
                 }
@@ -93,7 +93,7 @@ private struct BattleParticipantBadge: View {
             } else {
                 HStack(alignment: .center, spacing: 9) {
                     BattleParticipantAvatar(appearance: participant.appearance, fraction: fraction,
-                        isLocal: isLocal, pulse: pulse, progressGain: progressGain, canAnimate: canAnimate)
+                        isLocal: isLocal, pulse: pulse, progressGain: progressGain, canAnimate: canAnimate, compact: compact)
                     BattleParticipantDetails(participant: participant, status: status,
                         percent: percent, isLocal: isLocal, isLobby: isLobby, compact: false)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -143,6 +143,7 @@ private struct BattleParticipantAvatar: View {
     let pulse: Bool
     let progressGain: Int?
     let canAnimate: Bool
+    let compact: Bool
 
     var body: some View {
         ZStack {
@@ -158,10 +159,10 @@ private struct BattleParticipantAvatar: View {
                     .scaleEffect(1.18)
                     .transition(.opacity.combined(with: .scale(scale: 0.75)))
             }
-            PoulpiAvatar(appearance: appearance, size: 43)
+            PoulpiAvatar(appearance: appearance, size: compact ? 38 : 43)
                 .scaleEffect(pulse ? 1.08 : 1)
         }
-        .frame(width: 54, height: 54)
+        .frame(width: compact ? 46 : 54, height: compact ? 46 : 54)
         .overlay(alignment: .topTrailing) {
             if let progressGain {
                 Label {
@@ -199,8 +200,10 @@ private struct BattleParticipantDetails: View {
                 .fixedSize(horizontal: false, vertical: true)
             if !isLobby {
                 if compact {
-                    progress
-                    mistakes
+                    HStack(spacing: 4) {
+                        progress
+                        mistakes
+                    }
                 } else {
                     HStack(spacing: 5) {
                         progress
@@ -209,7 +212,9 @@ private struct BattleParticipantDetails: View {
                     }
                 }
             }
-            Text(status)
+            if status != L10n.text("En course") {
+                Text(status)
+            }
         }
         .font(.caption2)
         .foregroundStyle(LisaTheme.muted)

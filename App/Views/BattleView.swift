@@ -37,13 +37,13 @@ struct BattleView: View {
                             BattleLobby(battle: battle)
                                 .transition(.opacity.combined(with: .offset(y: 12)))
                         case .playing:
-                            BattlePlayView(battle: battle, maximumBoardSide: max(220, screen.size.height - 410))
+                            BattlePlayView(battle: battle, maximumBoardSide: max(190, screen.size.height - 410))
                                 .transition(.opacity.combined(with: .offset(y: 12)))
                         case .finished:
                             BattlePodium(battle: battle)
                                 .transition(.opacity.combined(with: .offset(y: 12)))
                         case .cancelled:
-                            VStack(spacing: 20) {
+                    VStack(spacing: battle.state == .playing ? 8 : 20) {
                                 ContentUnavailableView(L10n.text("Battle interrompue"), systemImage: "wifi.exclamationmark",
                                     description: Text(L10n.text("La partie n’a pas été comptabilisée. Retrouvez vos amis pour une nouvelle battle.")))
                                 LisaButton(title: L10n.text("Retour à l’accueil"), icon: "house") { close() }
@@ -52,7 +52,7 @@ struct BattleView: View {
                         }
                     }
                     .animation(motionEnabled ? .easeInOut(duration: 0.24) : nil, value: battle.state)
-                    .padding(16).frame(maxWidth: 1000).frame(maxWidth: .infinity)
+                    .padding(battle.state == .playing ? 10 : 16).frame(maxWidth: 1000).frame(maxWidth: .infinity)
                 }
                 .accessibilityIdentifier("battleContentScroll")
                 .safeAreaInset(edge: .top, spacing: 0) {
@@ -69,7 +69,7 @@ struct BattleView: View {
                         BattleKeypad(battle: battle, canUndo: game.canUndo)
                             .frame(maxWidth: 500)
                             .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
+                            .padding(.vertical, 6)
                             .frame(maxWidth: .infinity)
                             .background(.regularMaterial)
                     }
