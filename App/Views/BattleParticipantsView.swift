@@ -200,10 +200,8 @@ private struct BattleParticipantDetails: View {
                 .fixedSize(horizontal: false, vertical: true)
             if !isLobby {
                 if compact {
-                    HStack(spacing: 4) {
-                        progress
-                        mistakes
-                    }
+                    progress
+                    mistakes
                 } else {
                     HStack(spacing: 5) {
                         progress

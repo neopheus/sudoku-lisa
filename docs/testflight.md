@@ -145,3 +145,8 @@ Battle : nouvelles pastilles rondes avec pourcentage de progression et erreurs. 
 Les boutons 1–9 restent fixés en bas de l’écran pendant la course. La grille est réduite sur écran court pour afficher le plateau et garder les commandes à portée de doigt. En très grands caractères, le clavier reste dans le défilement afin de conserver des commandes lisibles. La compilation simulateur et l’archive Release signée ont réussi. L’archive finale `/tmp/lisa-release-20261009-b11-final.xcarchive` a été acceptée par Apple le 9 octobre à 09 h 45 (`Upload succeeded`, `EXPORT SUCCEEDED`, `/tmp/lisa-release-20261009-b11-final-upload.log`).
 
 - Correctifs clavier de cette passe : commits `fd0e47b` et `b7a820d`. Archive et IPA de build 11 reconstruits depuis ces commits avant envoi.
+
+
+### Mise en page corrigée des statistiques Battle — build 12
+
+L’aperçu iPhone SE du build 11 a révélé un chevauchement du pourcentage et du nombre d’erreurs sous les pastilles. Ces deux informations sont de nouveau présentées sur deux lignes distinctes sous chaque avatar. La capture de référence iPhone SE est conservée dans `docs/screenshots/battle-clavier-fixe-iphone-se.png`. La correction passe sur le parcours UI simulé. Build 12 à archiver et envoyer.
