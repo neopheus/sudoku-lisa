@@ -129,7 +129,7 @@ struct GameView: View {
                 store.tick()
             }
         }
-        .onChange(of: scenePhase) { _, phase in if phase != .active { paused = true; if coach.isWorking { coach.cancel() }; store.saveForBackground() } }
+        .onChange(of: scenePhase) { _, phase in if phase != .active { paused = true; if coach.isWorking { coach.cancel() } } }
         .onDisappear { coach.cancel(); store.synchronizeElapsedTime(); store.save(); LisaAudio.shared.configure(paused: false) }
         .onChange(of: paused, initial: true) { _, value in LisaAudio.shared.configure(paused: value) }
         .onChange(of: observedBoard) { previous, current in

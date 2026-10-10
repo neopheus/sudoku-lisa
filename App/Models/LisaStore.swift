@@ -114,6 +114,11 @@ final class LisaStore: ObservableObject {
     @Published var showGame = false
     @Published var showVictory = false
     @Published var saveError: String?
+    @Published private(set) var needsSaveRecovery = false
+    @Published private(set) var isRecoveringSave = false
+    @Published private(set) var canRestoreBackup = false
+    @Published private(set) var preservedSaveURL: URL?
+    @Published private(set) var recoveryMessage: String?
     var milestones = GameMilestones()
     private var recorded = false
     private var currentGameID = UUID()
@@ -128,12 +133,24 @@ final class LisaStore: ObservableObject {
     private var canPersist = false
     private static let loadFailureMessage = "La sauvegarde n’a pas pu être chargée. Elle est conservée et l’enregistrement est suspendu pour protéger votre progression."
     private let saveURL: URL
+    private var backupURL: URL { saveURL.appendingPathExtension("backup") }
     private var backgroundSave = UIBackgroundTaskIdentifier.invalid
     private var backgroundSaveGeneration = 0
+    private var sceneIsActive = true
     private lazy var writer: SnapshotWriter<SaveData> = {
-        let writer = SnapshotWriter<SaveData>(url: saveURL)
+        let writer = SnapshotWriter<SaveData>(url: saveURL, backupURL: backupURL) {
+            _ = try Self.decodeSave($0)
+        }
         writer.onResult = { [weak self] result in
-            if case .failure = result { self?.saveError = "Votre progression n’a pas pu être enregistrée." }
+            guard let self, case let .failure(error) = result else { return }
+            if case SnapshotRecovery.Failure.originalUnreadable = error {
+                self.canPersist = false
+                self.cancelGeneration()
+                self.needsSaveRecovery = true
+                self.saveError = Self.loadFailureMessage
+            } else {
+                self.saveError = "Votre progression n’a pas pu être enregistrée."
+            }
         }
         return writer
     }()
@@ -151,51 +168,25 @@ final class LisaStore: ObservableObject {
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--uitest-reset") {
             try? FileManager.default.removeItem(at: saveURL)
+            try? FileManager.default.removeItem(at: self.backupURL)
             UserDefaults.standard.removeObject(forKey: L10n.languagePreferenceKey)
+            if ProcessInfo.processInfo.arguments.contains("--uitest-unreadable-save") {
+                try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+                try? Data("{partial preserved UI test save".utf8).write(to: saveURL)
+            }
         }
         #endif
         do {
             try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
             if FileManager.default.fileExists(atPath: saveURL.path) {
-                let data = try JSONDecoder().decode(SaveData.self, from: Data(contentsOf: saveURL))
-                if let saves = data.savedGames {
-                    guard saves.allSatisfy({ key, game in
-                        key == game.mode && ["Libre", "Quotidien", "Voyage", "Événement", "Tournoi"].contains(key)
-                            && (game.journeyStage == nil || (1...25).contains(game.journeyStage!))
-                    }) else {
-                        throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid per-mode game context"))
-                    }
-                }
-                session = data.session
-                settings = data.settings
-                history = data.history
-                completedDays = data.completedDays
-                eventWins = data.eventWins
-                battleRewards = data.battleRewards ?? PoulpiBattleRewards()
-                eventMedals = data.eventMedals ?? []
-                activeEvent = data.activeEvent
-                activeTournament = data.activeTournament
-                mode = data.mode
-                activeDay = data.activeDay
-                recorded = session?.isComplete ?? false
-                savedGames = data.savedGames ?? [:]
-                if let saved = savedGames[mode] {
-                    session = saved.session
-                    activeDay = saved.day
-                    activeEvent = saved.eventID
-                    activeTournament = saved.tournamentID
-                    activeJourneyStage = saved.journeyStage
-                    recorded = saved.recorded
-                    currentGameID = saved.id
-                } else if let session {
-                    // The original v1 save is migrated in memory without rewriting on launch.
-                    activeJourneyStage = mode == "Voyage" ? min(max(1, eventWins + (recorded ? 0 : 1)), 25) : nil
-                    savedGames[mode] = currentSavedGame(session)
-                }
+                applyRestoredSave(try Self.decodeSave(SnapshotRecovery.readOriginal(at: saveURL)))
             }
             clock.seconds = session?.elapsedSeconds ?? 0
             canPersist = true
-        } catch { saveError = Self.loadFailureMessage }
+        } catch {
+            saveError = Self.loadFailureMessage
+            needsSaveRecovery = true
+        }
         #if DEBUG
         if ProcessInfo.processInfo.arguments.contains("--uitest-reset"),
            ProcessInfo.processInfo.arguments.contains("--uitest-reduce-motion") {
@@ -227,6 +218,138 @@ final class LisaStore: ObservableObject {
         }
     }
 
+    /// Initial loading, retries and backup restoration share full decoding and validation.
+    nonisolated private static func decodeSave(_ bytes: Data) throws -> SaveData {
+        let data = try JSONDecoder().decode(SaveData.self, from: bytes)
+        if let saves = data.savedGames {
+            guard saves.allSatisfy({ key, game in
+                key == game.mode && ["Libre", "Quotidien", "Voyage", "Événement", "Tournoi"].contains(key)
+                    && (game.journeyStage == nil || (1...25).contains(game.journeyStage!))
+            }) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid per-mode game context"))
+            }
+        }
+        return data
+    }
+
+    private func applyRestoredSave(_ data: SaveData) {
+        // settings.didSet must not submit a partially restored snapshot.
+        canPersist = false
+        session = data.session
+        settings = data.settings
+        history = data.history
+        completedDays = data.completedDays
+        eventWins = data.eventWins
+        battleRewards = data.battleRewards ?? PoulpiBattleRewards()
+        eventMedals = data.eventMedals ?? []
+        activeEvent = data.activeEvent
+        activeTournament = data.activeTournament
+        mode = data.mode
+        activeDay = data.activeDay
+        recorded = session?.isComplete ?? false
+        savedGames = data.savedGames ?? [:]
+        activeJourneyStage = nil
+        currentGameID = UUID()
+        if let saved = savedGames[mode] {
+            session = saved.session
+            activeDay = saved.day
+            activeEvent = saved.eventID
+            activeTournament = saved.tournamentID
+            activeJourneyStage = saved.journeyStage
+            recorded = saved.recorded
+            currentGameID = saved.id
+        } else if let session {
+            // The original v1 save is migrated in memory without rewriting on launch.
+            activeJourneyStage = mode == "Voyage" ? min(max(1, eventWins + (recorded ? 0 : 1)), 25) : nil
+            savedGames[mode] = currentSavedGame(session)
+        }
+        clock.seconds = session?.elapsedSeconds ?? 0
+        duplicateCells = session.map { BoardConflicts.indices(in: $0.values) } ?? []
+        milestones = GameMilestones()
+        if let session {
+            _ = milestones.record(before: Array(repeating: 0, count: 81), after: session.values,
+                                  solution: session.puzzle.solution, revealsCorrectness: false)
+        }
+    }
+
+    @discardableResult func retryLoadingSave() async -> Bool {
+        guard needsSaveRecovery, !isRecoveringSave else { return false }
+        cancelGeneration()
+        isRecoveringSave = true
+        recoveryMessage = nil
+        defer { isRecoveringSave = false }
+        await writer.flush()
+        let url = saveURL
+        let result = await Task.detached(priority: .utility) {
+            Result { try Self.decodeSave(SnapshotRecovery.readOriginal(at: url)) }
+        }.value
+        switch result {
+        case let .success(data):
+            applyRestoredSave(data)
+            canPersist = true
+            needsSaveRecovery = false
+            saveError = nil
+            recoveryMessage = "La sauvegarde a été chargée. Votre progression est de nouveau enregistrée."
+            return true
+        case .failure:
+            saveError = Self.loadFailureMessage
+            recoveryMessage = "La sauvegarde reste illisible. L’original est conservé et l’enregistrement reste suspendu."
+            return false
+        }
+    }
+
+    func refreshRecoveryBackup() async {
+        guard needsSaveRecovery, !isRecoveringSave else { return }
+        isRecoveringSave = true
+        defer { isRecoveringSave = false }
+        let url = backupURL
+        canRestoreBackup = await Task.detached(priority: .utility) {
+            (try? Self.decodeSave(SnapshotRecovery.readOriginal(at: url))) != nil
+        }.value
+    }
+
+    @discardableResult func restoreBackup() async -> Bool {
+        guard needsSaveRecovery, !isRecoveringSave else { return false }
+        cancelGeneration()
+        isRecoveringSave = true
+        recoveryMessage = nil
+        defer { isRecoveringSave = false }
+        await writer.flush()
+        let source = saveURL, backup = backupURL
+        let result = await Task.detached(priority: .utility) {
+            Result { try SnapshotRecovery.restoreBackup(at: backup, to: source, decode: Self.decodeSave) }
+        }.value
+        switch result {
+        case let .success(restored):
+            applyRestoredSave(restored.snapshot)
+            preservedSaveURL = restored.preservedOriginalURL
+            canPersist = true
+            needsSaveRecovery = false
+            saveError = nil
+            recoveryMessage = "La copie de secours a été restaurée. L’original a été conservé séparément et peut être exporté."
+            return true
+        case .failure:
+            saveError = Self.loadFailureMessage
+            canRestoreBackup = false
+            recoveryMessage = "La copie de secours n’a pas pu être restaurée. L’original est conservé."
+            return false
+        }
+    }
+
+    func exportOriginalSave() async throws -> URL {
+        guard !isRecoveringSave, needsSaveRecovery || preservedSaveURL != nil else {
+            throw SnapshotRecovery.Failure.operationUnavailable
+        }
+        isRecoveringSave = true
+        defer { isRecoveringSave = false }
+        let source = preservedSaveURL ?? saveURL
+        let destination = FileManager.default.temporaryDirectory
+            .appendingPathComponent("lisa-save-export-\(UUID().uuidString)")
+        return try await Task.detached(priority: .utility) {
+            try SnapshotRecovery.exportOriginal(at: source, to: destination)
+        }.value
+    }
+
     func save() {
         guard canPersist else { return }
         var snapshot = session
@@ -245,6 +368,14 @@ final class LisaStore: ObservableObject {
     func synchronizeElapsedTime() {
         guard let session, session.elapsedSeconds != clock.seconds else { return }
         self.session?.elapsedSeconds = clock.seconds
+    }
+
+    /// The app owns lifecycle persistence. Inactive and background form one
+    /// departure from active, even if the first flush has already finished.
+    func sceneActivityChanged(isActive: Bool) {
+        guard sceneIsActive != isActive else { return }
+        sceneIsActive = isActive
+        if !isActive { saveForBackground() }
     }
 
     func saveForBackground() {
@@ -310,6 +441,7 @@ final class LisaStore: ObservableObject {
     func hasSavedGame(mode: String, date: Date? = nil) -> Bool { savedGame(mode: mode, date: date) != nil }
 
     @discardableResult func resume(mode: String, date: Date? = nil) -> Bool {
+        guard canPersist else { saveError = Self.loadFailureMessage; return false }
         guard let saved = savedGame(mode: mode, date: date) else { return false }
         cancelGeneration()
         save()

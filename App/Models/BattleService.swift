@@ -1,3 +1,4 @@
+import os
 import Foundation
 import SwiftUI
 import UIKit
@@ -27,6 +28,19 @@ struct BattleBoardSummary: Equatable {
     }
 }
 
+/// Keeps exact network time while publishing only changes visible in the timer label.
+@MainActor
+final class BattleElapsedClock: ObservableObject {
+    private(set) var elapsed: Double = 0
+    @Published private(set) var seconds = 0
+
+    fileprivate func update(elapsed value: Double) {
+        elapsed = value
+        let displayedSeconds = Int(value)
+        if seconds != displayedSeconds { seconds = displayedSeconds }
+    }
+}
+
 /// Ephemeral private-match owner. Never writes or replaces LisaStore's solo session.
 @MainActor
 final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControllerDelegate, GKMatchDelegate {
@@ -40,7 +54,11 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
     @Published private(set) var difficulty: Difficulty = .easy
     @Published private(set) var errorMessage: String?
     @Published private(set) var countdown = 3
-    @Published private(set) var elapsed: Double = 0
+    let elapsedClock = BattleElapsedClock()
+    private(set) var elapsed: Double {
+        get { elapsedClock.elapsed }
+        set { elapsedClock.update(elapsed: newValue) }
+    }
     @Published private(set) var results: [BattleResult] = []
     @Published private(set) var roundID: UUID?
     @Published var notesMode = false
@@ -49,14 +67,17 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
     }
     private var deliveredRoundID: UUID?
     var appearance = PoulpiAppearance(color: .pink, accessory: .none)
-    var localPlayerID: String { fixture ? "local-fixture" : GKLocalPlayer.local.gamePlayerID }
+    var localPlayerID: String { fixture ? "local-fixture" : (transport?.localPlayerID ?? GKLocalPlayer.local.gamePlayerID) }
+    private var localPlayerName: String { transport?.localPlayerName ?? GKLocalPlayer.local.displayName }
     var isHost: Bool { hostID == localPlayerID }
     var canStart: Bool { active && isHost && state == .lobby && (2...4).contains(participants.count) && participants.allSatisfy { $0.ready && $0.status == .connected } }
-    var canRematch: Bool { isHost && state == .finished && disconnectedPlayers.isEmpty && (fixture || match != nil) }
+    var canRematch: Bool { isHost && state == .finished && disconnectedPlayers.isEmpty && (fixture || transport != nil) }
     var canEdit: Bool { state == .playing && active && session?.isComplete == false && localParticipant?.status == .connected }
     private var localParticipant: BattleParticipant? { participants.first { $0.id == localPlayerID } }
     private var hostID: String?
     private var match: GKMatch?
+    private var transport: (any BattleTransport)?
+    private let clock: any BattleClock
     private var battleID: UUID?
     private var sequence: UInt64 = 0
     private var ledger: BattleRoundLedger?
@@ -68,7 +89,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
     private var bestRTT = Double.infinity
     private var generation: Task<Puzzle, Error>?
     private var preparation: Task<Void, Never>?
-    private var loop: Task<Void, Never>?
+    private var stopLoop: (() -> Void)?
     private var lastProgress: Double = 0
     private var lastHello: Double = 0
     private var active = true
@@ -80,8 +101,13 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
     private var presented = false
     @Published private var disconnectedPlayers: Set<String> = []
     private var receiveBudgets: [String: (window: Double, count: Int)] = [:]
-    private var now: Double { ProcessInfo.processInfo.systemUptime }
+    private var now: Double { clock.now }
     private var hostNow: Double { now + clockOffset }
+
+    init(clock: any BattleClock = SystemBattleClock()) {
+        self.clock = clock
+        super.init()
+    }
 
     func configureAppearance(_ value: PoulpiAppearance) {
         appearance = value
@@ -121,9 +147,16 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
     private func attach(_ match: GKMatch) {
         guard (1...3).contains(match.players.count), match.expectedPlayerCount == 0 else { match.disconnect(); cancel("Tous les amis doivent être connectés avant de commencer."); return }
         self.match = match; match.delegate = self
-        let players = [GKLocalPlayer.local] + match.players
-        guard Set(players.map(\.gamePlayerID)).count == players.count else { cancel("Le groupe de joueurs est invalide."); return }
-        participants = players.map { BattleParticipant(id: $0.gamePlayerID, name: String($0.displayName.prefix(80))) }.sorted { $0.id < $1.id }
+        connect(transport: GameKitBattleTransport(match: match))
+    }
+
+    func connect(transport: any BattleTransport) {
+        let players = [BattleParticipant(id: transport.localPlayerID, name: String(transport.localPlayerName.prefix(80)))] + transport.peers
+        guard (2...4).contains(players.count), Set(players.map(\.id)).count == players.count else {
+            transport.disconnect(); cancel("Le groupe de joueurs est invalide."); return
+        }
+        self.transport = transport
+        participants = players.sorted { $0.id < $1.id }
         hostID = BattleValidation.hostID(in: participants.map(\.id)); clockOffset = 0
         if isHost {
             battleID = UUID(); roundID = UUID()
@@ -132,7 +165,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         state = .lobby; lastHeard = Dictionary(uniqueKeysWithValues: participants.map { ($0.id, now) })
         update(localPlayerID) { $0.appearance = appearance }
         startLoop()
-        if isHost { send(.hello(difficulty: difficulty)); send(.profile(name: GKLocalPlayer.local.displayName, appearance: appearance)) }
+        if isHost { send(.hello(difficulty: difficulty)); send(.profile(name: localPlayerName, appearance: appearance)) }
     }
     func setDifficulty(_ value: Difficulty) {
         guard isHost, state == .lobby else { return }
@@ -213,7 +246,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
     func setActive(_ value: Bool) {
         if !value, inactiveSince == nil { inactiveSince = now }
         active = value
-        if !value { loop?.cancel(); loop = nil }
+        if !value { stopLoop?(); stopLoop = nil }
         if value {
             presentPendingInvitation()
             let expired = inactiveSince.map { BattleValidation.interruptionExpired(since: $0, now: now) } ?? false
@@ -223,10 +256,12 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
                 update(localPlayerID) { if $0.status != .finished { $0.status = .didNotFinish } }
                 send(.forfeit); startLoop(); return
             }
-            if match != nil || fixture { startLoop() }
+            if transport != nil || fixture { startLoop() }
         }
-        if state == .lobby && !value {
-            update(localPlayerID) { $0.ready = false }; send(.ready(false)); return
+        if state == .lobby {
+            update(localPlayerID) { if !value { $0.ready = false }; $0.status = value ? .connected : .interrupted }
+            if !value { send(.ready(false)) }
+            send(.active(value)); return
         }
         guard [.preparing, .countdown, .playing].contains(state) else { return }
         if [.preparing, .countdown].contains(state) && !value {
@@ -236,7 +271,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         if value { sendProgress() }
     }
     func leave() {
-        if !fixture, match != nil, ![.finished, .cancelled].contains(state) {
+        if !fixture, transport != nil, ![.finished, .cancelled].contains(state) {
             if isHost { send(.cancelled("L’hôte a quitté la partie. Le duel est annulé.")) }
             else { send(.active(false)) }
         }
@@ -247,7 +282,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         #if DEBUG
         if fixture { prepareUITestRound(); return }
         #endif
-        guard disconnectedPlayers.isEmpty, let match, match.players.count + 1 == participants.count else { errorMessage = "Un ami a quitté le groupe. Créez une nouvelle invitation."; return }
+        guard disconnectedPlayers.isEmpty, let transport, transport.peers.count + 1 == participants.count else { errorMessage = "Un ami a quitté le groupe. Créez une nouvelle invitation."; return }
         roundID = UUID(); ledger?.beginRound(roundID!); resetLobby(); startLoop(); send(.lobby)
     }
     private func resetLobby() {
@@ -256,8 +291,8 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         interrupted = [:]; pendingFinish = nil
     }
     private func cleanup() {
-        loop?.cancel(); loop = nil; preparation?.cancel(); preparation = nil; generation?.cancel()
-        match?.delegate = nil; match?.disconnect(); match = nil
+        stopLoop?(); stopLoop = nil; preparation?.cancel(); preparation = nil; generation?.cancel()
+        transport?.disconnect(); transport = nil; match = nil
         battleID = nil; hostID = nil; ledger = nil; sequence = 0; preparationStarted = nil; interrupted = [:]; startTime = nil; fixture = false; clockOffset = 0; bestRTT = .infinity; pendingFinish = nil; pendingInvite = nil; disconnectedPlayers = []; receiveBudgets = [:]; inactiveSince = nil
     }
     private func cancel(_ message: String, broadcast: Bool = true) {
@@ -267,16 +302,15 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
     private func update(_ id: String, _ mutation: (inout BattleParticipant) -> Void) {
         guard let index = participants.firstIndex(where: { $0.id == id }) else { return }; mutation(&participants[index])
     }
-    private func send(_ message: BattleMessage, reliable: Bool = true, to player: GKPlayer? = nil) {
-        guard let match, let battleID, let roundID else { return }
+    private func send(_ message: BattleMessage, reliable: Bool = true, to playerID: String? = nil) {
+        guard let transport, let battleID, let roundID else { return }
         guard sequence < UInt64.max else { cancel("La partie doit être relancée.", broadcast: false); return }
         sequence += 1
         let packet = BattleEnvelope(battleID: battleID, roundID: roundID, sequence: sequence, message: message)
         do {
             let data = try JSONEncoder().encode(packet)
             guard data.count <= BattleEnvelope.maximumBytes else { cancel("Un message de partie est invalide.", broadcast: false); return }
-            if let player { try match.send(data, to: [player], dataMode: reliable ? .reliable : .unreliable) }
-            else { try match.sendData(toAllPlayers: data, with: reliable ? .reliable : .unreliable) }
+            try transport.send(data, reliably: reliable, to: playerID)
         } catch { cancel("La connexion de la partie est indisponible.", broadcast: false) }
     }
     private func sendProgress() {
@@ -284,25 +318,20 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         send(.progress(fraction: game.progress, mistakes: game.mistakes), reliable: false)
     }
     private func startLoop() {
-        loop?.cancel()
-        loop = Task { [weak self] in
-            while !Task.isCancelled {
-                do { try await Task.sleep(for: .milliseconds(250)) } catch { return }
-                guard let self else { return }; self.pulse()
-            }
-        }
+        stopLoop?()
+        stopLoop = clock.startTicks { [weak self] in self?.pulse() }
     }
     private func pulse() {
         guard active else { return }
         if state == .finished { return }
         if fixture {
-            if state == .countdown, let startTime { countdown = max(0, Int(ceil(startTime - now))); if now >= startTime { state = .playing } }
+            if state == .countdown, let startTime { updateCountdown(max(0, Int(ceil(startTime - now)))); if now >= startTime { state = .playing } }
             if state == .playing, session?.isComplete == false { elapsed = max(0, now - (startTime ?? now)) }
             return
         }
         if state == .lobby, now - lastHello >= 1 {
             lastHello = now
-            if isHost { send(.hello(difficulty: difficulty)); send(.profile(name: GKLocalPlayer.local.displayName, appearance: appearance)) }
+            if isHost { send(.hello(difficulty: difficulty)); send(.profile(name: localPlayerName, appearance: appearance)) }
             else if battleID != nil { send(.ping(now)) }
         }
         if state == .playing, let pendingFinish, let game = session, now - lastFinishSent >= 1 {
@@ -310,7 +339,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         }
         if now - lastProgress >= 0.5 { lastProgress = now; sendProgress() }
         if state == .countdown, let startTime {
-            countdown = max(0, Int(ceil(startTime - hostNow)))
+            updateCountdown(max(0, Int(ceil(startTime - hostNow))))
             if hostNow >= startTime {
                 if participants.contains(where: { $0.status != .connected }) { cancel("Le départ a été interrompu."); return }
                 if isHost, ledger?.allAcknowledged != true { cancel("Le départ n’a pas été confirmé par tous les amis."); return }
@@ -331,22 +360,26 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
             if isHost, let since = interrupted[player.id], BattleValidation.interruptionExpired(since: since, now: now) { recordDidNotFinish(player.id) }
         }
     }
-    private func receive(_ data: Data, from player: GKPlayer) {
-        guard participants.contains(where: { $0.id == player.gamePlayerID }), data.count <= BattleEnvelope.maximumBytes else { return }
-        let identity = player.gamePlayerID
+    private func updateCountdown(_ value: Int) {
+        guard countdown != value else { return }
+        countdown = value
+    }
+
+    func receive(_ data: Data, from sender: String) {
+        guard participants.contains(where: { $0.id == sender }), data.count <= BattleEnvelope.maximumBytes else { return }
+        let identity = sender
         var budget = receiveBudgets[identity] ?? (window: now, count: 0)
         if now - budget.window >= 1 { budget = (now, 0) }
         guard budget.count < 30 else { return }
         budget.count += 1; receiveBudgets[identity] = budget
         let packet: BattleEnvelope
         do { packet = try BattleEnvelope.decode(data) } catch { cancel("Les versions de Lisa ne sont pas compatibles ou un message est invalide.", broadcast: false); return }
-        let sender = player.gamePlayerID
         guard ![.idle, .cancelled].contains(state) else { return }
         if battleID == nil {
             guard sender == hostID, case .hello = packet.message else { return }
             battleID = packet.battleID; roundID = packet.roundID
             ledger = BattleRoundLedger(battleID: packet.battleID, roundID: packet.roundID, hostID: sender, playerIDs: Set(participants.map(\.id)))
-            send(.profile(name: String(GKLocalPlayer.local.displayName.prefix(80)), appearance: appearance)); send(.ping(now))
+            send(.profile(name: String(localPlayerName.prefix(80)), appearance: appearance)); send(.ping(now))
         }
         let canAdopt = sender == hostID && [.lobby, .finished].contains(state)
         guard ledger?.admit(packet, sender: sender, mayAdoptHostRound: canAdopt) == true else { return }
@@ -354,7 +387,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         switch packet.message {
         case .hello(let level):
             guard sender == hostID, state == .lobby else { return }; difficulty = level
-            send(.profile(name: String(GKLocalPlayer.local.displayName.prefix(80)), appearance: appearance))
+            send(.profile(name: String(localPlayerName.prefix(80)), appearance: appearance))
         case .profile(let name, let look): guard state == .lobby, name.count <= 80 else { return }; update(sender) { $0.name = name; $0.appearance = look }
         case .ready(let value): guard state == .lobby else { return }; update(sender) { $0.ready = value }
         case .difficulty(let level): guard sender == hostID, state == .lobby else { return }; difficulty = level; participants.indices.forEach { participants[$0].ready = false }
@@ -363,7 +396,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
             state = .preparing; preparationStarted = now; session = GameSession(puzzle: puzzle); results = []; elapsed = 0; selection = nil; notesMode = false; lockedDigit = nil; refreshBoardSummary()
             send(.loaded)
         case .loaded: guard isHost, state == .preparing else { return }; ledger?.markLoaded(sender); maybeScheduleStart()
-        case .ping(let sent): guard isHost, sent.isFinite else { return }; send(.pong(sent: sent, host: now), to: player)
+        case .ping(let sent): guard isHost, sent.isFinite else { return }; send(.pong(sent: sent, host: now), to: sender)
         case .pong(let sent, let host):
             guard sender == hostID, sent.isFinite, host.isFinite else { return }
             let rtt = now - sent
@@ -379,7 +412,13 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
             interrupted[sender] = nil
             update(sender) { $0.progress = fraction; $0.mistakes = mistakes; if $0.status == .interrupted { $0.status = .connected } }
         case .active(let value):
-            if state == .lobby && !value { update(sender) { $0.ready = false; $0.status = .interrupted }; return }
+            if state == .lobby {
+                update(sender) {
+                    if !value { $0.ready = false; $0.status = .interrupted }
+                    else if $0.status == .interrupted { $0.status = .connected }
+                }
+                return
+            }
             guard [.preparing, .countdown, .playing].contains(state) else { return }
             if !value && [.preparing, .countdown].contains(state) { cancel("Le départ a été interrompu.", broadcast: isHost); return }
             if value { interrupted[sender] = nil; update(sender) { if $0.status == .interrupted { $0.status = .connected } } }
@@ -399,7 +438,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
             guard sender == hostID, state == .playing, final.count == participants.count, Set(final.map(\.playerID)) == Set(participants.map(\.id)), final.allSatisfy({ ($0.status == .finished && $0.seconds?.isFinite == true && ($0.seconds ?? -1) >= 0) || ($0.status == .didNotFinish && $0.seconds == nil) }) else { return }
             publishFinalResults(final)
         case .cancelled(let reason): guard sender == hostID else { return }; cancel(String(reason.prefix(200)), broadcast: false)
-        case .lobby: guard sender == hostID, state == .finished else { return }; resetLobby(); startLoop(); send(.profile(name: String(GKLocalPlayer.local.displayName.prefix(80)), appearance: appearance)); send(.ping(now))
+        case .lobby: guard sender == hostID, state == .finished else { return }; resetLobby(); startLoop(); send(.profile(name: String(localPlayerName.prefix(80)), appearance: appearance)); send(.ping(now))
         }
     }
     private func recordDidNotFinish(_ id: String) {
@@ -434,7 +473,7 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         for result in results { update(result.playerID) { $0.status = result.status; if result.status == .finished { $0.progress = 1 } } }
         // Persist rewards before publishing podium phase, so its first frame sees unlocked items.
         deliverRoundFinished()
-        state = .finished; loop?.cancel(); loop = nil
+        state = .finished; stopLoop?(); stopLoop = nil
     }
     private func deliverRoundFinished() {
         guard let roundID, deliveredRoundID != roundID, let callback = onRoundFinished,
@@ -451,30 +490,54 @@ final class BattleService: NSObject, ObservableObject, GKMatchmakerViewControlle
         Task { @MainActor in controller.dismiss(animated: true); self.cancel("Les invitations ont échoué. Réessayez.") }
     }
     nonisolated func matchmakerViewController(_ controller: GKMatchmakerViewController, didFind match: GKMatch) {
-        Task { @MainActor in controller.dismiss(animated: true); self.attach(match) }
+        // One-shot, lock-protected handoff. Only the main actor consumes the match;
+        // the callback never reads it after enqueueing, and no client thread blocks.
+        // The unchecked API is limited to this single-consumer mailbox: the
+        // producer stops using the payload, extraction clears it under lock,
+        // and subsequent application access belongs exclusively to MainActor.
+        let pending = OSAllocatedUnfairLock(uncheckedState: Optional(match))
+        Task { @MainActor in
+            let match = pending.withLockUnchecked { payload in
+                defer { payload = nil }
+                return payload
+            }
+            guard let match else { return }
+            controller.dismiss(animated: true)
+            self.attach(match)
+        }
     }
     nonisolated func match(_ match: GKMatch, didReceive data: Data, fromRemotePlayer player: GKPlayer) {
-        Task { @MainActor in guard self.match === match else { return }; self.receive(data, from: player) }
+        let matchID = ObjectIdentifier(match)
+        let playerID = player.gamePlayerID
+        Task { @MainActor in guard self.match.map(ObjectIdentifier.init) == matchID else { return }; self.receive(data, from: playerID) }
     }
     nonisolated func match(_ match: GKMatch, player: GKPlayer, didChange state: GKPlayerConnectionState) {
+        let matchID = ObjectIdentifier(match)
+        let playerID = player.gamePlayerID
+        let connected = state == .connected
+        guard connected || state == .disconnected else { return }
         Task { @MainActor in
-            guard self.match === match else { return }
-            let id = player.gamePlayerID
-            if state == .disconnected { self.disconnectedPlayers.insert(id) }
-            else if state == .connected { self.disconnectedPlayers.remove(id) }
-            if self.state == .finished { return }
-            if state == .disconnected {
-                if id == self.hostID { self.cancel("La connexion avec l’hôte est perdue.", broadcast: false) }
-                else { self.interrupted[id] = self.now; self.update(id) { if $0.status == .connected { $0.status = .interrupted } } }
-            } else if state == .connected {
-                self.lastHeard[id] = self.now
-                self.interrupted[id] = nil; self.update(id) { if $0.status == .interrupted { $0.status = .connected } }
-                self.send(.active(self.active)); self.sendProgress()
-            }
+            guard self.match.map(ObjectIdentifier.init) == matchID else { return }
+            self.connectionChanged(playerID: playerID, connected: connected)
+        }
+    }
+    func connectionChanged(playerID id: String, connected: Bool) {
+        guard participants.contains(where: { $0.id == id }) else { return }
+        if connected { disconnectedPlayers.remove(id) }
+        else { disconnectedPlayers.insert(id) }
+        if state == .finished { return }
+        if !connected {
+            if id == hostID { cancel("La connexion avec l’hôte est perdue.", broadcast: false) }
+            else { interrupted[id] = now; update(id) { if $0.status == .connected { $0.status = .interrupted } } }
+        } else {
+            lastHeard[id] = now
+            interrupted[id] = nil; update(id) { if $0.status == .interrupted { $0.status = .connected } }
+            send(.active(active)); sendProgress()
         }
     }
     nonisolated func match(_ match: GKMatch, didFailWithError error: Error?) {
-        Task { @MainActor in guard self.match === match else { return }; self.cancel("Game Center ne peut pas rétablir la connexion.", broadcast: false) }
+        let matchID = ObjectIdentifier(match)
+        Task { @MainActor in guard self.match.map(ObjectIdentifier.init) == matchID else { return }; self.cancel("Game Center ne peut pas rétablir la connexion.", broadcast: false) }
     }
     nonisolated func match(_ match: GKMatch, shouldReinviteDisconnectedPlayer player: GKPlayer) -> Bool { true }
 

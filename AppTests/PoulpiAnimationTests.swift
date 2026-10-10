@@ -1,4 +1,5 @@
 import XCTest
+import os
 import SceneKit
 import UIKit
 import SudokuCore
@@ -142,15 +143,15 @@ final class PoulpiAnimationTests: XCTestCase {
     func testUnchangedPoseDoesNotRewritePositionsAndScales() {
         let rig = PoulpiRig()
         rig.animate(0)
-        var writes = 0
+        let writes = OSAllocatedUnfairLock(initialState: 0)
         var observations: [NSKeyValueObservation] = []
         rig.node.enumerateChildNodes { node, _ in
-            observations.append(node.observe(\.position) { _, _ in writes += 1 })
-            observations.append(node.observe(\.scale) { _, _ in writes += 1 })
+            observations.append(node.observe(\.position) { _, _ in writes.withLock { $0 += 1 } })
+            observations.append(node.observe(\.scale) { _, _ in writes.withLock { $0 += 1 } })
         }
         // No elapsed time and no changed inputs: the visible pose is identical.
         for _ in 0..<120 { rig.animate(0) }
-        XCTAssertEqual(writes, 0, "Unchanged transforms must not dirty SceneKit nodes every frame")
+        XCTAssertEqual(writes.withLock { $0 }, 0, "Unchanged transforms must not dirty SceneKit nodes every frame")
         withExtendedLifetime(observations) {}
     }
 
@@ -164,12 +165,12 @@ final class PoulpiAnimationTests: XCTestCase {
         for mood in LisaMascotMood.allCases {
             clock += 0.02
             rig.play(mood, animated: true)
-            rig.animate(clock)
+            rig.animate(clock.truncatingRemainder(dividingBy: 24))
             let initialPupils = try pupils.map(irisRotation)
             let initialArms = arms.map(\.simdOrientation.vector)
             let initialMouth = mouth.scale
             clock += CGFloat(mood.reactionDuration) * 0.37
-            rig.animate(clock)
+            rig.animate(clock.truncatingRemainder(dividingBy: 24))
             let laterPupils = try pupils.map(irisRotation)
             XCTAssertTrue(zip(initialPupils, laterPupils).contains { differs($0.0, $0.1) }, "\(mood) must move its gaze on the eye surface")
             for (index, arm) in arms.enumerated() {
@@ -242,7 +243,7 @@ final class PoulpiAnimationTests: XCTestCase {
             let startTime = clock
             for (label, fraction) in [("start", 0.02), ("accent", 0.37), ("settle", 0.86)] {
                 clock = startTime + CGFloat(mood.reactionDuration * fraction)
-                rig.animate(clock)
+                rig.animate(clock.truncatingRemainder(dividingBy: 24))
                 let image = renderer.snapshot(atTime: TimeInterval(clock), with: CGSize(width: 240, height: 240), antialiasingMode: .multisampling4X)
                 let pixels = try rgbaPixels(image)
                 let width = 240

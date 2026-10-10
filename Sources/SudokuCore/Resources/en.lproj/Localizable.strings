@@ -612,3 +612,24 @@
 "Vitesse normale" = "Normal speed";
 "Émotions" = "Emotions";
 "Glissez pour tourner et pincez pour zoomer." = "Drag to rotate and pinch to zoom.";
+
+/* Save recovery and inspection navigation */
+"Sauvegarde protégée" = "Protected save";
+"Votre progression est de nouveau enregistrée." = "Your progress is being saved again.";
+"Lecture de la sauvegarde…" = "Reading the save…";
+"Réessayer la lecture" = "Try reading again";
+"Restaurer la copie de secours" = "Restore the backup";
+"Une copie de secours lisible est disponible. Elle peut contenir une progression plus ancienne." = "A readable backup is available. It may contain earlier progress.";
+"Aucune copie de secours lisible n’est disponible." = "No readable backup is available.";
+"Partager l’original" = "Share the original";
+"Exporter l’original" = "Export the original";
+"L’original n’a pas pu être exporté. Il est conservé ; vous pouvez réessayer." = "The original could not be exported. It is preserved; you can try again.";
+"L’export crée une copie exacte du fichier original, sans le modifier." = "Export creates an exact copy of the original file without changing it.";
+"Restaurer la copie de secours ?" = "Restore the backup?";
+"Votre progression reviendra à cette copie. L’original sera conservé séparément avant la restauration." = "Your progress will return to this backup. The original will be preserved separately before restoration.";
+"La sauvegarde a été chargée. Votre progression est de nouveau enregistrée." = "The save was loaded. Your progress is being saved again.";
+"La sauvegarde reste illisible. L’original est conservé et l’enregistrement reste suspendu." = "The save is still unreadable. The original is preserved and saving remains paused.";
+"La copie de secours a été restaurée. L’original a été conservé séparément et peut être exporté." = "The backup was restored. The original was preserved separately and can be exported.";
+"La copie de secours n’a pas pu être restaurée. L’original est conservé." = "The backup could not be restored. The original is preserved.";
+"Précédent" = "Previous";
+"Suivant" = "Next";

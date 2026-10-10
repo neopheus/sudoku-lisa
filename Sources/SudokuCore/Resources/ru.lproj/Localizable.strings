@@ -612,3 +612,24 @@
 "Vitesse normale" = "Обычная скорость";
 "Émotions" = "Эмоции";
 "Glissez pour tourner et pincez pour zoomer." = "Проведите, чтобы повернуть, и сведите или разведите пальцы для изменения масштаба.";
+
+/* Save recovery and inspection navigation */
+"Sauvegarde protégée" = "Сохранение защищено";
+"Votre progression est de nouveau enregistrée." = "Ваш прогресс снова сохраняется.";
+"Lecture de la sauvegarde…" = "Чтение сохранения…";
+"Réessayer la lecture" = "Попробовать прочитать снова";
+"Restaurer la copie de secours" = "Восстановить резервную копию";
+"Une copie de secours lisible est disponible. Elle peut contenir une progression plus ancienne." = "Доступна читаемая резервная копия. Она может содержать более ранний прогресс.";
+"Aucune copie de secours lisible n’est disponible." = "Читаемой резервной копии нет.";
+"Partager l’original" = "Поделиться оригиналом";
+"Exporter l’original" = "Экспортировать оригинал";
+"L’original n’a pas pu être exporté. Il est conservé ; vous pouvez réessayer." = "Не удалось экспортировать оригинал. Он сохранён; можно попробовать снова.";
+"L’export crée une copie exacte du fichier original, sans le modifier." = "Экспорт создаёт точную копию исходного файла, не изменяя его.";
+"Restaurer la copie de secours ?" = "Восстановить резервную копию?";
+"Votre progression reviendra à cette copie. L’original sera conservé séparément avant la restauration." = "Прогресс вернётся к состоянию в этой копии. Перед восстановлением оригинал будет сохранён отдельно.";
+"La sauvegarde a été chargée. Votre progression est de nouveau enregistrée." = "Сохранение загружено. Ваш прогресс снова сохраняется.";
+"La sauvegarde reste illisible. L’original est conservé et l’enregistrement reste suspendu." = "Сохранение по-прежнему не читается. Оригинал сохранён, запись прогресса остаётся приостановленной.";
+"La copie de secours a été restaurée. L’original a été conservé séparément et peut être exporté." = "Резервная копия восстановлена. Оригинал сохранён отдельно, и его можно экспортировать.";
+"La copie de secours n’a pas pu être restaurée. L’original est conservé." = "Не удалось восстановить резервную копию. Оригинал сохранён.";
+"Précédent" = "Назад";
+"Suivant" = "Далее";

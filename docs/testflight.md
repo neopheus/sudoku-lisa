@@ -1,5 +1,20 @@
 # Distribution TestFlight — Lisa Sudoku
 
+## Préparation 1.0 (15) — 10 octobre 2026
+
+- Build 15 configuré pour l'application et l'extension, ainsi que dans le générateur du projet.
+- Contenu : protection et récupération des sauvegardes, résilience Battle, corrections de cadence et de paupières, suppression de travail graphique redondant, audio hors du thread principal et corrections de concurrence Swift 6.
+- Vérification des traductions et `git diff --check` réussis. Les vérifications Swift 6 de l'application et des tests applicatifs ont réussi sans diagnostic avant cette préparation ; les tests iOS n'ont pas pu être exécutés dans cet environnement.
+- Tentative d'archive `/tmp/lisa-release-20261010-b15.xcarchive` : échec à la résolution des dépendances, `sandbox-exec: sandbox_apply: Operation not permitted`. Xcode signale également des identifiants de compte indisponibles dans le trousseau. Journal : `/tmp/lisa-release-b15-archive.log`.
+- La tentative de tests moteur Release est bloquée à la génération du dSYM (`Operation not permitted`). Ne pas la compter comme une suite de tests réussie.
+- Suite moteur Debug exécutée ensuite : **96 tests réussis, zéro échec** (`/tmp/lisa-release-b15-debug-tests.log`).
+- Commit demandé mais non créé : l'ajout final au staging échoue avec `.git/index.lock: Operation not permitted`. Les changements restent dans le dossier de travail, en partie déjà indexés ; le dernier commit demeure `68ee66e`.
+- Aucune archive signée du build 15, aucun export ni envoi Apple. Reprendre l'archive depuis un environnement Xcode autorisé, avec les identifiants Apple accessibles, puis vérifier traitement et groupes TestFlight.
+
+### Notes de test proposées pour le build 15
+
+Vérifiez les paupières, les clignements, les transitions et le ralenti de Poulpi. Testez la musique et les sons lors de la pause, du passage en arrière-plan, d'une interruption audio et du débranchement d'écouteurs. Vérifiez la reprise des parties et le mode Battle à plusieurs appareils, y compris une déconnexion. Les optimisations conservent les paramètres de rendu et les animations ; le gain réel d'autonomie reste à mesurer sur iPhone.
+
 ## Configuration
 
 - Équipe Apple : XAVIER VALENTIN — `S2UPJPPKKG`.

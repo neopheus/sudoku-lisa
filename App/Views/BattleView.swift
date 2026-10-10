@@ -146,6 +146,7 @@ private struct BattleLobby: View {
     @ObservedObject var battle: BattleService
     @Environment(\.lisaMotionAllowed) private var motionAllowed
     var body: some View {
+        let motionAllowed = motionAllowed
         VStack(spacing: 20) {
             Text(L10n.text("Sur la ligne de départ")).font(LisaTheme.heading(26))
             BattleParticipantsView(participants: battle.participants, localPlayerID: battle.localPlayerID, isLobby: true)
@@ -227,6 +228,17 @@ private struct BattleParticipantRow: View {
     }
 }
 
+private struct BattleTimerLabel: View {
+    @ObservedObject var clock: BattleElapsedClock
+
+    var body: some View {
+        Label(LisaStore.time(clock.seconds), systemImage: "timer")
+            .font(.subheadline.monospacedDigit().weight(.medium))
+            .accessibilityIdentifier("battleTimer")
+            .accessibilityHint(L10n.text("Le chronomètre continue si vous quittez l’écran."))
+    }
+}
+
 private struct BattlePlayView: View {
     @ObservedObject var battle: BattleService
     let maximumBoardSide: CGFloat
@@ -237,10 +249,7 @@ private struct BattlePlayView: View {
                 Label(battle.difficulty.label, systemImage: "square.grid.3x3")
                     .font(.subheadline.weight(.semibold))
                 Spacer()
-                Label(LisaStore.time(Int(battle.elapsed)), systemImage: "timer")
-                    .font(.subheadline.monospacedDigit().weight(.medium))
-                    .accessibilityIdentifier("battleTimer")
-                    .accessibilityHint(L10n.text("Le chronomètre continue si vous quittez l’écran."))
+                BattleTimerLabel(clock: battle.elapsedClock)
             }
             .padding(.horizontal, 12).padding(.vertical, 7)
             .background(LisaTheme.paper.opacity(0.82), in: Capsule())

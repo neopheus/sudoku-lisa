@@ -24,6 +24,10 @@ enum LisaMascotMood: String, CaseIterable, Identifiable {
         default: 2.2
         }
     }
+
+    // sin² produces two bounces per cycle: three readable giggles, not six
+    // compressed into 1.8 seconds. Face, mantle and arms share this beat.
+    var laughCycles: Float { self == .giggle ? 1.5 : 2 }
 }
 
 enum LisaMascotExpressionScheduler {

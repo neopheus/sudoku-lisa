@@ -20,18 +20,20 @@ final class PoulpiRig: @unchecked Sendable {
     func setSwimming(_ pose: CompanionFlight.SwimPose?) {
         lock.lock(); swimming = pose; lock.unlock()
     }
-    private var previousTime: CGFloat = 0
+    private var animationClock = PoulpiAnimationClock()
     private var bones: [SCNNode] = []
     private var pupils: [SCNNode] = []
     private var brows: [SCNNode] = []
     private var eyelids: [SCNMorpher] = []
     private var lidMaterials: [SCNMaterial] = []
     private var eyelidClosure = [Float]([-1, -1])
+    private var eyelidWeights = [PoulpiEyelidWeights(), PoulpiEyelidWeights()]
     private var lastBodyScale: SIMD3<Float>?
     private var lastFace: FacePose?
+    // Expression transitions must never retain a transient automatic blink.
+    private var lastExpressionFace: FacePose?
     private var transitionFace: FacePose?
     private var reactionElapsed: Float = 0
-    private var phaseTime: Float = 0
     private var lastJointOrientations = Array<simd_quatf?>(repeating: nil, count: 24)
     private let mouth = SCNNode()
     private let mouthCavity = SCNNode()
@@ -676,7 +678,9 @@ final class PoulpiRig: @unchecked Sendable {
     // edge. A closed eye therefore has one real seam, not a painted line above
     // a second, still-open boundary. Both membranes follow the ivory surface.
     nonisolated(unsafe) private static let openLid = lidGeometry(closure: 0)
-    nonisolated(unsafe) private static let lidTargets = (1...16).map { lidGeometry(closure: Float($0) / 16) }
+    nonisolated(unsafe) private static let lidTargets = (1...PoulpiEyelidWeights.targetCount).map {
+        lidGeometry(closure: Float($0) / Float(PoulpiEyelidWeights.targetCount))
+    }
     private static let lidGeometryModifier = """
         #pragma arguments
         float lidClosure;
@@ -824,12 +828,9 @@ final class PoulpiRig: @unchecked Sendable {
         guard abs(closure-eyelidClosure[index])>0.0001 else { return }
         eyelidClosure[index]=closure
         lidMaterials[index].setValue(NSNumber(value: closure), forKey: "lidClosure")
-        let targetCount=Self.lidTargets.count
-        let phase=closure*Float(targetCount)
-        let segment=min(targetCount-1,Int(phase)), progress=phase-Float(segment)
-        for target in 0..<targetCount {
-            let weight=target==segment ? progress : (target==segment-1 ? 1-progress : 0)
-            eyelids[index].setWeight(CGFloat(weight),forTargetAt:target)
+        let morpher = eyelids[index]
+        eyelidWeights[index].update(closure: closure) { target, weight in
+            morpher.setWeight(CGFloat(weight), forTargetAt: target)
         }
     }
 
@@ -875,7 +876,7 @@ final class PoulpiRig: @unchecked Sendable {
         let animated = animated && !(ProcessInfo.processInfo.arguments.contains("--octopus-preview") && ProcessInfo.processInfo.arguments.contains("--octopus-still"))
         #endif
         lock.lock(); defer { lock.unlock() }
-        transitionFace = animated ? lastFace : nil
+        transitionFace = animated ? lastExpressionFace : nil
         self.mood = mood; reactionElapsed = 0
         if !animated {
             // Static poses write these nodes directly; the next animated frame
@@ -883,13 +884,15 @@ final class PoulpiRig: @unchecked Sendable {
             lastBodyScale = nil; lastFace = nil
             node.removeAction(forKey:"rig")
             swimWeight = 0
-            previousTime = 0; phaseTime = 0
+            animationClock = PoulpiAnimationClock()
             bends = Array(repeating: 0, count: 24)
             twists = Array(repeating: 0, count: 24)
             for b in bones { b.eulerAngles = SCNVector3Zero }
             lastJointOrientations = Array(repeating: nil, count: 24)
             bones[0].scale=SCNVector3(1,1,1)
-            applyFace(Self.expression(for: mood))
+            let expression = Self.expression(for: mood)
+            lastExpressionFace = expression
+            applyFace(expression)
             return
         }
         guard node.action(forKey:"rig") == nil else { return }
@@ -911,7 +914,7 @@ final class PoulpiRig: @unchecked Sendable {
         return ReactionEnvelope(anticipation: anticipation, accent: accent, settle: settle)
     }
 
-    private static func animatedFace(_ mood: LisaMascotMood, time: Float, envelope: ReactionEnvelope) -> FacePose {
+    private static func animatedFace(_ mood: LisaMascotMood, time: Float, reactionPhase: Float, envelope: ReactionEnvelope) -> FacePose {
         var face = expression(for: mood)
         let strength = 0.65 + envelope.accent * 0.45 - envelope.anticipation * 0.12 + envelope.settle * 0.06
         face.lids *= strength
@@ -923,25 +926,29 @@ final class PoulpiRig: @unchecked Sendable {
         face.gaze += SIMD2(sin(time * 0.9) * 0.008, cos(time * 1.3) * 0.006)
         switch mood {
         case .giggle, .celebrating:
-            face.opening *= 0.67 + 0.33 * pow(sin(time * 7), 2)
-            face.brows += SIMD2(repeating: sin(time * 7) * 0.008)
+            let laugh = sin(reactionPhase * 2 * .pi * mood.laughCycles)
+            face.opening *= 0.67 + 0.33 * laugh * laugh
+            face.brows += SIMD2(repeating: laugh * 0.008)
         case .sleepy:
             face.opening = max(face.opening, 0.48 * envelope.accent)
             face.roundness = 0.9
         case .nervous:
-            face.gaze += SIMD2(sin(time * 16) * 0.007, cos(time * 13) * 0.005)
+            let tremor = reactionPhase * 2 * .pi
+            face.gaze += SIMD2(sin(tremor * 5) * 0.007, cos(tremor * 6) * 0.005)
         case .dizzy:
-            face.gaze += SIMD2(cos(time * 5), sin(time * 5)) * 0.020
+            let rotation = reactionPhase * 2 * .pi * 3
+            face.gaze += SIMD2(cos(rotation), sin(rotation)) * 0.020
         default: break
         }
-        let local = time.truncatingRemainder(dividingBy: 4)
-        let blink = local > 3.65 ? pow(sin((local - 3.65) / 0.35 * .pi), 2) : 0
-        face.lids = simd_max(face.lids, SIMD2(repeating: blink))
         if mood == .peek || mood == .encouraging || mood == .moonwalk {
             face.lids.x = max(face.lids.x, min(1, envelope.accent * 1.08))
         }
-        if mood == .sneeze { face.lids = simd_max(face.lids, SIMD2(repeating: envelope.accent)) }
-        if let forced = inspectionBlink { face.lids = SIMD2(repeating: forced) }
+        if mood == .sneeze {
+            let impulse = PoulpiAnimationTiming.sneezeImpulse(phase: reactionPhase)
+            let closing = max(impulse, PoulpiAnimationTiming.sneezeImpulse(phase: reactionPhase + 0.04))
+            face.lids = simd_max(face.lids, SIMD2(repeating: closing))
+            face.opening = max(face.opening, impulse * 0.7)
+        }
         return face
     }
 
@@ -963,7 +970,7 @@ final class PoulpiRig: @unchecked Sendable {
     }
 
     /// Distinct, bounded poses blend into the swim instead of replacing it.
-    private func armGesture(_ mood: LisaMascotMood, arm: Int, joint: Int, time: Float) -> (bend: Float, twist: Float) {
+    private func armGesture(_ mood: LisaMascotMood, arm: Int, joint: Int, time: Float, reactionPhase: Float) -> (bend: Float, twist: Float) {
         let tip = Float(joint) / 2
         let side: Float = arm < 4 ? 1 : -1
         let front = arm == 0 || arm == 7
@@ -986,7 +993,8 @@ final class PoulpiRig: @unchecked Sendable {
         case .thinking, .curious:
             return front ? (-0.18 - tip * 0.14, side * 0.10) : (-0.04, 0)
         case .celebrating, .giggle:
-            return (0.18 + wave * (0.20 + tip * 0.10), side * sin(time * 4) * 0.12)
+            let laughPhase = reactionPhase * 2 * .pi * mood.laughCycles
+            return (0.18 + sin(laughPhase - Float(joint) * 0.6) * (0.20 + tip * 0.10), side * sin(laughPhase) * 0.12)
         case .peek, .cloudHide:
             return (front ? -0.32 - tip * 0.18 : 0.18, front ? side * 0.12 : 0)
         case .swim, .chase, .rocket:
@@ -996,7 +1004,7 @@ final class PoulpiRig: @unchecked Sendable {
         case .juggle:
             return (front ? -0.18 + sin(time * 5 + side * .pi / 2) * 0.22 : -0.08, front ? side * 0.12 : 0)
         case .sneeze:
-            return ((pow(max(0, sin(time * 4)), 4) - 0.3) * 0.40, 0)
+            return (PoulpiAnimationTiming.sneezeImpulse(phase: reactionPhase) * 0.40, 0)
         case .tumble, .pirouette:
             return (0.30 + tip * 0.12, side * 0.10)
         case .balance, .dizzy, .wobble:
@@ -1012,26 +1020,32 @@ final class PoulpiRig: @unchecked Sendable {
     func animate(_ time: CGFloat) {
         lock.lock(); defer { lock.unlock() }
         let mood = self.mood, swimming = self.swimming
-        let elapsed = Float(time >= previousTime ? time - previousTime : max(0, 24 - previousTime + time))
-        previousTime = time
+        let elapsed = Float(animationClock.advance(actionTime: Double(time)))
         reactionElapsed += elapsed
-        // All facial frequencies are multiples of 0.1 rad/s, so 20π is an
-        // exact common period. This stays continuous across the 24s action loop.
-        phaseTime = (phaseTime + elapsed).truncatingRemainder(dividingBy: 20 * .pi)
         let reactionElapsed = self.reactionElapsed
-        let dt = min(0.05, elapsed)
-        let t=phaseTime, cycle=Float(time) * .pi/12
+        // Only radian oscillators share 20π. Blink and stroke use their own
+        // periods from the continuous clock, including across action restarts.
+        let t = Float(animationClock.totalTime.truncatingRemainder(dividingBy: 20 * .pi))
+        let cycle = Float(time) * .pi/12
+        let reactionPhase = PoulpiAnimationTiming.reactionPhase(elapsed: Double(reactionElapsed), duration: mood.reactionDuration)
         let envelope = Self.envelope(elapsed: reactionElapsed, duration: Float(mood.reactionDuration))
-        let targetFace = Self.animatedFace(mood, time: t, envelope: envelope)
-        let face = transitionFace.map { Self.blend($0, targetFace, progress: reactionElapsed / 0.22) } ?? targetFace
+        let targetFace = Self.animatedFace(mood, time: t, reactionPhase: reactionPhase, envelope: envelope)
+        var face = transitionFace.map { Self.blend($0, targetFace, progress: reactionElapsed / 0.22) } ?? targetFace
+        lastExpressionFace = face
+        // The current blink wins over expression interpolation so the actual
+        // lids reach full closure, then reopen without a captured blink tail.
+        face.lids = simd_max(face.lids, SIMD2(repeating: PoulpiAnimationTiming.blink(at: animationClock.totalTime)))
+        if let forced = Self.inspectionBlink { face.lids = SIMD2(repeating: forced) }
         if reactionElapsed >= 0.22 { transitionFace = nil }
-        let blend = 1 - exp(-dt / 0.13)
+        let blend = PoulpiAnimationTiming.smoothing(elapsed: Double(elapsed))
         swimWeight += ((swimming == nil ? 0 : 1) - swimWeight) * blend
-        let stroke = Float(swimming?.phase ?? Double(t * .pi))
+        let stroke = Float(swimming?.phase ?? animationClock.totalTime.truncatingRemainder(dividingBy: 2) * .pi)
         let effort = Float(swimming?.effort ?? 0)
         let braking = Float(swimming?.braking ?? 0)
         let turn = Float(swimming?.turn ?? 0)
-        let gestureTime = swimming != nil && (mood == .swim || mood == .chase || mood == .rocket) ? stroke / .pi : t
+        let localReactionTime = min(reactionElapsed, Float(mood.reactionDuration))
+        let gestureTime = swimming != nil && (mood == .swim || mood == .chase || mood == .rocket)
+            ? stroke / .pi : localReactionTime
         for i in 0..<8 {
             let angle = Self.armAngles[i]
             let steering = turn * Self.armSines[i]
@@ -1048,16 +1062,17 @@ final class PoulpiRig: @unchecked Sendable {
                 let jointSteering = steering * (0.15 + joint * 0.04)
                 let gesture = mood == .idle || mood == .sleepy
                     ? (bend: Float(0), twist: Float(0))
-                    : armGesture(mood, arm: i, joint: j, time: gestureTime)
-                let sharedGesture = sin(t * 4.4 - Float(i) * 0.45 - joint * 0.5)
+                    : armGesture(mood, arm: i, joint: j, time: gestureTime, reactionPhase: reactionPhase)
+                let sharedGesture = sin(localReactionTime * 4.4 - Float(i) * 0.45 - joint * 0.5)
                     * face.armEnergy * (0.35 + joint * 0.18)
                 let anticipation = -envelope.anticipation * face.armEnergy * (0.34 + joint * 0.12)
                 let accent = envelope.accent * sharedGesture
+                let gestureWeight: Float = mood.isAcrobatic ? max(0, envelope.accent) : 1
                 let target = idle * (1 - swimWeight * 0.7) + swimWeight * (paddle + fan + jointSteering)
-                    + gesture.bend + sharedGesture * 0.35 + anticipation + accent
+                    + gesture.bend * gestureWeight + sharedGesture * 0.35 + anticipation + accent
                 let index = i * 3 + j
                 bends[index] += (target - bends[index]) * blend
-                let twist = (j == 0 ? baseTwist : 0) + gesture.twist
+                let twist = (j == 0 ? baseTwist : 0) + gesture.twist * gestureWeight
                 twists[index] += (twist - twists[index]) * blend
                 // Compose rotations once: do not mix Euler writes with axis-angle.
                 let curl = simd_quatf(angle: bends[index], axis: Self.curlAxes[i])

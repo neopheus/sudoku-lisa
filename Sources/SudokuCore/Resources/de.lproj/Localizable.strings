@@ -612,3 +612,24 @@
 "Vitesse normale" = "Normale Geschwindigkeit";
 "Émotions" = "Gefühle";
 "Glissez pour tourner et pincez pour zoomer." = "Zum Drehen ziehen und zum Zoomen zwei Finger auseinanderziehen.";
+
+/* Save recovery and inspection navigation */
+"Sauvegarde protégée" = "Geschützter Spielstand";
+"Votre progression est de nouveau enregistrée." = "Dein Fortschritt wird wieder gespeichert.";
+"Lecture de la sauvegarde…" = "Spielstand wird gelesen…";
+"Réessayer la lecture" = "Erneut lesen";
+"Restaurer la copie de secours" = "Sicherungskopie wiederherstellen";
+"Une copie de secours lisible est disponible. Elle peut contenir une progression plus ancienne." = "Eine lesbare Sicherungskopie ist verfügbar. Sie kann einen älteren Fortschritt enthalten.";
+"Aucune copie de secours lisible n’est disponible." = "Keine lesbare Sicherungskopie verfügbar.";
+"Partager l’original" = "Original teilen";
+"Exporter l’original" = "Original exportieren";
+"L’original n’a pas pu être exporté. Il est conservé ; vous pouvez réessayer." = "Das Original konnte nicht exportiert werden. Es bleibt erhalten; du kannst es erneut versuchen.";
+"L’export crée une copie exacte du fichier original, sans le modifier." = "Der Export erstellt eine exakte Kopie der Originaldatei, ohne sie zu verändern.";
+"Restaurer la copie de secours ?" = "Sicherungskopie wiederherstellen?";
+"Votre progression reviendra à cette copie. L’original sera conservé séparément avant la restauration." = "Dein Fortschritt wird auf diese Kopie zurückgesetzt. Das Original wird vor der Wiederherstellung separat aufbewahrt.";
+"La sauvegarde a été chargée. Votre progression est de nouveau enregistrée." = "Der Spielstand wurde geladen. Dein Fortschritt wird wieder gespeichert.";
+"La sauvegarde reste illisible. L’original est conservé et l’enregistrement reste suspendu." = "Der Spielstand ist weiterhin unlesbar. Das Original bleibt erhalten und das Speichern bleibt ausgesetzt.";
+"La copie de secours a été restaurée. L’original a été conservé séparément et peut être exporté." = "Die Sicherungskopie wurde wiederhergestellt. Das Original wurde separat aufbewahrt und kann exportiert werden.";
+"La copie de secours n’a pas pu être restaurée. L’original est conservé." = "Die Sicherungskopie konnte nicht wiederhergestellt werden. Das Original bleibt erhalten.";
+"Précédent" = "Vorherige";
+"Suivant" = "Weiter";

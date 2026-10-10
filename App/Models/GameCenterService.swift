@@ -1,3 +1,4 @@
+import os
 import SudokuCore
 import SwiftUI
 import UIKit
@@ -91,7 +92,20 @@ final class GameCenterService: NSObject, ObservableObject, GKGameCenterControlle
     }
 
     nonisolated func player(_ player: GKPlayer, didAccept invite: GKInvite) {
-        Task { @MainActor in BattleService.shared.accept(invite: invite) }
+        // One-shot protected storage bridges the Objective-C callback to the
+        // main actor without marking every GKInvite as freely Sendable.
+        // The unchecked API is limited to this single-consumer mailbox: the
+        // producer stops using the payload, extraction clears it under lock,
+        // and subsequent application access belongs exclusively to MainActor.
+        let pending = OSAllocatedUnfairLock(uncheckedState: Optional(invite))
+        Task { @MainActor in
+            let invite = pending.withLockUnchecked { payload in
+                defer { payload = nil }
+                return payload
+            }
+            guard let invite else { return }
+            BattleService.shared.accept(invite: invite)
+        }
     }
 
     var presenter: UIViewController? {

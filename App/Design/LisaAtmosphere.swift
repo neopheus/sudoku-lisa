@@ -127,6 +127,7 @@ struct LisaUnitCelebration: View {
     let token: Int
     @State private var started = Date().timeIntervalSinceReferenceDate
     @State private var finished = false
+    @State private var geometryCache = LisaCelebrationGeometryCache()
     @ObservedObject private var budget = LisaRenderBudget.shared
 
     var body: some View {
@@ -134,17 +135,19 @@ struct LisaUnitCelebration: View {
             Canvas { context, size in
                 guard !finished, !cells.isEmpty else { return }
                 let age = time == 0 ? 0 : max(0, time - started)
-                let side = size.width / 9
-                let origin = CGPoint(x: (CGFloat(originIndex % 9) + 0.5) * side,
-                                     y: (CGFloat(originIndex / 9) + 0.5) * side)
-                drawCells(context, side: side, origin: origin, age: age, animated: time > 0)
+                let geometry = geometryCache.geometry(size: size, token: token, units: units,
+                                                      cells: cells, originIndex: originIndex)
+                let side = geometry.metrics.side
+                let origin = geometry.metrics.origin
+                drawCells(context, geometry: geometry, age: age, animated: time > 0)
                 guard time > 0 else { return }
-                for unit in units.sorted() {
-                    let rect = unitRect(unit, side: side)
+                for (offset, unitGeometry) in geometry.metrics.units.enumerated() {
+                    let unit = unitGeometry.index
+                    let rect = unitGeometry.rect
                     let color: Color = unit < 9 ? .cyan : unit < 18 ? LisaTheme.mint : LisaTheme.yellow
                     var outline = context
                     outline.opacity = fade(age, hold: 0.38, end: 0.9)
-                    let path = Path(roundedRect: rect.insetBy(dx: 1, dy: 1), cornerRadius: 6)
+                    let path = geometry.unitPaths[offset]
                     luminousStroke(path, in: outline, color: color, width: 2.5)
                     if unit < 18 {
                         drawComets(context, rect: rect, origin: origin, horizontal: unit < 9,
@@ -175,16 +178,14 @@ struct LisaUnitCelebration: View {
         }
     }
 
-    private func drawCells(_ context: GraphicsContext, side: Double, origin: CGPoint, age: Double, animated: Bool) {
-        for cell in cells.sorted() {
-            let center = CGPoint(x: (Double(cell % 9) + 0.5) * side, y: (Double(cell / 9) + 0.5) * side)
-            let delay = hypot(center.x - origin.x, center.y - origin.y) / side * 0.025
-            let local = animated ? age - delay : 0
+    private func drawCells(_ context: GraphicsContext, geometry: LisaCelebrationGeometryCache.Value, age: Double, animated: Bool) {
+        for (offset, cell) in geometry.metrics.cells.enumerated() {
+            let local = animated ? age - cell.delay : 0
             guard local >= 0 else { continue }
             var layer = context
             layer.opacity = animated ? fade(local, hold: 0.12, end: 0.65) : 0.65
-            let rect = CGRect(x: center.x - side / 2 + 2, y: center.y - side / 2 + 2, width: side - 4, height: side - 4)
-            let path = Path(roundedRect: rect, cornerRadius: 5)
+            let rect = cell.rect
+            let path = geometry.cellPaths[offset]
             layer.fill(path, with: .color(LisaTheme.yellow.opacity(0.18)))
             layer.stroke(path, with: .color(LisaTheme.yellow), lineWidth: 1.5)
             if animated {
@@ -263,10 +264,32 @@ struct LisaUnitCelebration: View {
     private func easeOut(_ value: Double) -> Double { 1 - pow(1 - min(1, max(0, value)), 3) }
     private func fade(_ age: Double, hold: Double, end: Double) -> Double { 1 - min(1, max(0, (age - hold) / (end - hold))) }
 
-    private func unitRect(_ unit: Int, side: Double) -> CGRect {
-        if unit < 9 { return CGRect(x: 1, y: Double(unit) * side + 1, width: side * 9 - 2, height: side - 2) }
-        if unit < 18 { return CGRect(x: Double(unit - 9) * side + 1, y: 1, width: side - 2, height: side * 9 - 2) }
-        let box = unit - 18
-        return CGRect(x: Double(box % 3 * 3) * side + 1, y: Double(box / 3 * 3) * side + 1, width: side * 3 - 2, height: side * 3 - 2)
+}
+
+/// A single-entry cache owned by this view; neither events nor resize variants
+/// accumulate. Mutable storage itself is not observed by the animation clock.
+final class LisaCelebrationGeometryCache {
+    struct Key: Equatable {
+        let size: CGSize
+        let token: Int
+        let units: Set<Int>
+        let cells: Set<Int>
+        let originIndex: Int
+    }
+    struct Value {
+        let metrics: CelebrationGeometry
+        let cellPaths: [Path]
+        let unitPaths: [Path]
+    }
+    private var entry: (Key, Value)?
+    func geometry(size: CGSize, token: Int, units: Set<Int>, cells: Set<Int>, originIndex: Int) -> Value {
+        let key = Key(size: size, token: token, units: units, cells: cells, originIndex: originIndex)
+        if let entry, entry.0 == key { return entry.1 }
+        let metrics = CelebrationGeometry(width: size.width, cells: cells, units: units, originIndex: originIndex)
+        let value = Value(metrics: metrics,
+                          cellPaths: metrics.cells.map { Path(roundedRect: $0.rect, cornerRadius: 5) },
+                          unitPaths: metrics.units.map { Path(roundedRect: $0.rect.insetBy(dx: 1, dy: 1), cornerRadius: 6) })
+        entry = (key, value)
+        return value
     }
 }

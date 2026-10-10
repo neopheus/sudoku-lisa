@@ -223,6 +223,7 @@ final class OctopusModel {
         camera.position = SCNVector3(0, 1.30, 7)
         camera.look(at: portraitTarget)
         scene.rootNode.addChildNode(camera)
+        lighting.name = "flightLighting"
         scene.rootNode.addChildNode(lighting)
         for (position, intensity, color) in [
             (SCNVector3(-3,4,5), CGFloat(220), UIColor(red:1,green:0.96,blue:0.91,alpha:1)),
@@ -336,7 +337,6 @@ final class OctopusModel {
     }
     private func installFlight() {
         let aspect = flightAspect
-        let lighting = lighting
         let rig = rig
         // SceneKit advances this curve directly; no SwiftUI redraw per frame.
         flight.runAction(.repeatForever(.customAction(duration: 32) { node, elapsed in
@@ -345,7 +345,10 @@ final class OctopusModel {
             rig.setSwimming(swim)
             let halfHeight = Float(12 - p.depth) * tan(Float.pi / 9)
             node.position = SCNVector3(Float(p.x) * halfHeight * aspect, Float(p.y) * halfHeight, Float(p.depth))
-            lighting.position = node.position
+            // flight -> portraitRotation -> scene.rootNode, where the light rig
+            // is a sibling. Resolve through SceneKit's action-owned node rather
+            // than capturing a second non-Sendable node across render threads.
+            node.parent?.parent?.childNode(withName: "flightLighting", recursively: false)?.position = node.position
             node.eulerAngles = SCNVector3(Float(-p.dz * 0.10), Float(p.dx * 1.8), Float(-p.dx * 0.9 - swim.turn * 0.18))
             // Distant passes remain visually light over the puzzle.
             node.opacity = p.depth < -2 ? CGFloat(max(0.55, 1 + (p.depth + 2) * 0.12)) : 1
@@ -388,7 +391,7 @@ final class OctopusModel {
         gesture.removeAllActions()
         let duration = mood.reactionDuration
         gesture.runAction(.customAction(duration: duration) { node, elapsed in
-            let t = min(1, Float(elapsed / duration))
+            let t = PoulpiAnimationTiming.reactionPhase(elapsed: Double(elapsed), duration: duration)
             let envelope = pow(sin(.pi * t), 2)
             let phase = t * .pi * 2
             let blend = max(0, 1 - t / 0.18)
@@ -423,9 +426,10 @@ final class OctopusModel {
             case .cloudHide:
                 sx = 1 - 0.25 * envelope; sy = sx; y = -0.1 * envelope
             case .sneeze:
-                pitch = -0.25 * envelope + pow(sin(phase * 2), 8) * 0.5 * envelope
-                sx = 1 + sin(phase * 2) * 0.14 * envelope
-                sy = 1 - sin(phase * 2) * 0.14 * envelope
+                let impulse = PoulpiAnimationTiming.sneezeImpulse(phase: t)
+                pitch = -0.25 * envelope + impulse * 0.5
+                sx = 1 + impulse * 0.14
+                sy = 1 - impulse * 0.14
             case .tumble:
                 roll = .pi * 2 * t * t * (3 - 2 * t)
                 sx = 1 - 0.45 * envelope; sy = sx
@@ -459,16 +463,16 @@ final class OctopusModel {
                 yaw = sin(phase) * 0.65 * envelope
                 roll = sin(phase * 2) * 0.10 * envelope
             case .giggle:
-                y = pow(sin(phase * 3), 2) * 0.10 * envelope
-                roll = sin(phase * 3) * 0.12 * envelope
+                y = pow(sin(phase * mood.laughCycles), 2) * 0.10 * envelope
+                roll = sin(phase * mood.laughCycles) * 0.12 * envelope
                 sx = 1 + 0.06 * envelope; sy = 1 - 0.06 * envelope
             case .rocket:
                 y = 0.12 * envelope
                 roll = sin(phase * 3) * 0.07 * envelope
                 z = -0.08 * envelope
             case .celebrating:
-                y = pow(sin(phase * 2), 2) * 0.12 * envelope
-                roll = sin(phase * 2) * 0.16 * envelope
+                y = pow(sin(phase * mood.laughCycles), 2) * 0.12 * envelope
+                roll = sin(phase * mood.laughCycles) * 0.16 * envelope
             case .thinking:
                 roll = -0.15 * envelope; yaw = 0.12 * envelope
             case .encouraging:

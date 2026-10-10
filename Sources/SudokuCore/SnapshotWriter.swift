@@ -15,6 +15,17 @@ public final class SnapshotWriter<Snapshot: Encodable & Sendable> {
         }
     }
 
+    /// Validation covers the full app payload, including migrations and contexts.
+    /// An unreadable existing original is never replaced by an automatic write.
+    public init(url: URL, backupURL: URL, validate: @escaping @Sendable (Data) throws -> Void) {
+        write = { snapshot in
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .sortedKeys
+            let data = try encoder.encode(snapshot)
+            try SnapshotRecovery.write(data, to: url, backupURL: backupURL, validate: validate)
+        }
+    }
+
     // Injectable I/O allows tests to block an in-flight write deterministically.
     init(write: @escaping @Sendable (Snapshot) throws -> Void) { self.write = write }
 

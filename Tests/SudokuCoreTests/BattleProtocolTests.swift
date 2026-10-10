@@ -98,3 +98,37 @@ extension BattleProtocolTests {
         ledger.beginRound(UUID()); XCTAssertTrue(ledger.results.isEmpty); XCTAssertFalse(ledger.isFinalized); XCTAssertNil(ledger.completedResult(for: "host"))
     }
 }
+
+
+extension BattleProtocolTests {
+    func testRematchRejectsDelayedLiveLaneAndPreservesNewRoundSequenceBudget() {
+        let battle = UUID(), oldRound = UUID(), nextRound = UUID()
+        var ledger = BattleRoundLedger(battleID: battle, roundID: oldRound, hostID: "host", playerIDs: ["host", "peer"])
+        let lobby = BattleEnvelope(battleID: battle, roundID: nextRound, sequence: 2, message: .lobby)
+        XCTAssertTrue(ledger.admit(lobby, sender: "host", mayAdoptHostRound: true))
+        // A live sequence may exceed the latest control sequence, but cannot revive an old round.
+        let delayed = BattleEnvelope(battleID: battle, roundID: oldRound, sequence: 500, message: .progress(fraction: 1, mistakes: 0))
+        XCTAssertFalse(ledger.admit(delayed, sender: "host", mayAdoptHostRound: true))
+        XCTAssertEqual(ledger.roundID, nextRound)
+        let current = BattleEnvelope(battleID: battle, roundID: nextRound, sequence: 3, message: .progress(fraction: 0.1, mistakes: 0))
+        XCTAssertTrue(ledger.admit(current, sender: "host", mayAdoptHostRound: false), "Rejected packets must not consume the current round's live sequence")
+    }
+
+    func testAdoptingRematchClearsResultsAndRequiresFreshLoadAcknowledgements() {
+        let battle = UUID(), oldRound = UUID(), nextRound = UUID()
+        var ledger = BattleRoundLedger(battleID: battle, roundID: oldRound, hostID: "host", playerIDs: ["host", "peer"])
+        ledger.markLoaded("host"); ledger.markLoaded("peer")
+        ledger.acknowledgeStart("host"); ledger.acknowledgeStart("peer")
+        ledger.record(BattleResult(playerID: "host", name: "Host", seconds: 2, status: .finished))
+        ledger.record(BattleResult(playerID: "peer", name: "Peer", seconds: 3, status: .finished))
+        let lobby = BattleEnvelope(battleID: battle, roundID: nextRound, sequence: 10, message: .lobby)
+        XCTAssertTrue(ledger.admit(lobby, sender: "host", mayAdoptHostRound: true))
+        XCTAssertTrue(ledger.results.isEmpty)
+        XCTAssertFalse(ledger.isFinalized)
+        XCTAssertFalse(ledger.canScheduleStart(active: true, connectedPlayerIDs: ["host", "peer"]))
+        XCTAssertFalse(ledger.allAcknowledged)
+        let staleFinish = BattleEnvelope(battleID: battle, roundID: oldRound, sequence: 99, message: .finish(values: [], elapsed: 2))
+        XCTAssertFalse(ledger.admit(staleFinish, sender: "peer", mayAdoptHostRound: true))
+        XCTAssertEqual(ledger.roundID, nextRound)
+    }
+}

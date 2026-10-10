@@ -20,7 +20,9 @@ struct SudokuLisaApp: App {
 
     @ViewBuilder private var appContent: some View {
         #if DEBUG
-        if ProcessInfo.processInfo.arguments.contains("--octopus-preview") {
+        if ProcessInfo.processInfo.arguments.contains("--poulpi-inspection-sequence") {
+            PoulpiInspectionSequenceView()
+        } else if ProcessInfo.processInfo.arguments.contains("--octopus-preview") {
             if ProcessInfo.processInfo.arguments.contains("--octopus-motion-preview") {
                 OctopusMotionPreview()
             } else {
@@ -46,7 +48,7 @@ struct SudokuLisaApp: App {
                 .preferredColorScheme(store.settings.darkMode ? .dark : .light)
                 .onChange(of: scenePhase, initial: true) { _, phase in
                     LisaAudio.shared.configure(active: phase == .active, music: store.settings.music, musicTrack: LisaMusicTrack(rawValue: store.settings.musicTrack) ?? .marimbaPuzzle)
-                    if phase != .active { store.saveForBackground() }
+                    store.sceneActivityChanged(isActive: phase == .active)
                 }
                 .onAppear {
                     #if DEBUG

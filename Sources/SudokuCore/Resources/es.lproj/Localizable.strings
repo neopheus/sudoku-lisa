@@ -612,3 +612,24 @@
 "Vitesse normale" = "Velocidad normal";
 "Émotions" = "Emociones";
 "Glissez pour tourner et pincez pour zoomer." = "Desliza para girar y pellizca para ampliar.";
+
+/* Save recovery and inspection navigation */
+"Sauvegarde protégée" = "Guardado protegido";
+"Votre progression est de nouveau enregistrée." = "Tu progreso vuelve a guardarse.";
+"Lecture de la sauvegarde…" = "Leyendo el guardado…";
+"Réessayer la lecture" = "Volver a intentar la lectura";
+"Restaurer la copie de secours" = "Restaurar la copia de seguridad";
+"Une copie de secours lisible est disponible. Elle peut contenir une progression plus ancienne." = "Hay una copia de seguridad legible. Puede contener un progreso anterior.";
+"Aucune copie de secours lisible n’est disponible." = "No hay ninguna copia de seguridad legible.";
+"Partager l’original" = "Compartir el original";
+"Exporter l’original" = "Exportar el original";
+"L’original n’a pas pu être exporté. Il est conservé ; vous pouvez réessayer." = "No se ha podido exportar el original. Se conserva; puedes volver a intentarlo.";
+"L’export crée une copie exacte du fichier original, sans le modifier." = "La exportación crea una copia exacta del archivo original sin modificarlo.";
+"Restaurer la copie de secours ?" = "¿Restaurar la copia de seguridad?";
+"Votre progression reviendra à cette copie. L’original sera conservé séparément avant la restauration." = "Tu progreso volverá al de esta copia. El original se conservará por separado antes de restaurarla.";
+"La sauvegarde a été chargée. Votre progression est de nouveau enregistrée." = "Se ha cargado el guardado. Tu progreso vuelve a guardarse.";
+"La sauvegarde reste illisible. L’original est conservé et l’enregistrement reste suspendu." = "El guardado sigue siendo ilegible. El original se conserva y el guardado permanece suspendido.";
+"La copie de secours a été restaurée. L’original a été conservé séparément et peut être exporté." = "Se ha restaurado la copia de seguridad. El original se conserva por separado y puede exportarse.";
+"La copie de secours n’a pas pu être restaurée. L’original est conservé." = "No se ha podido restaurar la copia de seguridad. El original se conserva.";
+"Précédent" = "Anterior";
+"Suivant" = "Siguiente";

@@ -7,14 +7,15 @@ struct RootView: View {
     @State private var tab = 0
     @State private var settings = false
     @State private var battlePresented = false
+    @State private var saveRecoveryPresented = false
     @ObservedObject private var battle = BattleService.shared
     var body: some View {
         TabView(selection: $tab) {
-            NavigationStack { HomeView(onRoute: { tab = $0 }, onBattle: { battlePresented = true }, mascotAnimationEnabled: tab == 0 && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil).toolbar { ToolbarItem(placement: .topBarTrailing) { Button { settings = true } label: { Image(systemName: "slider.horizontal.3").foregroundStyle(LisaTheme.ink) }.accessibilityLabel(L10n.text("Réglages")) } } }
+            NavigationStack { HomeView(onRoute: { tab = $0 }, onBattle: { battlePresented = true }, mascotAnimationEnabled: tab == 0 && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery && !saveRecoveryPresented).toolbar { ToolbarItem(placement: .topBarTrailing) { Button { settings = true } label: { Image(systemName: "slider.horizontal.3").foregroundStyle(LisaTheme.ink) }.accessibilityLabel(L10n.text("Réglages")) } } }
                 .environment(\.lisaMotionAllowed, motionAllowed(tab: 0))
                 .tabItem { Label(L10n.text("Jouer"), systemImage: "square.grid.3x3.fill") }.tag(0)
-            NavigationStack { DailyView(motionEnabled: tab == 1 && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil) }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 1)).tabItem { Label(L10n.text("Chaque jour"), systemImage: "sun.max.fill") }.tag(1)
-            NavigationStack { JourneyView(motionEnabled: tab == 2 && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil) }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 2)).tabItem { Label(L10n.text("Voyage"), systemImage: "sparkles") }.tag(2)
+            NavigationStack { DailyView(motionEnabled: tab == 1 && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery && !saveRecoveryPresented) }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 1)).tabItem { Label(L10n.text("Chaque jour"), systemImage: "sun.max.fill") }.tag(1)
+            NavigationStack { JourneyView(motionEnabled: tab == 2 && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery && !saveRecoveryPresented) }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 2)).tabItem { Label(L10n.text("Voyage"), systemImage: "sparkles") }.tag(2)
             NavigationStack { ProgressViewLisa() }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 3)).tabItem { Label(L10n.text("Mes progrès"), systemImage: "chart.bar.fill") }.tag(3)
             NavigationStack { PoulpiView(active: motionAllowed(tab: 4)) }
                 .tabItem { Label("Poulpi", systemImage: "face.smiling.fill") }.tag(4)
@@ -25,13 +26,42 @@ struct RootView: View {
         .toolbarBackground(.visible, for: .tabBar)
         .saturation(store.settings.paperMode ? 0 : 1)
         .sheet(isPresented: $settings) { SettingsView() }
+        .sheet(isPresented: $saveRecoveryPresented) { SaveRecoveryView() }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            if store.needsSaveRecovery || store.preservedSaveURL != nil {
+                Button { saveRecoveryPresented = true } label: {
+                    Label(L10n.text("Sauvegarde protégée"), systemImage: "exclamationmark.shield")
+                        .font(.body.weight(.semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                }
+                .background(LisaTheme.paper)
+                .accessibilityIdentifier("saveRecoveryOpen")
+            }
+        }
         .fullScreenCover(isPresented: $store.showGame) { GameView() }
         .fullScreenCover(isPresented: $battlePresented) { BattleView() }
         .onAppear {
+            saveRecoveryPresented = store.needsSaveRecovery
             battle.configureAppearance(store.poulpiAppearance)
             battle.onRoundFinished = { [weak store = store] roundID, result in
                 store?.recordBattleResult(roundID: roundID, won: result.rank == 1)
             }
+        }
+        .task(id: store.needsSaveRecovery) {
+            guard store.needsSaveRecovery else { return }
+            if store.showGame {
+                store.showGame = false
+                do { try await Task.sleep(for: .milliseconds(450)) } catch { return }
+            }
+            saveRecoveryPresented = true
+            await store.refreshRecoveryBackup()
+        }
+        .onChange(of: store.saveError) { _, message in
+            if store.needsSaveRecovery, message != nil, !store.showGame { saveRecoveryPresented = true }
+        }
+        .onChange(of: saveRecoveryPresented) { _, presented in
+            if !presented, store.needsSaveRecovery { store.saveError = nil }
         }
         .task {
             // Game Center can launch the app for a pending friend invitation.
@@ -52,10 +82,10 @@ struct RootView: View {
         .accessibilityHidden(store.isGenerating)
         .overlay { GenerationOverlay() }
         .alert(L10n.text("Préparation de la grille"), isPresented: Binding(get: { store.generationError != nil }, set: { if !$0 { store.generationError = nil } })) { Button(L10n.text("D’accord")) { store.generationError = nil } } message: { Text(L10n.text(store.generationError ?? "")) }
-        .alert(L10n.text("Sauvegarde"), isPresented: Binding(get: { store.saveError != nil }, set: { if !$0 { store.saveError = nil } })) { Button(L10n.text("D’accord")) { store.saveError = nil } } message: { Text(L10n.text(store.saveError ?? "")) }
+        .alert(L10n.text("Sauvegarde"), isPresented: Binding(get: { store.saveError != nil && !store.needsSaveRecovery }, set: { if !$0 && !store.needsSaveRecovery { store.saveError = nil } })) { Button(L10n.text("D’accord")) { store.saveError = nil } } message: { Text(L10n.text(store.saveError ?? "")) }
     }
     private func motionAllowed(tab index: Int) -> Bool {
-        store.settings.animatedDecor && tab == index && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil
+        store.settings.animatedDecor && tab == index && !store.showGame && !battlePresented && !settings && !saveRecoveryPresented && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery
     }
 }
 

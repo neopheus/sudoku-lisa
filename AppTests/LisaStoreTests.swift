@@ -105,6 +105,181 @@ final class LisaStoreTests: XCTestCase {
         XCTAssertNil(reopened.saveError)
     }
 
+    @MainActor func testRetryRestoresWholeCorrectedSaveWithoutRewritingIt() async throws {
+        let url = try temporarySave()
+        try Data("broken".utf8).write(to: url)
+        let store = LisaStore(saveURL: url)
+        XCTAssertTrue(store.needsSaveRecovery)
+        store.settings.darkMode = true
+        let corrected = try fixture()
+        try corrected.write(to: url)
+        let retried = await store.retryLoadingSave()
+        XCTAssertTrue(retried)
+        await store.flushPendingSaves()
+        XCTAssertFalse(store.needsSaveRecovery)
+        XCTAssertNil(store.saveError)
+        XCTAssertEqual(try Data(contentsOf: url), corrected)
+        XCTAssertFalse(store.settings.darkMode)
+        XCTAssertEqual(store.history.count, 1)
+        XCTAssertEqual(store.completedDays, ["2026-10-06"])
+        XCTAssertEqual(store.eventWins, 5)
+        XCTAssertEqual(store.eventMedals, ["2026-10-1"])
+        XCTAssertEqual(store.activeEvent, "2026-10-2")
+        XCTAssertEqual(store.activeTournament, "2026-W41")
+        XCTAssertEqual(store.mode, "Quotidien")
+        XCTAssertEqual(store.clock.seconds, 123)
+        XCTAssertEqual(store.session?.notes[4], [7])
+        store.session?.undo()
+        XCTAssertEqual(store.session?.notes[4], [])
+        store.settings.darkMode = true
+        await store.flushPendingSaves()
+        XCTAssertTrue(LisaStore(saveURL: url).settings.darkMode)
+    }
+
+    @MainActor func testFailedOrMissingRetryKeepsPersistenceClosed() async throws {
+        let url = try temporarySave()
+        let original = Data("unreadable original".utf8)
+        try original.write(to: url)
+        let store = LisaStore(saveURL: url)
+        let retried = await store.retryLoadingSave()
+        XCTAssertFalse(retried)
+        XCTAssertTrue(store.needsSaveRecovery)
+        store.settings.darkMode = true
+        await store.flushPendingSaves()
+        XCTAssertEqual(try Data(contentsOf: url), original)
+        try FileManager.default.removeItem(at: url)
+        let retriedMissing = await store.retryLoadingSave()
+        XCTAssertFalse(retriedMissing)
+        store.save()
+        await store.flushPendingSaves()
+        XCTAssertFalse(FileManager.default.fileExists(atPath: url.path))
+        store.start(.easy)
+        XCTAssertFalse(store.isGenerating)
+    }
+
+    @MainActor func testRecoveryExportPreservesRawCorruptionAndBlockedPersistence() async throws {
+        let url = try temporarySave()
+        let original = Data([0xFF, 0x00, 0x7B, 0x22])
+        try original.write(to: url)
+        let store = LisaStore(saveURL: url)
+        let exported = try await store.exportOriginalSave()
+        addTeardownBlock { try? FileManager.default.removeItem(at: exported.deletingLastPathComponent()) }
+        XCTAssertEqual(try Data(contentsOf: exported), original)
+        XCTAssertEqual(try Data(contentsOf: url), original)
+        XCTAssertTrue(store.needsSaveRecovery)
+        store.save()
+        await store.flushPendingSaves()
+        XCTAssertEqual(try Data(contentsOf: url), original)
+    }
+
+    @MainActor func testRestoreBackupRecoversMigrationAndQuarantinesExactOriginal() async throws {
+        let url = try temporarySave()
+        let backup = url.appendingPathExtension("backup")
+        let original = Data("partial original".utf8)
+        try original.write(to: url)
+        let valid = try fixture()
+        try valid.write(to: backup)
+        let store = LisaStore(saveURL: url)
+        await store.refreshRecoveryBackup()
+        XCTAssertTrue(store.canRestoreBackup)
+        let restored = await store.restoreBackup()
+        XCTAssertTrue(restored)
+        XCTAssertFalse(store.needsSaveRecovery)
+        XCTAssertEqual(store.history.count, 1)
+        XCTAssertEqual(store.clock.seconds, 123)
+        XCTAssertEqual(store.session?.notes[4], [7])
+        let preserved = try XCTUnwrap(store.preservedSaveURL)
+        XCTAssertEqual(try Data(contentsOf: preserved), original)
+        XCTAssertEqual(try Data(contentsOf: url), valid)
+        XCTAssertEqual(try Data(contentsOf: backup), valid)
+        let export = try await store.exportOriginalSave()
+        addTeardownBlock { try? FileManager.default.removeItem(at: export.deletingLastPathComponent()) }
+        XCTAssertEqual(try Data(contentsOf: export), original)
+        store.settings.darkMode = true
+        await store.flushPendingSaves()
+        XCTAssertTrue(LisaStore(saveURL: url).settings.darkMode)
+        XCTAssertEqual(try Data(contentsOf: preserved), original)
+    }
+
+    @MainActor func testInvalidBackupCannotUnlockRecoveryOrOverwriteOriginal() async throws {
+        let url = try temporarySave()
+        let original = Data("original".utf8)
+        try original.write(to: url)
+        var invalid = try XCTUnwrap(JSONSerialization.jsonObject(with: fixture()) as? [String: Any])
+        invalid["savedGames"] = ["Libre": ["id": UUID().uuidString, "mode": "Quotidien",
+                                             "session": invalid["session"]!, "recorded": false]]
+        try JSONSerialization.data(withJSONObject: invalid).write(to: url.appendingPathExtension("backup"))
+        let store = LisaStore(saveURL: url)
+        await store.refreshRecoveryBackup()
+        XCTAssertFalse(store.canRestoreBackup)
+        let restored = await store.restoreBackup()
+        XCTAssertFalse(restored)
+        XCTAssertTrue(store.needsSaveRecovery)
+        store.save()
+        await store.flushPendingSaves()
+        XCTAssertEqual(try Data(contentsOf: url), original)
+    }
+
+    @MainActor func testLiveFileCorruptionClosesPersistenceAndKeepsHealthyBackup() async throws {
+        let url = try temporarySave()
+        let valid = try fixture()
+        try valid.write(to: url)
+        let store = LisaStore(saveURL: url)
+        store.settings.darkMode = true
+        await store.flushPendingSaves()
+        let backup = url.appendingPathExtension("backup")
+        XCTAssertEqual(try Data(contentsOf: backup), valid)
+        let corrupted = Data("{partially written elsewhere".utf8)
+        try corrupted.write(to: url)
+        store.settings.darkMode = false
+        await store.flushPendingSaves()
+        XCTAssertTrue(store.needsSaveRecovery)
+        XCTAssertEqual(try Data(contentsOf: backup), valid)
+        XCTAssertEqual(try Data(contentsOf: url), corrupted)
+        XCTAssertFalse(store.resumeLastGame(), "An unreadable save must not resume an unsavable board")
+        store.start(.easy)
+        XCTAssertFalse(store.isGenerating)
+        store.save()
+        await store.flushPendingSaves()
+        XCTAssertEqual(try Data(contentsOf: url), corrupted)
+    }
+
+    @MainActor func testCorruptionDuringGenerationCannotReplaceRestoredBackupWithStaleBoard() async throws {
+        let url = try temporarySave()
+        try fixture().write(to: url)
+        let began = expectation(description: "Generation began")
+        let finished = expectation(description: "Cancelled worker eventually returned")
+        let release = DispatchSemaphore(value: 0)
+        let store = LisaStore(saveURL: url, generator: { difficulty, seed in
+            began.fulfill()
+            _ = release.wait(timeout: .now() + 5)
+            defer { finished.fulfill() }
+            // Ignore cancellation deliberately: the store must reject this stale result.
+            return Self.puzzle(difficulty, seed)
+        })
+        store.save()
+        await store.flushPendingSaves()
+        let previous = try XCTUnwrap(store.session)
+        store.start(.hard, mode: "Quotidien", seedOverride: 999)
+        await fulfillment(of: [began], timeout: 3)
+        await store.flushPendingSaves()
+        try Data("{corrupt original".utf8).write(to: url)
+        store.save()
+        await store.flushPendingSaves()
+        XCTAssertTrue(store.needsSaveRecovery)
+        XCTAssertFalse(store.isGenerating)
+        let restored = await store.restoreBackup()
+        XCTAssertTrue(restored)
+        release.signal()
+        await fulfillment(of: [finished], timeout: 3)
+        try await Task.sleep(for: .milliseconds(50))
+        await store.flushPendingSaves()
+        XCTAssertEqual(store.session, previous)
+        XCTAssertEqual(store.mode, "Quotidien")
+        XCTAssertEqual(LisaStore(saveURL: url).session, previous)
+        XCTAssertFalse(store.showGame)
+    }
+
     @MainActor func testLegacyEquippedStarMigratesWithoutRewritingAndPersistsWithColor() async throws {
         let url = try temporarySave()
         var data = try XCTUnwrap(JSONSerialization.jsonObject(with: fixture()) as? [String: Any])
@@ -393,6 +568,25 @@ final class LisaStoreTests: XCTestCase {
         XCTAssertFalse(store.isGenerating)
         XCTAssertEqual(store.mode, "Quotidien")
         XCTAssertEqual(LisaStore(saveURL: url).clock.seconds, 210)
+    }
+
+    @MainActor func testInactiveThenBackgroundSavesOnceUntilActiveAgain() async throws {
+        let url = try temporarySave()
+        try fixture().write(to: url)
+        let store = LisaStore(saveURL: url)
+        store.clock.seconds = 211
+        store.sceneActivityChanged(isActive: false)
+        await store.flushPendingSaves()
+        XCTAssertEqual(LisaStore(saveURL: url).clock.seconds, 211)
+        // Model a second phase notification after the first flush completed.
+        store.clock.seconds = 212
+        store.sceneActivityChanged(isActive: false)
+        await store.flushPendingSaves()
+        XCTAssertEqual(LisaStore(saveURL: url).clock.seconds, 211)
+        store.sceneActivityChanged(isActive: true)
+        store.sceneActivityChanged(isActive: false)
+        await store.flushPendingSaves()
+        XCTAssertEqual(LisaStore(saveURL: url).clock.seconds, 212)
     }
 
 

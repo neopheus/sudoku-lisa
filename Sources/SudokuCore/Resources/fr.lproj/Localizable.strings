@@ -612,3 +612,24 @@
 "Vitesse normale" = "Vitesse normale";
 "Émotions" = "Émotions";
 "Glissez pour tourner et pincez pour zoomer." = "Glissez pour tourner et pincez pour zoomer.";
+
+/* Save recovery and inspection navigation */
+"Sauvegarde protégée" = "Sauvegarde protégée";
+"Votre progression est de nouveau enregistrée." = "Votre progression est de nouveau enregistrée.";
+"Lecture de la sauvegarde…" = "Lecture de la sauvegarde…";
+"Réessayer la lecture" = "Réessayer la lecture";
+"Restaurer la copie de secours" = "Restaurer la copie de secours";
+"Une copie de secours lisible est disponible. Elle peut contenir une progression plus ancienne." = "Une copie de secours lisible est disponible. Elle peut contenir une progression plus ancienne.";
+"Aucune copie de secours lisible n’est disponible." = "Aucune copie de secours lisible n’est disponible.";
+"Partager l’original" = "Partager l’original";
+"Exporter l’original" = "Exporter l’original";
+"L’original n’a pas pu être exporté. Il est conservé ; vous pouvez réessayer." = "L’original n’a pas pu être exporté. Il est conservé ; vous pouvez réessayer.";
+"L’export crée une copie exacte du fichier original, sans le modifier." = "L’export crée une copie exacte du fichier original, sans le modifier.";
+"Restaurer la copie de secours ?" = "Restaurer la copie de secours ?";
+"Votre progression reviendra à cette copie. L’original sera conservé séparément avant la restauration." = "Votre progression reviendra à cette copie. L’original sera conservé séparément avant la restauration.";
+"La sauvegarde a été chargée. Votre progression est de nouveau enregistrée." = "La sauvegarde a été chargée. Votre progression est de nouveau enregistrée.";
+"La sauvegarde reste illisible. L’original est conservé et l’enregistrement reste suspendu." = "La sauvegarde reste illisible. L’original est conservé et l’enregistrement reste suspendu.";
+"La copie de secours a été restaurée. L’original a été conservé séparément et peut être exporté." = "La copie de secours a été restaurée. L’original a été conservé séparément et peut être exporté.";
+"La copie de secours n’a pas pu être restaurée. L’original est conservé." = "La copie de secours n’a pas pu être restaurée. L’original est conservé.";
+"Précédent" = "Précédent";
+"Suivant" = "Suivant";

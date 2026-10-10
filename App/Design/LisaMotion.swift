@@ -1,4 +1,5 @@
 import SwiftUI
+import SudokuCore
 
 private struct LisaMotionAllowedKey: EnvironmentKey {
     static let defaultValue = true
@@ -16,6 +17,7 @@ extension EnvironmentValues {
 struct LisaMotionClock<Content: View>: View {
     var enabled: Bool
     var fps: Double
+    var shimmerPhase: Double?
     let content: (Double) -> Content
     @EnvironmentObject private var store: LisaStore
     @Environment(\.lisaMotionAllowed) private var allowed
@@ -27,15 +29,16 @@ struct LisaMotionClock<Content: View>: View {
     @State private var budgetClient = UUID()
     @ObservedObject private var budget = LisaRenderBudget.shared
 
-    init(enabled: Bool = true, fps: Double = 30, @ViewBuilder content: @escaping (Double) -> Content) {
+    init(enabled: Bool = true, fps: Double = 30, shimmerPhase: Double? = nil, @ViewBuilder content: @escaping (Double) -> Content) {
         self.enabled = enabled
         self.fps = fps
+        self.shimmerPhase = shimmerPhase
         self.content = content
     }
 
     var body: some View {
         let running = enabled && allowed && visible && onScreen && store.settings.animatedDecor && !reduceMotion && scenePhase == .active
-        TimelineView(.animation(minimumInterval: 1 / budget.cadence(fps), paused: !running)) { context in
+        TimelineView(LisaEffectSchedule(interval: 1 / budget.cadence(fps), paused: !running, shimmerPhase: shimmerPhase)) { context in
             content(running ? context.date.timeIntervalSinceReferenceDate : 0)
                 .environment(\.lisaMotionAllowed, running)
         }
@@ -49,6 +52,24 @@ struct LisaMotionClock<Content: View>: View {
         .onChange(of: running, initial: true) { _, active in budget.setActive(active, client: budgetClient) }
         .onAppear { visible = true }
         .onDisappear { visible = false; budget.setActive(false, client: budgetClient) }
+    }
+}
+
+/// Uses the usual animation schedule for continuous effects, and sparse entries
+/// for shimmer. Lifecycle gating remains shared by both clocks.
+struct LisaEffectSchedule: TimelineSchedule {
+    let interval: Double
+    let paused: Bool
+    let shimmerPhase: Double?
+    func entries(from startDate: Date, mode: TimelineScheduleMode) -> AnySequence<Date> {
+        if let phase = shimmerPhase {
+            guard !paused else { return AnySequence([startDate]) }
+            return AnySequence(ShimmerFrameSequence(start: startDate.timeIntervalSinceReferenceDate,
+                                                   phase: phase, interval: interval)
+                .lazy.map { Date(timeIntervalSinceReferenceDate: $0) })
+        }
+        return AnySequence(AnimationTimelineSchedule(minimumInterval: interval, paused: paused)
+            .entries(from: startDate, mode: mode))
     }
 }
 
@@ -77,7 +98,7 @@ struct LisaShimmer: View {
     var phase: Double = 0
     @Environment(\.isEnabled) private var enabled
     var body: some View {
-        LisaMotionClock(enabled: enabled, fps: 24) { time in
+        LisaMotionClock(enabled: enabled, fps: 24, shimmerPhase: phase) { time in
             GeometryReader { geometry in
                 let cycle = (time + phase).truncatingRemainder(dividingBy: 5.5)
                 let travel = cycle / 1.6
