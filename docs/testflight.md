@@ -230,3 +230,18 @@ Voyage et Libre : découvrez 25 escales illustrées et de nouvelles animations (
 - Notes françaises enregistrées et trois groupes associés : **Lisa — Interne** (3 testeurs), **Lisa — Externe** et **Liens à partager**. Notifications automatiques décochées ; le bouton « Notifier les testeurs » reste disponible. L’approbation externe ne constitue pas l’état « En cours de test ». Installation sur iPhone physique non vérifiée.
 - [Build 18](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/d0c7d2f6-5412-4998-bdd2-a28fe35457a9) · [Preuve](screenshots/testflight-build-18.jpg).
 - Incrément de version et compte rendu de distribution laissés non commités ; aucun nouveau commit ni push pendant ce déploiement.
+
+
+## Tiroir système des autocollants — build 19, 11 octobre 2026
+
+- Sources : commit `c8a5bbf`, version 1.0 (19) pour iPhone, Watch et extension Messages. Aucun push Git.
+- Déclaration des contextes Messages et Media dans l’extension pour rendre le pack accessible dans le tiroir Autocollants et le clavier emoji. Les 24 PNG étaient déjà présents dans le build 18.
+- Validation : 116 tests moteur/invitations et 7 tests d’intégration autocollants réussis ; signature profonde de l’archive vérifiée, deux contextes et 24 PNG confirmés dans l’extension archivée. L’usage dans Messages sur iPhone reste à vérifier.
+- Archive : `/tmp/lisa-testflight-20261011-stickers-b19.xcarchive`. Journaux : `/tmp/lisa-testflight-b19-archive.log` et `/tmp/lisa-testflight-b19-upload.log`.
+- Envoi accepté par Apple le 11 octobre à **11 h 30 min 56 s (Paris)** : `Upload succeeded`, `EXPORT SUCCEEDED`. Traitement terminé, notes enregistrées et soumission effectuée ; état final **Approuvé**.
+- Trois groupes associés : Lisa — Interne, Lisa — Externe et Liens à partager. Notifications automatiques désactivées ; « Notifier les testeurs » reste disponible. L’approbation ne constitue pas l’état « En cours de test ».
+- [Build 19](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/e53da164-3e52-4d3c-ade1-1bb588215523) · [Preuve](screenshots/testflight-build-19.jpg).
+
+### Notes de test du build 19
+
+Correction de l’accès aux autocollants Poulpi dans le tiroir système. Dans Messages, ouvrez une conversation puis + → Autocollants et sélectionnez Lisa Stickers. Vérifiez les 24 images, leur insertion et le glisser-déposer sur un message. Essayez aussi les autocollants depuis le clavier emoji. Signalez un pack absent ou vide avec le modèle d’iPhone et la version iOS. Les 25 escales illustrées et les nouvelles musiques du build précédent sont conservées.
