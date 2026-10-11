@@ -212,3 +212,21 @@ Poulpi est plus expressif : yeux, regard, paupières, bouche, tête et tentacule
 
 - Traitement terminé et build **approuvé** dans App Store Connect. Notes françaises enregistrées ; trois groupes associés : Lisa — Interne (3 testeurs), Lisa — Externe et Liens à partager. Le bouton « Notifier les testeurs » reste disponible : les notifications externes automatiques n’ont pas été envoyées. Ne pas confondre l’approbation externe avec l’état « En cours de test ».
 - [Build 17](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/3ffd2782-b252-4d9b-aeb2-d045ad475220). Preuve locale : `/tmp/lisa-testflight-build-17.png`.
+
+## Escales illustrées et nouvelles musiques — build 18, 11 octobre 2026
+
+- Sources applicatives : commit `3fdc790`, avec incrément du numéro de build à 18 dans le projet et son générateur. Aucun push Git.
+- Contenu : 25 illustrations distinctes, animations de premier plan propres aux univers, transitions passables et cinq pistes d’Eric Matyas en mode automatique. Crédits et niveaux audio harmonisés, textes dans cinq langues. Conservation des sauvegardes, de la progression et des morceaux fixes.
+- Validation de cette version : 116 tests moteur/invitations, 14 tests applicatifs ciblés et cinq scénarios UI réussis ; contrôle supplémentaire avec Réduire les animations activé. Captures clair/sombre, portrait/paysage sur iPhone SE simulé, 25 ressources et 50 rendus contrôlés. Localisation et `git diff --check` valides. Pas de mesure thermique ni d’écoute sur iPhone physique revendiquée.
+- Archive Release : `/tmp/lisa-testflight-20261011-escales-b18.xcarchive`, réussie et signature profonde vérifiée. App iPhone, Apple Watch et extension Messages en 1.0 (18). Les 25 images sont présentes dans Assets.car ; les cinq fichiers musicaux correspondent aux sources ; les anciens WAV de prototype sont absents.
+- Taille du bundle local : 179 223 673 octets. Ce chiffre ne représente pas la taille distribuée par TestFlight.
+- Journaux : `/tmp/lisa-testflight-b18-archive.log` et `/tmp/lisa-testflight-b18-upload.log`.
+
+### Notes de test du build 18
+
+Voyage et Libre : découvrez 25 escales illustrées et de nouvelles animations (pétales, papillons, bulles, poissons, neige, aurores et étoiles filantes). Activez la musique et choisissez « Automatique selon l’univers » pour écouter les cinq nouveaux morceaux. Vérifiez les transitions passées rapidement, le démarrage du chronomètre, la reprise après fermeture et la progression entre deux parties. Essayez clair/sombre, paysage, grands caractères, mode papier et Réduire les animations. Signalez toute gêne de lecture, coupure musicale, saccade ou chauffe en précisant le modèle d’iPhone.
+
+- Envoi accepté par Apple le 11 octobre 2026 à **11 h 19 min 58 s (Europe/Paris)** : `Upload succeeded`, `Uploaded package is processing`, `EXPORT SUCCEEDED`. Traitement terminé et soumission TestFlight effectuée ; état final constaté : **Approuvé**.
+- Notes françaises enregistrées et trois groupes associés : **Lisa — Interne** (3 testeurs), **Lisa — Externe** et **Liens à partager**. Notifications automatiques décochées ; le bouton « Notifier les testeurs » reste disponible. L’approbation externe ne constitue pas l’état « En cours de test ». Installation sur iPhone physique non vérifiée.
+- [Build 18](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/d0c7d2f6-5412-4998-bdd2-a28fe35457a9) · [Preuve](screenshots/testflight-build-18.jpg).
+- Incrément de version et compte rendu de distribution laissés non commités ; aucun nouveau commit ni push pendant ce déploiement.

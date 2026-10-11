@@ -25,6 +25,9 @@ final class PoulpiStickerTests: XCTestCase {
     func testMessagesExtensionIsEmbeddedWithItsOwnCatalogueResources() throws {
         let bundleURL = Bundle.main.bundleURL.appendingPathComponent("PlugIns/LisaStickers.appex")
         let bundle = try XCTUnwrap(Bundle(url: bundleURL))
+        let contexts = try XCTUnwrap(bundle.infoDictionary?["MSSupportedPresentationContexts"] as? [String])
+        XCTAssertEqual(Set(contexts), ["MSMessagesAppPresentationContextMessages", "MSMessagesAppPresentationContextMedia"],
+                       "The packaged extension must opt into the system Stickers drawer, not just the iMessage apps list")
         let configuration = try XCTUnwrap(bundle.infoDictionary?["NSExtension"] as? [String: Any])
         XCTAssertEqual(configuration["NSExtensionPointIdentifier"] as? String, "com.apple.message-payload-provider")
         XCTAssertEqual(configuration["NSExtensionPrincipalClass"] as? String, "LisaStickers.MessagesViewController")

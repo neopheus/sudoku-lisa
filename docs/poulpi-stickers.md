@@ -5,7 +5,7 @@ Le module local `PoulpiStickers` contient le catalogue commun, les traductions F
 ## Utilisation et vérification sur iPhone
 
 - Dans Lisa, ouvrir **Poulpi → Autocollants Poulpi**. Toucher une image pour l’agrandir et partager son PNG.
-- Pour iMessage, ouvrir une conversation dans Messages, puis **+ → Plus → Lisa Stickers** (l’emplacement dépend de la version iOS). Vérifier l’apparition des 24 images, puis leur insertion et leur envoi dans une conversation de test autorisée. Si l’extension manque, vérifier qu’elle est activée dans les réglages des apps iMessage.
+- Pour iMessage, ouvrir une conversation dans Messages, puis **+ → Autocollants → Lisa Stickers** (l’emplacement dépend de la version iOS). Le pack est aussi accessible depuis les autocollants du clavier emoji. Vérifier l’apparition des 24 images, puis leur insertion et leur envoi dans une conversation de test autorisée. Si l’extension manque, vérifier qu’elle est activée dans les réglages des apps iMessage. Dans le build 18 et les versions précédentes, chercher plutôt **+ → Plus → Lisa Stickers** : le contexte système Autocollants n’était pas déclaré.
 - Pour WhatsApp installé, utiliser **Ajouter à WhatsApp** dans la galerie puis confirmer l’import dans WhatsApp. Vérifier ensuite le pack dans le sélecteur d’autocollants d’une conversation de test.
 - Sans WhatsApp, Lisa explique que l’application doit être installée. Une ouverture de WhatsApp ne signifie pas que l’utilisateur a confirmé l’import.
 
@@ -30,6 +30,14 @@ L’exporteur Debug photographie le même modèle 3D que l’app dans 24 poses ;
 - Test `LisaUITests/BattleUITests/testPoulpiStickerGalleryAndWhatsAppUnavailable` : galerie, aperçu et absence de WhatsApp sur le simulateur dédié.
 
 Les tests locaux ne prouvent pas l’envoi dans Messages ni l’acceptation du pack par WhatsApp sur un iPhone. Ces deux essais doivent être faits sur l’installation contenant cette version.
+
+### Découverte dans le tiroir Autocollants — 11 octobre 2026
+
+L’archive distribuée du build 18 contient l’extension et ses 24 PNG, mais ne déclare pas `MSSupportedPresentationContexts`. Ajout des contextes `MSMessagesAppPresentationContextMessages` et `MSMessagesAppPresentationContextMedia` à la racine du plist de l’extension, conformément à la [documentation Apple](https://developer.apple.com/documentation/messages/adding-sticker-packs-and-imessage-apps-to-the-system-stickers-app-messages-camera-and-facetime). Apple précise que déclarer les deux contextes place le pack dans le contexte média, notamment le tiroir Autocollants et le clavier emoji, plutôt que dans la liste des apps du bouton +.
+
+Le test d’intégration vérifie cette déclaration dans l’extension réellement embarquée. La mention « Autocollants inclus : Non » d’App Store Connect ne constitue pas une vérification de l’affichage des `MSSticker` créés par le code ; aucune modification de cette mention ni disponibilité du correctif dans le build 18 n’est revendiquée.
+
+Validation locale : 116 tests moteur/invitations et 7 tests d’intégration autocollants réussis, dont la création des 24 `MSSticker` et le contrôle des contextes dans l’extension compilée. La première exécution sans signature échoue au lancement du conteneur CloudKit de l’app hôte ; la relance sur le simulateur dédié avec `CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-` réussit (`/tmp/lisa-stickers-context-signed-tests.log`). Présence dans le tiroir et insertion sur iPhone encore à vérifier ; correctif non déployé.
 
 ### Contrôles du 8 octobre 2026
 

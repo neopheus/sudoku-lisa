@@ -19,6 +19,12 @@
     <string>$(MARKETING_VERSION)</string>
     <key>CFBundleVersion</key>
     <string>$(CURRENT_PROJECT_VERSION)</string>
+    <!-- Required for discovery in the system Stickers drawer and emoji keyboard. -->
+    <key>MSSupportedPresentationContexts</key>
+    <array>
+        <string>MSMessagesAppPresentationContextMessages</string>
+        <string>MSMessagesAppPresentationContextMedia</string>
+    </array>
     <key>NSExtension</key>
     <dict>
         <key>NSExtensionPointIdentifier</key>
