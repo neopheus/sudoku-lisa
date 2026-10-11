@@ -2,6 +2,11 @@ import XCTest
 
 @MainActor
 final class BattleUITests: XCTestCase {
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+    }
+
     func testBattleCountdownInputPodiumAndSoloPreserved() {
         let app = launch(fixture: true)
         openBattle(app)
@@ -118,10 +123,7 @@ final class BattleUITests: XCTestCase {
         XCTAssertTrue(controls.exists)
         let initial = stage.frame
         let lastAnimation = app.buttons["poulpiAnimation-superhero"]
-        for _ in 0..<24 {
-            if lastAnimation.isHittable { break }
-            controls.swipeUp()
-        }
+        reveal(lastAnimation, in: app)
         XCTAssertTrue(lastAnimation.isHittable, "The last animation remains reachable below the fixed preview")
         XCTAssertTrue(stage.isHittable, "Poulpi stays visible while its controls scroll")
         XCTAssertEqual(stage.frame.minY, initial.minY, accuracy: 2)
@@ -135,6 +137,7 @@ final class BattleUITests: XCTestCase {
     private func launch(fixture: Bool, largeText: Bool = false) -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
+        app.launchEnvironment["LISA_UI_TESTING"] = "1"
         app.launchArguments = ["--uitest-reset", "--uitest-finale", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR",
                                "-UIPreferredContentSizeCategoryName", largeText ? "UICTContentSizeCategoryAccessibilityXXXL" : "UICTContentSizeCategoryL"]
         if fixture { app.launchArguments.append("--uitest-battle") }
@@ -148,10 +151,10 @@ final class BattleUITests: XCTestCase {
         let controls = app.scrollViews["poulpiControlsScroll"]
         if controls.exists {
             for _ in 0..<24 {
-                if element.isHittable { return }
+                if element.exists && element.isHittable && controls.frame.insetBy(dx: 0, dy: 10).contains(CGPoint(x: element.frame.midX, y: element.frame.midY)) { return }
                 let upper = controls.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.35))
                 let lower = controls.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.7))
-                if element.exists && element.frame.midY < controls.frame.minY {
+                if element.exists && element.frame.midY < controls.frame.minY + 10 {
                     upper.press(forDuration: 0.05, thenDragTo: lower)
                 } else {
                     lower.press(forDuration: 0.05, thenDragTo: upper)

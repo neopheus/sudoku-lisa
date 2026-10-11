@@ -189,3 +189,26 @@ L’aperçu iPhone SE du build 11 a révélé un chevauchement du pourcentage et
 ### Notes de test du build 14
 
 Poulpi est plus expressif : yeux, regard, paupières, bouche, tête et tentacules animés. Dans la rubrique Poulpi, essayez les émotions et acrobaties, le rejeu, la boucle, la pause, le ralenti et l’aperçu compact. Vérifiez particulièrement les clignements, le clin d’œil, les transitions entre expressions et le rendu de profil. Signalez tout débordement, saccade ou problème de paupière avec le modèle d’iPhone. Vérifiez aussi les animations pendant une partie et l’option Réduire les animations.
+
+
+## iPhone et Apple Watch — build 16, 10 octobre 2026
+
+- Reprise autorisée de la distribution après la validation locale : 112 tests moteur/invitations, 84 tests applicatifs et 46 tests UI réussis après corrections/relances ciblées ; un test de grand écran ignoré sur les iPhone de validation.
+- Contenu : application Watch avec le même Poulpi 3D que l’iPhone, expressions partagées, contexte de progression/couleur/accessoire, mini-Sudoku Watch et invitations privées CloudKit. Corrections d’intégration de la cloche et préservation de la partie solo.
+- Archive signée réussie : `/tmp/lisa-testflight-20261010-watch-b15.xcarchive`. L’archive contient l’app iPhone, l’app Watch et l’extension iMessage. `codesign --verify --deep --strict` réussi ; ressources JSON/yeux Poulpi identiques entre iPhone et Watch. Les profils générés contiennent les droits du conteneur `iCloud.com.xavier.sudokulisa` et les notifications.
+- L’archive source était en 1.0 (15). Apple signalait déjà un build 15 : l’export automatique a relevé le numéro à **1.0 (16)** pour l’envoi. Projet et générateur alignés ensuite sur 16, sans changement du code applicatif.
+- **Envoi accepté le 10 octobre 2026 à 18 h 44, heure de Paris** : `Upload succeeded`, `Uploaded package is processing`, `EXPORT SUCCEEDED` dans `/tmp/lisa-testflight-20261010-upload.log`. Le journal ContentDelivery confirme `cfBundleVersion: 16` pour l’application `6819455460`.
+- App Store Connect dans Chrome est déconnecté ; reconnexion demandée au titulaire. Fin du traitement, conformité et association aux groupes TestFlight non confirmées. Aucun essai sur appareils physiques, ni déploiement du schéma CloudKit de production confirmé.
+- Aucun commit ni push demandé ou réalisé. Les sources locales validées sont incluses dans l’archive ; empreintes avant export dans `/tmp/lisa-testflight-20261010-source-manifest.json`.
+
+
+## Synchronisation des couleurs Poulpi sur Watch — build 17, 11 octobre 2026
+
+- Ajout du canal immédiat WatchConnectivity en complément du contexte de fond ; requête de dernière apparence à l’ouverture/réactivation/reconnexion de la Watch ; nouvelle tentative même si la couleur n’a pas changé après un envoi échoué. Initialisation du délégué iPhone dès le lancement pour les réveils Watch en arrière-plan.
+- Conservation du dernier contexte valide sur la montre et rejet des contextes plus anciens. Le choix de couleur/accessoire reste effectué sur l’iPhone.
+- Validation : 113 tests moteur/invitations réussis, quatre nouveaux tests applicatifs de transport réussis. Archive Release iPhone/Watch/stickers et vérification profonde de signature réussies en 1.0 (17). Rendu doré + étoile contrôlé sur simulateur depuis un contexte enregistré, capture `/tmp/lisa-watch-sync-gold.png` ; transfert entre appareils physiques non validé ici.
+- Archive : `/tmp/lisa-testflight-20261011-watch-sync-b17.xcarchive`. Envoi Apple accepté le 11 octobre à 00 h 14 (Paris), `Upload succeeded` et `EXPORT SUCCEEDED` dans `/tmp/lisa-testflight-watch-sync-b17-upload.log`.
+- Aucun commit ni push.
+
+- Traitement terminé et build **approuvé** dans App Store Connect. Notes françaises enregistrées ; trois groupes associés : Lisa — Interne (3 testeurs), Lisa — Externe et Liens à partager. Le bouton « Notifier les testeurs » reste disponible : les notifications externes automatiques n’ont pas été envoyées. Ne pas confondre l’approbation externe avec l’état « En cours de test ».
+- [Build 17](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/3ffd2782-b252-4d9b-aeb2-d045ad475220). Preuve locale : `/tmp/lisa-testflight-build-17.png`.

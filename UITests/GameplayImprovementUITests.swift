@@ -2,9 +2,15 @@ import XCTest
 
 @MainActor
 final class GameplayImprovementUITests: XCTestCase {
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+    }
+
     private func launchFixture() -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
+        app.launchEnvironment["LISA_UI_TESTING"] = "1"
         app.launchArguments = ["--uitest-reset", "--uitest-finale", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()

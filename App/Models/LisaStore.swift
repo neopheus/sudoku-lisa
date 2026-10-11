@@ -5,7 +5,7 @@ import UIKit
 struct LisaSettings: Codable, Sendable {
     var sound = true
     var music = false
-    var musicTrack = LisaMusicTrack.marimbaPuzzle.rawValue
+    var musicTrack = LisaMusicTrack.automatic.rawValue
     var animatedDecor = true
     var haptics = true
     var autoCheck = true
@@ -64,6 +64,13 @@ struct SavedModeGame: Codable, Sendable, Identifiable {
     let tournamentID: String?
     let journeyStage: Int?
     var recorded: Bool
+    var sceneryID: String? = nil
+
+    var scenery: SceneryStop? {
+        guard mode == "Libre" || mode == "Voyage" else { return nil }
+        if let sceneryID, let stop = SceneryStop(id: sceneryID) { return stop }
+        return mode == "Voyage" ? SceneryStop.journey(stage: journeyStage ?? 1) : .legacyFree(seed: session.puzzle.seed)
+    }
 }
 
 private struct SaveData: Codable, Sendable {
@@ -78,6 +85,7 @@ private struct SaveData: Codable, Sendable {
     var activeEvent: String?
     var activeTournament: String?
     var savedGames: [String: SavedModeGame]?
+    var freeSceneryRoute: FreeSceneryRoute?
     var battleRewards: PoulpiBattleRewards?
 }
 
@@ -94,7 +102,7 @@ final class LisaStore: ObservableObject {
     let clock = LisaGameClock()
     private(set) var duplicateCells: Set<Int> = []
     @Published var settings = LisaSettings() { didSet {
-        LisaAudio.shared.configure(music: settings.music, musicTrack: LisaMusicTrack(rawValue: settings.musicTrack) ?? .marimbaPuzzle, effectsEnabled: settings.sound)
+        configureAudio()
         save()
     } }
     @Published var history: [FinishedGame] = []
@@ -121,7 +129,27 @@ final class LisaStore: ObservableObject {
     @Published private(set) var recoveryMessage: String?
     var milestones = GameMilestones()
     private var recorded = false
-    private var currentGameID = UUID()
+    private(set) var currentGameID = UUID()
+    @Published private(set) var activeScenery: SceneryStop?
+    @Published private(set) var introductionID: UUID?
+    private var freeSceneryRoute = FreeSceneryRoute()
+
+    var nextScenery: SceneryStop? {
+        if mode == "Libre" { return freeSceneryRoute.next }
+        if mode == "Voyage" { return SceneryStop.journey(stage: eventWins + 1) }
+        return nil
+    }
+
+    func finishIntroduction(_ id: UUID? = nil) {
+        guard id == nil || introductionID == id else { return }
+        introductionID = nil
+    }
+
+    func configureAudio() {
+        LisaAudio.shared.configure(music: settings.music,
+            musicTrack: LisaMusicTrack(rawValue: settings.musicTrack) ?? .marimbaPuzzle,
+            world: activeScenery?.world, effectsEnabled: settings.sound)
+    }
     private var activeJourneyStage: Int?
     private var generationID: UUID?
     private var generationTask: Task<Void, Never>?
@@ -202,6 +230,7 @@ final class LisaStore: ObservableObject {
             mode = "Voyage"
             eventWins = 4
             activeJourneyStage = 5
+            activeScenery = .journey(stage: 5)
             recorded = false
             if ProcessInfo.processInfo.arguments.contains("--uitest-zen") {
                 settings.autoCheck = false
@@ -225,6 +254,7 @@ final class LisaStore: ObservableObject {
             guard saves.allSatisfy({ key, game in
                 key == game.mode && ["Libre", "Quotidien", "Voyage", "Événement", "Tournoi"].contains(key)
                     && (game.journeyStage == nil || (1...25).contains(game.journeyStage!))
+                    && (game.sceneryID == nil || SceneryStop(id: game.sceneryID!) != nil)
             }) else {
                 throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid per-mode game context"))
             }
@@ -249,6 +279,7 @@ final class LisaStore: ObservableObject {
         recorded = session?.isComplete ?? false
         savedGames = data.savedGames ?? [:]
         activeJourneyStage = nil
+        activeScenery = nil
         currentGameID = UUID()
         if let saved = savedGames[mode] {
             session = saved.session
@@ -263,6 +294,10 @@ final class LisaStore: ObservableObject {
             activeJourneyStage = mode == "Voyage" ? min(max(1, eventWins + (recorded ? 0 : 1)), 25) : nil
             savedGames[mode] = currentSavedGame(session)
         }
+        activeScenery = savedGames[mode]?.scenery
+        freeSceneryRoute = data.freeSceneryRoute ?? FreeSceneryRoute(after: savedGames["Libre"]?.scenery)
+        introductionID = nil
+        configureAudio()
         clock.seconds = session?.elapsedSeconds ?? 0
         duplicateCells = session.map { BoardConflicts.indices(in: $0.values) } ?? []
         milestones = GameMilestones()
@@ -355,12 +390,12 @@ final class LisaStore: ObservableObject {
         var snapshot = session
         snapshot?.elapsedSeconds = clock.seconds
         if let snapshot { savedGames[mode] = currentSavedGame(snapshot) }
-        let data = SaveData(session: snapshot, settings: settings, history: history, completedDays: completedDays, eventWins: eventWins, mode: mode, activeDay: activeDay, eventMedals: eventMedals, activeEvent: activeEvent, activeTournament: activeTournament, savedGames: savedGames, battleRewards: battleRewards)
+        let data = SaveData(session: snapshot, settings: settings, history: history, completedDays: completedDays, eventWins: eventWins, mode: mode, activeDay: activeDay, eventMedals: eventMedals, activeEvent: activeEvent, activeTournament: activeTournament, savedGames: savedGames, freeSceneryRoute: freeSceneryRoute, battleRewards: battleRewards)
         writer.submit(data)
     }
 
     func tick() {
-        guard session?.isComplete == false else { return }
+        guard introductionID == nil, sceneIsActive, session?.isComplete == false else { return }
         clock.seconds += 1
         if clock.seconds.isMultiple(of: 5) { save() }
     }
@@ -375,7 +410,7 @@ final class LisaStore: ObservableObject {
     func sceneActivityChanged(isActive: Bool) {
         guard sceneIsActive != isActive else { return }
         sceneIsActive = isActive
-        if !isActive { saveForBackground() }
+        if !isActive { finishIntroduction(); saveForBackground() }
     }
 
     func saveForBackground() {
@@ -394,6 +429,15 @@ final class LisaStore: ObservableObject {
     }
 
     func flushPendingSaves() async { await writer.flush() }
+
+    /// A Battle handoff cannot silently abandon a solo save that failed to persist.
+    func prepareForBattleInvitation() async -> Bool {
+        guard canPersist, !needsSaveRecovery, !isGenerating else { return false }
+        synchronizeElapsedTime()
+        save()
+        await flushPendingSaves()
+        return canPersist && !needsSaveRecovery && saveError == nil
+    }
 
     private func endBackgroundSave(generation: Int) {
         guard generation == backgroundSaveGeneration, backgroundSave != .invalid else { return }
@@ -424,7 +468,7 @@ final class LisaStore: ObservableObject {
     private func currentSavedGame(_ session: GameSession) -> SavedModeGame {
         SavedModeGame(id: currentGameID, session: session, mode: mode, day: activeDay,
                       eventID: activeEvent, tournamentID: activeTournament,
-                      journeyStage: activeJourneyStage, recorded: recorded)
+                      journeyStage: activeJourneyStage, recorded: recorded, sceneryID: activeScenery?.id)
     }
 
     func savedGame(mode: String, date: Date? = nil) -> SavedModeGame? {
@@ -460,6 +504,9 @@ final class LisaStore: ObservableObject {
         activeTournament = saved.tournamentID
         activeJourneyStage = saved.journeyStage
         currentGameID = saved.id
+        activeScenery = saved.scenery
+        introductionID = nil
+        configureAudio()
         session = saved.session
         clock.seconds = saved.session.elapsedSeconds
         recorded = saved.recorded
@@ -506,10 +553,15 @@ final class LisaStore: ObservableObject {
             case .success(let puzzle):
                 // Context changes only after a complete, current generation result exists.
                 self.save()
+                let scenery = mode == "Voyage" ? SceneryStop.journey(stage: stage ?? 1)
+                    : mode == "Libre" ? self.freeSceneryRoute.takeNext() : nil
                 let saved = SavedModeGame(session: GameSession(puzzle: puzzle), mode: mode,
                                           day: day, eventID: eventID, tournamentID: tournamentID,
-                                          journeyStage: stage, recorded: false)
+                                          journeyStage: stage, recorded: false, sceneryID: scenery?.id)
                 self.restore(saved)
+                if scenery != nil && self.settings.animatedDecor && !self.settings.paperMode && !UIAccessibility.isReduceMotionEnabled {
+                    self.introductionID = saved.id
+                }
                 self.showGame = true
                 self.save()
             case .failure:

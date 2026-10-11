@@ -633,3 +633,44 @@
 "La copie de secours n’a pas pu être restaurée. L’original est conservé." = "Не удалось восстановить резервную копию. Оригинал сохранён.";
 "Précédent" = "Назад";
 "Suivant" = "Далее";
+
+/* Lisa friend invitations */
+"%@ souhaite jouer avec vous" = "%@ хочет сыграть с вами";
+"Activer les notifications" = "Включить уведомления";
+"Ajouter des amis" = "Добавить друзей";
+"Annuler l’invitation" = "Отменить приглашение";
+"Aucune invitation pour le moment." = "Пока нет приглашений.";
+"Disponibilité confirmée — rejoignez Battle sur l’iPhone" = "Готовность подтверждена — откройте Battle на iPhone";
+"En attente de réponse" = "Ожидание ответа";
+"Gérer les amis" = "Управление друзьями";
+"Invitation annulée" = "Приглашение отменено";
+"Invitation expirée" = "Срок приглашения истёк";
+"Invitation refusée" = "Приглашение отклонено";
+"Invitations" = "Приглашения";
+"Je suis disponible" = "Я готов(а)";
+"Les invitations sont indisponibles. Vérifiez iCloud et votre connexion, puis réessayez." = "Приглашения недоступны. Проверьте iCloud и подключение к интернету, затем попробуйте снова.";
+"Mes amis Lisa" = "Мои друзья в Lisa";
+"Nom du cercle d’amis" = "Название группы друзей";
+"Ouvrir Battle sur l’iPhone" = "Открыть Battle на iPhone";
+"Partagez un accès privé avec vos amis. Ils doivent l’accepter une première fois avec iCloud." = "Поделитесь закрытым доступом с друзьями. Им нужно один раз принять его через iCloud.";
+"Plus tard" = "Позже";
+"Proposer une partie" = "Предложить игру";
+"Refuser" = "Отклонить";
+"Réessayer" = "Повторить";
+"Répondez ici pour indiquer votre disponibilité. La partie se rejoint ensuite dans Battle sur l’iPhone." = "Ответьте здесь, чтобы сообщить о готовности. Затем присоединитесь к игре в Battle на iPhone.";
+"Sudoku" = "Судоку";
+"Voir l’invitation" = "Посмотреть приглашение";
+"Votre surnom" = "Ваше имя";
+
+"Voir les invitations" = "Посмотреть приглашения";
+
+"Invitation Lisa" = "Приглашение Lisa";
+
+/* Lisa notification permission messages */
+"Notifications activées." = "Уведомления включены.";
+"Notifications désactivées. Vous pouvez les autoriser dans les réglages de l’iPhone." = "Уведомления выключены. Их можно включить в настройках iPhone.";
+"Impossible d’activer les notifications. Réessayez." = "Не удалось включить уведомления. Попробуйте снова.";
+
+/* Lisa friend group actions */
+"Quitter le cercle" = "Покинуть группу";
+"Quitter le cercle ? Son propriétaire le supprime pour tous les membres." = "Покинуть группу? Её владелец удалит её для всех участников.";

@@ -3,9 +3,15 @@ import UIKit
 
 @MainActor
 final class LisaUITests: XCTestCase {
+    override func setUpWithError() throws {
+        continueAfterFailure = false
+        XCUIDevice.shared.orientation = .portrait
+    }
+
     private func launchFresh(metrics: Bool = false) -> XCUIApplication {
         continueAfterFailure = false
         let app = XCUIApplication()
+        app.launchEnvironment["LISA_UI_TESTING"] = "1"
         app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
         if metrics { app.launchEnvironment["LISA_RENDER_METRICS"] = "1" }
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
@@ -25,6 +31,30 @@ final class LisaUITests: XCTestCase {
         app.buttons[title].firstMatch
     }
 
+    func testInvitationsOpenFromHomeAndPreserveSoloGrid() {
+        let app = launchFresh()
+        let inbox = app.buttons["invitationInboxOpen"]
+        XCTAssertTrue(inbox.waitForExistence(timeout: 5))
+        inbox.tap()
+        XCTAssertTrue(app.navigationBars["Invitations"].waitForExistence(timeout: 5))
+        attach(app, name: "Invitations-accueil")
+        app.buttons["Fermer"].tap()
+
+        button("C’est parti !", in: app).tap()
+        app.buttons["Facile"].tap()
+        let cells = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Ligne "))
+        XCTAssertTrue(cells.firstMatch.waitForExistence(timeout: 15))
+        let before = cells.allElementsBoundByIndex.map(\.label)
+        XCTAssertEqual(before.count, 81)
+        XCTAssertTrue(inbox.waitForExistence(timeout: 5))
+        inbox.tap()
+        XCTAssertTrue(app.navigationBars["Invitations"].waitForExistence(timeout: 5))
+        app.buttons["Fermer"].tap()
+        XCTAssertTrue(cells.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(cells.allElementsBoundByIndex.map(\.label), before)
+        attach(app, name: "Invitations-retour-solo")
+    }
+
     func testPoulpiAnimationsRotationZoomAndAutoplay() {
         let app = launchFresh()
         app.tabBars.buttons["Poulpi"].tap()
@@ -33,8 +63,8 @@ final class LisaUITests: XCTestCase {
         let controls = app.scrollViews["poulpiControlsScroll"]
         func revealControl(_ element: XCUIElement) {
             for _ in 0..<24 {
-                if element.exists && element.isHittable { return }
-                let above = element.exists && element.frame.midY < controls.frame.minY
+                if element.exists && element.isHittable && controls.frame.insetBy(dx: 0, dy: 10).contains(CGPoint(x: element.frame.midX, y: element.frame.midY)) { return }
+                let above = element.exists && element.frame.midY < controls.frame.minY + 10
                 let from = controls.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: above ? 0.3 : 0.7))
                 let to = controls.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: above ? 0.7 : 0.3))
                 from.press(forDuration: 0.05, thenDragTo: to)
@@ -278,7 +308,9 @@ final class LisaUITests: XCTestCase {
             waitForExpectations(timeout: 3)
             attach(app, name: message)
             expectation(for: NSPredicate(format: "value == %@", "Au repos"), evaluatedWith: companion)
-            waitForExpectations(timeout: 10)
+            // SceneKit simulator scheduling can defer the reset after a capture.
+            // Verify eventual completion; this is not an animation timing benchmark.
+            waitForExpectations(timeout: 20)
         }
         app.buttons["Mettre en pause"].tap()
         XCTAssertTrue(app.staticTexts["Votre grille vous attend."].waitForExistence(timeout: 5))
@@ -347,6 +379,7 @@ final class LisaUITests: XCTestCase {
     func testVictoryRewardsAndNextJourneyChapter() {
         continueAfterFailure = false
         let app = XCUIApplication()
+        app.launchEnvironment["LISA_UI_TESTING"] = "1"
         app.launchArguments = ["--uitest-reset", "--uitest-finale", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
@@ -388,6 +421,7 @@ final class LisaUITests: XCTestCase {
     func testZenModeStillAllowsVictory() {
         continueAfterFailure = false
         let app = XCUIApplication()
+        app.launchEnvironment["LISA_UI_TESTING"] = "1"
         app.launchArguments = ["--uitest-reset", "--uitest-finale", "--uitest-zen", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
         // Also verify the app observes the real accessibility setting when the QA device enables it.
         if UIAccessibility.isReduceMotionEnabled { app.launchArguments.append("--uitest-reduce-motion") }

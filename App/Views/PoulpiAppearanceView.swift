@@ -17,17 +17,7 @@ extension PoulpiColor {
         let rgb = pigment
         return Color(red: rgb.x, green: rgb.y, blue: rgb.z)
     }
-    /// Original keeps the exact validated material and shader untouched.
-    var pigment: SIMD3<Double> {
-        switch self {
-        case .pink: SIMD3(0.37, 0.32, 0.76)
-        case .coral: SIMD3(0.90, 0.39, 0.40)
-        case .lavender: SIMD3(0.64, 0.47, 0.87)
-        case .lagoon: SIMD3(0.21, 0.62, 0.86)
-        case .mint: SIMD3(0.26, 0.72, 0.57)
-        case .gold: SIMD3(0.92, 0.65, 0.25)
-        }
-    }
+
 }
 
 extension PoulpiAccessory {

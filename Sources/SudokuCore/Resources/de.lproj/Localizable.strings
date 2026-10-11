@@ -633,3 +633,44 @@
 "La copie de secours n’a pas pu être restaurée. L’original est conservé." = "Die Sicherungskopie konnte nicht wiederhergestellt werden. Das Original bleibt erhalten.";
 "Précédent" = "Vorherige";
 "Suivant" = "Weiter";
+
+/* Lisa friend invitations */
+"%@ souhaite jouer avec vous" = "%@ möchte mit dir spielen";
+"Activer les notifications" = "Mitteilungen aktivieren";
+"Ajouter des amis" = "Freunde hinzufügen";
+"Annuler l’invitation" = "Einladung zurückziehen";
+"Aucune invitation pour le moment." = "Zurzeit keine Einladungen.";
+"Disponibilité confirmée — rejoignez Battle sur l’iPhone" = "Verfügbarkeit bestätigt — öffne Battle auf deinem iPhone";
+"En attente de réponse" = "Warten auf Antwort";
+"Gérer les amis" = "Freunde verwalten";
+"Invitation annulée" = "Einladung zurückgezogen";
+"Invitation expirée" = "Einladung abgelaufen";
+"Invitation refusée" = "Einladung abgelehnt";
+"Invitations" = "Einladungen";
+"Je suis disponible" = "Ich bin verfügbar";
+"Les invitations sont indisponibles. Vérifiez iCloud et votre connexion, puis réessayez." = "Einladungen sind nicht verfügbar. Überprüfe iCloud und deine Verbindung und versuche es erneut.";
+"Mes amis Lisa" = "Meine Lisa-Freunde";
+"Nom du cercle d’amis" = "Name des Freundeskreises";
+"Ouvrir Battle sur l’iPhone" = "Battle auf deinem iPhone öffnen";
+"Partagez un accès privé avec vos amis. Ils doivent l’accepter une première fois avec iCloud." = "Teile einen privaten Zugang mit deinen Freunden. Sie müssen ihn einmalig über iCloud annehmen.";
+"Plus tard" = "Später";
+"Proposer une partie" = "Spiel vorschlagen";
+"Refuser" = "Ablehnen";
+"Réessayer" = "Erneut versuchen";
+"Répondez ici pour indiquer votre disponibilité. La partie se rejoint ensuite dans Battle sur l’iPhone." = "Antworte hier, um deine Verfügbarkeit mitzuteilen. Starte das Spiel anschließend in Battle auf deinem iPhone.";
+"Sudoku" = "Sudoku";
+"Voir l’invitation" = "Einladung ansehen";
+"Votre surnom" = "Dein Spitzname";
+
+"Voir les invitations" = "Einladungen ansehen";
+
+"Invitation Lisa" = "Lisa-Einladung";
+
+/* Lisa notification permission messages */
+"Notifications activées." = "Mitteilungen aktiviert.";
+"Notifications désactivées. Vous pouvez les autoriser dans les réglages de l’iPhone." = "Mitteilungen sind deaktiviert. Du kannst sie in den iPhone-Einstellungen aktivieren.";
+"Impossible d’activer les notifications. Réessayez." = "Mitteilungen konnten nicht aktiviert werden. Versuche es erneut.";
+
+/* Lisa friend group actions */
+"Quitter le cercle" = "Gruppe verlassen";
+"Quitter le cercle ? Son propriétaire le supprime pour tous les membres." = "Gruppe verlassen? Der Eigentümer löscht sie für alle Mitglieder.";

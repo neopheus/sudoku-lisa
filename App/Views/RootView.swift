@@ -9,15 +9,16 @@ struct RootView: View {
     @State private var battlePresented = false
     @State private var saveRecoveryPresented = false
     @ObservedObject private var battle = BattleService.shared
+    @ObservedObject private var social = LisaSocialNavigation.shared
     var body: some View {
         TabView(selection: $tab) {
-            NavigationStack { HomeView(onRoute: { tab = $0 }, onBattle: { battlePresented = true }, mascotAnimationEnabled: tab == 0 && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery && !saveRecoveryPresented).toolbar { ToolbarItem(placement: .topBarTrailing) { Button { settings = true } label: { Image(systemName: "slider.horizontal.3").foregroundStyle(LisaTheme.ink) }.accessibilityLabel(L10n.text("Réglages")) } } }
+            NavigationStack { HomeView(onRoute: { tab = $0 }, onBattle: { battlePresented = true }, mascotAnimationEnabled: tab == 0 && !store.showGame && !battlePresented && !settings && !social.inboxPresented && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery && !saveRecoveryPresented).toolbar { ToolbarItem(placement: .topBarLeading) { invitationAccessory(tab: 0) } }.toolbar { ToolbarItem(placement: .topBarTrailing) { Button { settings = true } label: { Image(systemName: "slider.horizontal.3").foregroundStyle(LisaTheme.ink) }.accessibilityLabel(L10n.text("Réglages")) } } }
                 .environment(\.lisaMotionAllowed, motionAllowed(tab: 0))
                 .tabItem { Label(L10n.text("Jouer"), systemImage: "square.grid.3x3.fill") }.tag(0)
-            NavigationStack { DailyView(motionEnabled: tab == 1 && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery && !saveRecoveryPresented) }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 1)).tabItem { Label(L10n.text("Chaque jour"), systemImage: "sun.max.fill") }.tag(1)
-            NavigationStack { JourneyView(motionEnabled: tab == 2 && !store.showGame && !battlePresented && !settings && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery && !saveRecoveryPresented) }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 2)).tabItem { Label(L10n.text("Voyage"), systemImage: "sparkles") }.tag(2)
-            NavigationStack { ProgressViewLisa() }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 3)).tabItem { Label(L10n.text("Mes progrès"), systemImage: "chart.bar.fill") }.tag(3)
-            NavigationStack { PoulpiView(active: motionAllowed(tab: 4)) }
+            NavigationStack { DailyView(motionEnabled: tab == 1 && !store.showGame && !battlePresented && !settings && !social.inboxPresented && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery && !saveRecoveryPresented).toolbar { ToolbarItem(placement: .topBarLeading) { invitationAccessory(tab: 1) } } }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 1)).tabItem { Label(L10n.text("Chaque jour"), systemImage: "sun.max.fill") }.tag(1)
+            NavigationStack { JourneyView(motionEnabled: tab == 2 && !store.showGame && !battlePresented && !settings && !social.inboxPresented && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery && !saveRecoveryPresented).toolbar { ToolbarItem(placement: .topBarLeading) { invitationAccessory(tab: 2) } } }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 2)).tabItem { Label(L10n.text("Voyage"), systemImage: "sparkles") }.tag(2)
+            NavigationStack { ProgressViewLisa().toolbar { ToolbarItem(placement: .topBarLeading) { invitationAccessory(tab: 3) } } }.lisaAppear().environment(\.lisaMotionAllowed, motionAllowed(tab: 3)).tabItem { Label(L10n.text("Mes progrès"), systemImage: "chart.bar.fill") }.tag(3)
+            NavigationStack { PoulpiView(active: motionAllowed(tab: 4)).toolbar { ToolbarItem(placement: .topBarLeading) { invitationAccessory(tab: 4) } } }
                 .tabItem { Label("Poulpi", systemImage: "face.smiling.fill") }.tag(4)
         }
         .buttonStyle(LisaPressStyle())
@@ -67,14 +68,19 @@ struct RootView: View {
             // Game Center can launch the app for a pending friend invitation.
             // Test installs must never show authentication or create real matches.
             guard !ProcessInfo.processInfo.arguments.contains("--uitest-reset"),
-                  ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else { return }
+                  ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil,
+                  ProcessInfo.processInfo.environment["LISA_UI_TESTING"] != "1" else { return }
             GameCenterService.shared.authenticate()
         }
         .onChange(of: store.poulpiAppearance) { _, appearance in battle.configureAppearance(appearance) }
-        .task(id: battle.state) {
-            guard battle.state != .idle, !battlePresented else { return }
+        .task(id: "\(battle.state != .idle)-\(social.openBattle)") {
+            guard battle.state != .idle || social.openBattle else { return }
+            guard !battlePresented else { social.openBattle = false; return }
+            social.switchingToBattle = true
+            defer { social.switchingToBattle = false; social.openBattle = false }
+            guard await store.prepareForBattleInvitation(), !Task.isCancelled else { return }
             if store.showGame {
-                store.synchronizeElapsedTime(); store.save(); store.showGame = false
+                store.showGame = false
                 do { try await Task.sleep(for: .milliseconds(450)) } catch { return }
             }
             battlePresented = true
@@ -84,8 +90,14 @@ struct RootView: View {
         .alert(L10n.text("Préparation de la grille"), isPresented: Binding(get: { store.generationError != nil }, set: { if !$0 { store.generationError = nil } })) { Button(L10n.text("D’accord")) { store.generationError = nil } } message: { Text(L10n.text(store.generationError ?? "")) }
         .alert(L10n.text("Sauvegarde"), isPresented: Binding(get: { store.saveError != nil && !store.needsSaveRecovery }, set: { if !$0 && !store.needsSaveRecovery { store.saveError = nil } })) { Button(L10n.text("D’accord")) { store.saveError = nil } } message: { Text(L10n.text(store.saveError ?? "")) }
     }
+    @ViewBuilder private func invitationAccessory(tab index: Int) -> some View {
+        if tab == index && !store.showGame && !battlePresented && !settings && !saveRecoveryPresented {
+            LisaInvitationsAccessory(compact: true)
+        }
+    }
+
     private func motionAllowed(tab index: Int) -> Bool {
-        store.settings.animatedDecor && tab == index && !store.showGame && !battlePresented && !settings && !saveRecoveryPresented && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery
+        store.settings.animatedDecor && !social.inboxPresented && tab == index && !store.showGame && !battlePresented && !settings && !saveRecoveryPresented && !store.isGenerating && store.saveError == nil && !store.needsSaveRecovery
     }
 }
 

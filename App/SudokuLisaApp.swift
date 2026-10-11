@@ -3,6 +3,7 @@ import SudokuCore
 
 @main
 struct SudokuLisaApp: App {
+    @UIApplicationDelegateAdaptor(LisaAppDelegate.self) private var appDelegate
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     @StateObject private var store = LisaStore()
     @Environment(\.scenePhase) private var scenePhase
@@ -47,8 +48,21 @@ struct SudokuLisaApp: App {
                 .background(LisaDisplayObserver().allowsHitTesting(false).accessibilityHidden(true))
                 .preferredColorScheme(store.settings.darkMode ? .dark : .light)
                 .onChange(of: scenePhase, initial: true) { _, phase in
-                    LisaAudio.shared.configure(active: phase == .active, music: store.settings.music, musicTrack: LisaMusicTrack(rawValue: store.settings.musicTrack) ?? .marimbaPuzzle)
+                    LisaAudio.shared.configure(active: phase == .active, music: store.settings.music, musicTrack: LisaMusicTrack(rawValue: store.settings.musicTrack) ?? .marimbaPuzzle, world: store.activeScenery?.world)
                     store.sceneActivityChanged(isActive: phase == .active)
+                }
+                .task(id: scenePhase) {
+                    guard scenePhase == .active,
+                          !ProcessInfo.processInfo.arguments.contains("--uitest-reset"),
+                          ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil,
+                          ProcessInfo.processInfo.environment["LISA_UI_TESTING"] != "1" else { return }
+                    LisaWatchBridge.shared.update(completedGames: store.history.count, streak: store.streak, appearance: store.poulpiAppearance)
+                    await LisaSocialNotifications.shared.refresh()
+                }
+                .onChange(of: store.history.count) { _, _ in LisaWatchBridge.shared.update(completedGames: store.history.count, streak: store.streak, appearance: store.poulpiAppearance) }
+                .onChange(of: store.streak) { _, _ in LisaWatchBridge.shared.update(completedGames: store.history.count, streak: store.streak, appearance: store.poulpiAppearance) }
+                .onChange(of: store.poulpiAppearance) { _, appearance in
+                    LisaWatchBridge.shared.update(completedGames: store.history.count, streak: store.streak, appearance: appearance)
                 }
                 .onAppear {
                     #if DEBUG

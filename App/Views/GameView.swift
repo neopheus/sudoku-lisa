@@ -3,6 +3,7 @@ import UIKit
 import SudokuCore
 
 struct GameView: View {
+    @ObservedObject private var social = LisaSocialNavigation.shared
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     @EnvironmentObject private var store: LisaStore
     @Environment(\.scenePhase) private var scenePhase
@@ -43,17 +44,17 @@ struct GameView: View {
     @Environment(\.colorScheme) private var colorScheme
     private var mascotUncovered: Bool { scenePhase == .active && !settings && !gameDetailsPresented && !victoryPresented && !hintPresented && !errorPresented && !learning && !coach.isWorking && !store.isGenerating }
     private var timerRunning: Bool {
-        scenePhase == .active && !paused && !hintPresented && !settings && !gameDetailsPresented && !errorPresented && !learning
+        scenePhase == .active && !social.switchingToBattle && !social.inboxPresented && !paused && !hintPresented && !settings && !gameDetailsPresented && !errorPresented && !learning
             && !coach.isWorking && !store.isGenerating && store.session?.isComplete == false
     }
 
     var body: some View {
         let _ = LisaRenderBudget.shared.recordGameBody()
         ZStack {
-            LisaBackground(motionEnabled: !paused && mascotUncovered, quiet: true, chapter: store.mode == "Voyage" ? LisaJourneyAtmosphere.chapter(store.eventWins - (store.showVictory ? 1 : 0)) : nil)
+            LisaBackground(motionEnabled: !social.inboxPresented && !paused && mascotUncovered, quiet: true, chapter: store.mode == "Voyage" ? LisaJourneyAtmosphere.chapter(store.eventWins - (store.showVictory ? 1 : 0)) : nil)
             // Keep the entire companion scene behind the opaque board at every flight depth.
             LisaGameCompanion(mood: mascotMood, reaction: mascotReaction,
-                              active: !paused && mascotUncovered && !store.showVictory,
+                              active: !social.inboxPresented && !paused && mascotUncovered && !store.showVictory,
                               requestToken: companionRequest, occlusionRect: boardFrame,
                               onMessage: { companionMessage = $0 })
                 .opacity(!paused && mascotUncovered ? 1 : 0)
@@ -120,7 +121,7 @@ struct GameView: View {
         .onPreferenceChange(LisaBoardFrameKey.self) { boardFrame = $0 }
         .preferredColorScheme(store.settings.darkMode ? .dark : .light)
         .saturation(store.settings.paperMode ? 0 : 1)
-        .environment(\.lisaMotionAllowed, store.settings.animatedDecor && !paused && mascotUncovered)
+        .environment(\.lisaMotionAllowed, store.settings.animatedDecor && !social.inboxPresented && !paused && mascotUncovered)
         .task(id: timerRunning) {
             guard timerRunning else { return }
             while !Task.isCancelled {
@@ -263,7 +264,7 @@ struct GameView: View {
     @ViewBuilder
     private func gameHeader(_ game: GameSession, wide: Bool) -> some View {
         if dynamicTypeSize.isAccessibilitySize {
-            HStack(spacing: 4) {
+            HStack(spacing: 1) {
                 LisaIconButton(icon: "chevron.left", label: L10n.text("Sauvegarder et revenir à l’accueil")) { store.save(); store.showGame = false }
                 Spacer(minLength: 0)
                 LisaIconButton(icon: "face.smiling", label: L10n.text("Faire rire Lisa")) { companionRequest += 1 }
@@ -274,6 +275,7 @@ struct GameView: View {
                 LisaIconButton(icon: "info.circle", label: L10n.text("La partie en détail")) { gameDetailsPresented = true }
                     .accessibilityIdentifier("gameDetailsButton")
                 LisaIconButton(icon: "pause.fill", label: L10n.text("Mettre en pause")) { paused = true }
+                gameInvitations
                 LisaIconButton(icon: "gearshape", label: L10n.text("Réglages")) { settings = true }
                     .accessibilityIdentifier("gameSettingsButton")
             }
@@ -299,8 +301,18 @@ struct GameView: View {
                 Spacer()
                 LisaIconButton(icon: "book", label: L10n.text("Apprendre")) { lessonTechnique = nil; learning = true }
                     .accessibilityIdentifier("gameLearnButton")
+                gameInvitations
                 LisaIconButton(icon: "gearshape", label: L10n.text("Réglages")) { settings = true }.accessibilityIdentifier("gameSettingsButton")
             }
+        }
+    }
+
+    @ViewBuilder private var gameInvitations: some View {
+        if mascotUncovered {
+            LisaInvitationsAccessory(compact: true)
+                .frame(width: 44, height: 48)
+                .tint(LisaTheme.ink)
+                .background(CandySurface(cornerRadius: 18, depth: 3))
         }
     }
 

@@ -1,0 +1,10 @@
+
+/* Lisa social notifications */
+"Invitation Lisa" = "Lisa invitation";
+"%@ souhaite jouer avec vous" = "%@ wants to play with you";
+"Voir les invitations" = "View invitations";
+"Je suis disponible" = "I’m available";
+"Refuser" = "Decline";
+"Notifications activées." = "Notifications enabled.";
+"Notifications désactivées. Vous pouvez les autoriser dans les réglages de l’iPhone." = "Notifications are off. You can enable them in your iPhone settings.";
+"Impossible d’activer les notifications. Réessayez." = "Could not enable notifications. Try again.";

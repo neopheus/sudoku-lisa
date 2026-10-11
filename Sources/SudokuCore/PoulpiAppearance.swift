@@ -3,6 +3,18 @@ import Foundation
 public enum PoulpiColor: String, Codable, CaseIterable, Identifiable, Sendable {
     case pink, coral, lavender, lagoon, mint, gold
     public var id: String { rawValue }
+
+    /// Original keeps the exact validated material and shader untouched.
+    public var pigment: SIMD3<Double> {
+        switch self {
+        case .pink: SIMD3(0.37, 0.32, 0.76)
+        case .coral: SIMD3(0.90, 0.39, 0.40)
+        case .lavender: SIMD3(0.64, 0.47, 0.87)
+        case .lagoon: SIMD3(0.21, 0.62, 0.86)
+        case .mint: SIMD3(0.26, 0.72, 0.57)
+        case .gold: SIMD3(0.92, 0.65, 0.25)
+        }
+    }
 }
 
 public enum PoulpiAccessory: String, Codable, CaseIterable, Identifiable, Sendable {

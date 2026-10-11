@@ -633,3 +633,44 @@
 "La copie de secours n’a pas pu être restaurée. L’original est conservé." = "No se ha podido restaurar la copia de seguridad. El original se conserva.";
 "Précédent" = "Anterior";
 "Suivant" = "Siguiente";
+
+/* Lisa friend invitations */
+"%@ souhaite jouer avec vous" = "%@ quiere jugar contigo";
+"Activer les notifications" = "Activar notificaciones";
+"Ajouter des amis" = "Añadir amigos";
+"Annuler l’invitation" = "Cancelar invitación";
+"Aucune invitation pour le moment." = "No hay invitaciones por ahora.";
+"Disponibilité confirmée — rejoignez Battle sur l’iPhone" = "Disponibilidad confirmada: únete a Battle en tu iPhone";
+"En attente de réponse" = "Esperando respuesta";
+"Gérer les amis" = "Gestionar amigos";
+"Invitation annulée" = "Invitación cancelada";
+"Invitation expirée" = "Invitación caducada";
+"Invitation refusée" = "Invitación rechazada";
+"Invitations" = "Invitaciones";
+"Je suis disponible" = "Estoy disponible";
+"Les invitations sont indisponibles. Vérifiez iCloud et votre connexion, puis réessayez." = "Las invitaciones no están disponibles. Comprueba iCloud y tu conexión, e inténtalo de nuevo.";
+"Mes amis Lisa" = "Mis amigos de Lisa";
+"Nom du cercle d’amis" = "Nombre del grupo de amigos";
+"Ouvrir Battle sur l’iPhone" = "Abrir Battle en tu iPhone";
+"Partagez un accès privé avec vos amis. Ils doivent l’accepter une première fois avec iCloud." = "Comparte un acceso privado con tus amigos. Deben aceptarlo una vez con iCloud.";
+"Plus tard" = "Más tarde";
+"Proposer une partie" = "Proponer una partida";
+"Refuser" = "Rechazar";
+"Réessayer" = "Intentar de nuevo";
+"Répondez ici pour indiquer votre disponibilité. La partie se rejoint ensuite dans Battle sur l’iPhone." = "Responde aquí para indicar que estás disponible. Después, únete a la partida en Battle desde tu iPhone.";
+"Sudoku" = "Sudoku";
+"Voir l’invitation" = "Ver invitación";
+"Votre surnom" = "Tu apodo";
+
+"Voir les invitations" = "Ver invitaciones";
+
+"Invitation Lisa" = "Invitación de Lisa";
+
+/* Lisa notification permission messages */
+"Notifications activées." = "Notificaciones activadas.";
+"Notifications désactivées. Vous pouvez les autoriser dans les réglages de l’iPhone." = "Las notificaciones están desactivadas. Puedes activarlas en los ajustes del iPhone.";
+"Impossible d’activer les notifications. Réessayez." = "No se pudieron activar las notificaciones. Inténtalo de nuevo.";
+
+/* Lisa friend group actions */
+"Quitter le cercle" = "Salir del grupo";
+"Quitter le cercle ? Son propriétaire le supprime pour tous les membres." = "¿Salir del grupo? Su propietario lo eliminará para todos los miembros.";

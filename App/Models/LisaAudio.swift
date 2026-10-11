@@ -6,18 +6,25 @@ enum LisaSound: String, CaseIterable, Sendable {
 }
 
 enum LisaMusicTrack: String, CaseIterable, Identifiable, Sendable {
+    case automatic = "automatic"
     case marimbaPuzzle = "marimba-puzzle"
     case fishbowlAcrobatics = "fishbowl-acrobatics"
 
     var id: String { rawValue }
     var title: String {
         switch self {
+        case .automatic: L10n.text("Automatique selon l’univers")
         case .marimbaPuzzle: L10n.text("Marimba Game Music")
         case .fishbowlAcrobatics: L10n.text("Fishbowl Acrobatics")
         }
     }
     var resourceName: String { "lisa-music-" + rawValue }
     var fileExtension: String { "mp3" }
+    func resource(world: SceneryWorld?) -> (name: String, extension: String) {
+        if self == .automatic, let world { return (world.musicResource, "wav") }
+        let fixed = self == .automatic ? Self.marimbaPuzzle : self
+        return (fixed.resourceName, fixed.fileExtension)
+    }
 }
 
 /// Injectable session boundary; its methods are called only on the audio queue.
@@ -49,6 +56,9 @@ final class LisaAudio: NSObject, @unchecked Sendable {
     private var effects: [LisaSound: AVAudioPlayer] = [:]
     private var music: AVAudioPlayer?
     private var currentMusicTrack: LisaMusicTrack = .marimbaPuzzle
+    private var currentWorld: SceneryWorld?
+    private var outgoingMusic: AVAudioPlayer?
+    private var fadeGeneration = 0
     private var active = false
     private var interrupted = false
     private var musicWanted = false
@@ -74,23 +84,37 @@ final class LisaAudio: NSObject, @unchecked Sendable {
     }
 
     @MainActor
-    func configure(active: Bool? = nil, music: Bool? = nil, musicTrack: LisaMusicTrack? = nil, paused: Bool? = nil, effectsEnabled: Bool? = nil) {
+    func configure(active: Bool? = nil, music: Bool? = nil, musicTrack: LisaMusicTrack? = nil, world: SceneryWorld? = nil, paused: Bool? = nil, effectsEnabled: Bool? = nil) {
         queue.async { [self] in
-            configureOnQueue(active: active, music: music, musicTrack: musicTrack, paused: paused, effectsEnabled: effectsEnabled)
+            configureOnQueue(active: active, music: music, musicTrack: musicTrack, world: world, paused: paused, effectsEnabled: effectsEnabled)
         }
     }
 
-    private func configureOnQueue(active: Bool? = nil, music: Bool? = nil, musicTrack: LisaMusicTrack? = nil, paused: Bool? = nil, effectsEnabled: Bool? = nil) {
+    private func configureOnQueue(active: Bool? = nil, music: Bool? = nil, musicTrack: LisaMusicTrack? = nil, world: SceneryWorld? = nil, paused: Bool? = nil, effectsEnabled: Bool? = nil) {
         dispatchPrecondition(condition: .onQueue(queue))
         if let active { self.active = active }
         if let music {
             if music != musicWanted { routeSuspended = false }
             musicWanted = music
         }
-        if let musicTrack, currentMusicTrack != musicTrack {
+        let oldResource = currentMusicTrack.resource(world: currentWorld).name
+        if let musicTrack {
             currentMusicTrack = musicTrack
-            self.music?.stop()
+            currentWorld = world
+        }
+        if oldResource != currentMusicTrack.resource(world: currentWorld).name {
+            // At most two players; obsolete fades never stop a newer incoming track.
+            fadeGeneration += 1
+            outgoingMusic?.stop()
+            outgoingMusic = self.music
             self.music = nil
+            outgoingMusic?.setVolume(0, fadeDuration: 0.65)
+            let generation = fadeGeneration
+            queue.asyncAfter(deadline: .now() + 0.7) { [weak self] in
+                guard let self, self.fadeGeneration == generation else { return }
+                self.outgoingMusic?.stop()
+                self.outgoingMusic = nil
+            }
         }
         if let paused { self.paused = paused; if !paused { routeSuspended = false } }
         if let effectsEnabled { self.effectsEnabled = effectsEnabled }
@@ -143,13 +167,14 @@ final class LisaAudio: NSObject, @unchecked Sendable {
 
     private func updateMusic() {
         guard active, musicWanted, !paused, !interrupted, !routeSuspended, sessionActive,
-              !session.isOtherAudioPlaying else { music?.pause(); return }
+              !session.isOtherAudioPlaying else { music?.pause(); outgoingMusic?.stop(); outgoingMusic = nil; return }
         if music == nil {
-            music = player(named: currentMusicTrack.resourceName, extension: currentMusicTrack.fileExtension)
+            let resource = currentMusicTrack.resource(world: currentWorld)
+            music = player(named: resource.name, extension: resource.extension)
             music?.numberOfLoops = -1
-            music?.volume = 0.38
+            music?.volume = 0
         }
-        if music?.isPlaying == false { music?.play() }
+        if music?.isPlaying == false { music?.play(); music?.setVolume(0.38, fadeDuration: 0.65) }
     }
 
     private func player(named name: String) -> AVAudioPlayer? {
@@ -172,6 +197,8 @@ final class LisaAudio: NSObject, @unchecked Sendable {
                 sessionActive = false
                 effects.values.forEach { $0.stop() }
                 music?.pause()
+            outgoingMusic?.stop(); outgoingMusic = nil
+                outgoingMusic?.stop(); outgoingMusic = nil
             } else if type == AVAudioSession.InterruptionType.ended.rawValue {
                 interrupted = false
                 if AVAudioSession.InterruptionOptions(rawValue: options).contains(.shouldResume) { configureOnQueue() }
@@ -186,6 +213,7 @@ final class LisaAudio: NSObject, @unchecked Sendable {
             // Headphones disconnected: silence until the player opts in again or resumes.
             routeSuspended = true
             music?.pause()
+            outgoingMusic?.stop(); outgoingMusic = nil
             effects.values.forEach { $0.stop() }
         }
     }
@@ -193,7 +221,7 @@ final class LisaAudio: NSObject, @unchecked Sendable {
     @objc private func secondaryAudioChanged(_ notification: Notification) {
         let hint = notification.userInfo?[AVAudioSessionSilenceSecondaryAudioHintTypeKey] as? UInt
         queue.async { [self] in
-            if hint == AVAudioSession.SilenceSecondaryAudioHintType.begin.rawValue { music?.pause() }
+            if hint == AVAudioSession.SilenceSecondaryAudioHintType.begin.rawValue { music?.pause(); outgoingMusic?.stop(); outgoingMusic = nil }
             else { updateMusic() }
         }
     }

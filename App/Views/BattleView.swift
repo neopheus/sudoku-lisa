@@ -8,12 +8,13 @@ struct BattleView: View {
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @ObservedObject private var battle = BattleService.shared
+    @ObservedObject private var social = LisaSocialNavigation.shared
     @Environment(\.dynamicTypeSize) private var typeSize
     @State private var confirmLeave = false
     @State private var visible = false
 
     private var motionEnabled: Bool {
-        visible && scenePhase == .active && !reduceMotion && store.settings.animatedDecor
+        visible && !social.inboxPresented && scenePhase == .active && !reduceMotion && store.settings.animatedDecor
     }
 
     var body: some View {
@@ -79,6 +80,9 @@ struct BattleView: View {
             .navigationTitle(L10n.text("Battle entre amis"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    LisaInvitationsAccessory(compact: true)
+                }
                 ToolbarItem(placement: .topBarLeading) {
                     Button { if battle.state == .idle || battle.state == .finished || battle.state == .cancelled { close() } else { confirmLeave = true } } label: {
                         Image(systemName: "xmark")

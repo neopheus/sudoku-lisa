@@ -13,6 +13,7 @@ final class LocalizationUITests: XCTestCase {
         ]
         for (language, locale, play, daily, journey, progress, settings, settingsTitle, languageTitle, done, start, easy, erase) in cases {
             let app = XCUIApplication()
+            app.launchEnvironment["LISA_UI_TESTING"] = "1"
             app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(\(language))", "-AppleLocale", locale]
             app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
             app.launch()
@@ -35,6 +36,7 @@ final class LocalizationUITests: XCTestCase {
 
     func testGermanSettingsTitle() {
         let app = XCUIApplication()
+        app.launchEnvironment["LISA_UI_TESTING"] = "1"
         app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(de)", "-AppleLocale", "de_DE"]
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
@@ -48,6 +50,7 @@ final class LocalizationUITests: XCTestCase {
     func testManualLanguageSelectionPersistsAndPreservesGame() {
         continueAfterFailure = false
         let app = XCUIApplication()
+        app.launchEnvironment["LISA_UI_TESTING"] = "1"
         app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR"]
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
