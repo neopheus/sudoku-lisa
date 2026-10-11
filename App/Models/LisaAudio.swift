@@ -18,10 +18,16 @@ enum LisaMusicTrack: String, CaseIterable, Identifiable, Sendable {
         case .fishbowlAcrobatics: L10n.text("Fishbowl Acrobatics")
         }
     }
+    /// Measured RMS compensation: keep world changes near -22 dB before master gain.
+    /// Only attenuation is used, leaving peak headroom and the original files intact.
+    func volume(world: SceneryWorld?) -> Float {
+        guard self == .automatic, let world else { return 0.38 }
+        return [0.269, 0.285, 0.309, 0.178, 0.38][world.index]
+    }
     var resourceName: String { "lisa-music-" + rawValue }
     var fileExtension: String { "mp3" }
     func resource(world: SceneryWorld?) -> (name: String, extension: String) {
-        if self == .automatic, let world { return (world.musicResource, "wav") }
+        if self == .automatic, let world { return (world.musicResource, "m4a") }
         let fixed = self == .automatic ? Self.marimbaPuzzle : self
         return (fixed.resourceName, fixed.fileExtension)
     }
@@ -174,7 +180,7 @@ final class LisaAudio: NSObject, @unchecked Sendable {
             music?.numberOfLoops = -1
             music?.volume = 0
         }
-        if music?.isPlaying == false { music?.play(); music?.setVolume(0.38, fadeDuration: 0.65) }
+        if music?.isPlaying == false { music?.play(); music?.setVolume(currentMusicTrack.volume(world: currentWorld), fadeDuration: 0.65) }
     }
 
     private func player(named name: String) -> AVAudioPlayer? {
@@ -188,6 +194,25 @@ final class LisaAudio: NSObject, @unchecked Sendable {
         return player
     }
 
+    #if DEBUG
+    struct PlaybackSnapshot: Sendable {
+        let player: ObjectIdentifier?
+        let resource: String?
+        let outgoingPlayers: Int
+        let playing: Bool
+    }
+    /// Queue-confined diagnostic for hosted tests; no AVFoundation object escapes.
+    func playbackSnapshot() async -> PlaybackSnapshot {
+        await withCheckedContinuation { continuation in
+            queue.async { [self] in
+                continuation.resume(returning: PlaybackSnapshot(player: music.map(ObjectIdentifier.init),
+                    resource: music?.url?.lastPathComponent, outgoingPlayers: outgoingMusic == nil ? 0 : 1,
+                    playing: music?.isPlaying ?? false))
+            }
+        }
+    }
+    #endif
+
     @objc private func interruption(_ notification: Notification) {
         let type = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
         let options = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt ?? 0
@@ -197,7 +222,6 @@ final class LisaAudio: NSObject, @unchecked Sendable {
                 sessionActive = false
                 effects.values.forEach { $0.stop() }
                 music?.pause()
-            outgoingMusic?.stop(); outgoingMusic = nil
                 outgoingMusic?.stop(); outgoingMusic = nil
             } else if type == AVAudioSession.InterruptionType.ended.rawValue {
                 interrupted = false

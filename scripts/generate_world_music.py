@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Five original Lisa loops. No samples, soundfonts, recordings or external melodies.
+"""Historical prototype only; not the app soundtrack. Five original Lisa loops. No samples, soundfonts, recordings or external melodies.
 PCM synthesis and note sequences authored for this repository. See docs/audio-music-credits.md.
 Run with Python 3; deterministic, standard library only. Tails wrap across the loop seam.
 """
@@ -12,7 +12,7 @@ RATE = 32000
 BEAT = .75
 LENGTH = 32 * BEAT
 N = int(RATE * LENGTH)
-OUTPUT = Path(__file__).resolve().parents[1] / 'App/Resources/Audio/Music'
+OUTPUT = Path('/tmp/lisa-prototype-music')
 # Independent eight-bar motifs, with rests and a varied second phrase.
 SCORES = {
     'garden': ([72, 76, 79, 74, 76, 81, 79, 76, 74, 79, 83, 81, 76, 74, 72, 79], [48, 53, 57, 55], 'wood'),

@@ -1,0 +1,132 @@
+{
+  "tool": "built-in imagegen",
+  "format": "portrait 1024x1536",
+  "shared": "Production portrait background for a premium whimsical iOS puzzle game. Polished sculpted 3D storybook quality, tactile rounded materials, rich depth, soft global illumination, subsurface scattering, sophisticated lavender shadows and warm rim highlights. Harmonious vivid colors. Detailed outer edges and corners, central 70 percent spacious and calm to receive an opaque sudoku board later. Full bleed, atmospheric perspective. No text, UI, numbers, characters, logo, watermark, flat vector shapes.",
+  "stops": [
+    {
+      "world": "garden",
+      "index": 0,
+      "scene": "Marshmallow meadow with giant rounded daisies, velvet mint hills and peach dawn, no floating islands."
+    },
+    {
+      "world": "garden",
+      "index": 1,
+      "scene": "A forest of enormous luminous pink bell flowers arching around a sunlit open clearing, thick dimensional petals and golden pollen."
+    },
+    {
+      "world": "garden",
+      "index": 2,
+      "scene": "A winding rose pink river with smooth pearlescent stones and stepping stones, flowering banks around edges, distant waterfall."
+    },
+    {
+      "world": "garden",
+      "index": 4,
+      "scene": "A twilight flower garden, lavender-blue evening sky, glowing pink blossoms and warm firefly lanterns, crescent moon."
+    },
+    {
+      "world": "candyForest",
+      "index": 0,
+      "scene": "A sunny candy woodland clearing with striped lollipop trees, strawberry shrubs and green sugar grass."
+    },
+    {
+      "world": "candyForest",
+      "index": 1,
+      "scene": "A dense grove of towering spiral lollipops and candy cane trunks, layered mint foliage framing an open path."
+    },
+    {
+      "world": "candyForest",
+      "index": 2,
+      "scene": "A curved candy cane bridge across a sparkling stream, distant candy trees, bridge high in the scene leaving spacious lower clearing."
+    },
+    {
+      "world": "candyForest",
+      "index": 4,
+      "scene": "A moonlit candy forest, deep turquoise and violet night, glowing gumdrop mushrooms and luminous pink lollipop trees."
+    },
+    {
+      "world": "lagoon",
+      "index": 0,
+      "scene": "A tropical sparkling lagoon BEACH above water, creamy sand clearing, palm fronds and pearl shells around edges, turquoise ocean horizon and coral islands."
+    },
+    {
+      "world": "lagoon",
+      "index": 1,
+      "scene": "An underwater REEF of lush sculpted pink coral and peach anemones, sun shafts, calm aqua open center."
+    },
+    {
+      "world": "lagoon",
+      "index": 2,
+      "scene": "An underwater turquoise CAVE, arch of smooth violet rock across top and sides, luminous pearls and glowing blue crystals, calm empty center."
+    },
+    {
+      "world": "lagoon",
+      "index": 4,
+      "scene": "A bioluminescent lagoon at NIGHT, violet-blue water, glowing turquoise sea plants and floating luminous jellyfish around edges, pearl rocks."
+    },
+    {
+      "world": "frost",
+      "index": 0,
+      "scene": "A broad frosted VALLEY at sunrise, distant rounded lavender snowy hills, smooth white snow in center, crystal bushes in corners, peach sky."
+    },
+    {
+      "world": "frost",
+      "index": 1,
+      "scene": "A snow-covered FOREST, soft heavy snow on fir trees framing both sides, a winding path into pale mist, tiny warm lanterns at edges."
+    },
+    {
+      "world": "frost",
+      "index": 2,
+      "scene": "An icy crystal LAKE surrounded by low snow banks, reflective frozen turquoise surface, tall faceted crystals in outer corners, serene daylight."
+    },
+    {
+      "world": "frost",
+      "index": 3,
+      "scene": "High on a snow mountain SUMMIT above cloud sea, rounded snow ledges in foreground corners, blue lavender peaks far below, warm sun and open sky."
+    },
+    {
+      "world": "stars",
+      "index": 0,
+      "scene": "A soft ORBIT above a luminous pearlescent planet, curved planetary horizon at bottom, floating tiny moon rocks at edges, rich indigo space."
+    },
+    {
+      "world": "stars",
+      "index": 1,
+      "scene": "A powdered pink MOON landscape, rounded pearlescent craters and crystal boulders framing corners, earthlike blue marble in upper sky, starry open middle."
+    },
+    {
+      "world": "stars",
+      "index": 3,
+      "scene": "A magical MAUVE NEBULA, rich lavender peach dimensional cloud curls framing a deep luminous indigo center, sparkling stardust and tiny faraway planets."
+    },
+    {
+      "world": "stars",
+      "index": 4,
+      "scene": "A magical CONSTELLATION in deep sapphire space: luminous golden stars connected in a simple octopus-like constellation in upper third, pearlescent small moon rocks around bottom corners, violet nebula edges."
+    },
+    {
+      "world": "garden",
+      "index": 3,
+      "scene": "Marshmallow garden, pearlescent pink flowers, mint rolling terrain, winding rose river, suspended flower islands, warm peach sky."
+    },
+    {
+      "world": "candyForest",
+      "index": 3,
+      "scene": "Candy woodland, glossy striped lollipop trees, mint strawberry foliage, confection cottage upper right, candy bridge, warm lemon sky."
+    },
+    {
+      "world": "lagoon",
+      "index": 3,
+      "scene": "Underwater turquoise lagoon, sunbeams, pink peach coral, pearl shells, whimsical shipwreck upper right."
+    },
+    {
+      "world": "frost",
+      "index": 4,
+      "scene": "Snow valley, rounded lavender mountains, icy stream, snowy fir branches, glowing crystals, mint pink aurora."
+    },
+    {
+      "world": "stars",
+      "index": 2,
+      "scene": "Cosmic dreamscape, pearlescent violet planets, peach rings, rose indigo nebulae, golden stars, crystal moon rocks."
+    }
+  ]
+}

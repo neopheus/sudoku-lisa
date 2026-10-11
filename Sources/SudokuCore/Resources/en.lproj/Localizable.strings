@@ -674,3 +674,37 @@
 /* Lisa friend group actions */
 "Quitter le cercle" = "Leave group";
 "Quitter le cercle ? Son propriétaire le supprime pour tous les membres." = "Leave group? Its owner will delete it for all members.";
+
+/* World stops, introductions and automatic music. */
+"Prairie guimauve" = "Marshmallow meadow";
+"Fleurs géantes" = "Giant flowers";
+"Rivière rose" = "Pink river";
+"Jardin suspendu" = "Hanging garden";
+"Crépuscule fleuri" = "Blossoming dusk";
+"Clairière sucrée" = "Sweet clearing";
+"Bosquet de sucettes" = "Lollipop grove";
+"Pont de bonbons" = "Candy bridge";
+"Confiserie cachée" = "Hidden sweet shop";
+"Forêt nocturne" = "Night forest";
+"Plage pétillante" = "Sparkling beach";
+"Récif de corail" = "Coral reef";
+"Grotte turquoise" = "Turquoise cave";
+"Épave aux perles" = "Pearl shipwreck";
+"Lagon lumineux" = "Glowing lagoon";
+"Vallée givrée" = "Frosted valley";
+"Forêt enneigée" = "Snowy forest";
+"Lac de cristal" = "Crystal lake";
+"Sommet des neiges" = "Snowy summit";
+"Aurore polaire" = "Polar aurora";
+"Orbite douce" = "Gentle orbit";
+"Lune poudrée" = "Powdered moon";
+"Anneaux célestes" = "Celestial rings";
+"Nébuleuse mauve" = "Mauve nebula";
+"Constellation de Poulpi" = "Poulpi’s constellation";
+"Automatique selon l’univers" = "Automatic by world";
+"Jouer maintenant" = "Play now";
+"Prochaine escale" = "Next stop";
+
+"Licence des musiques d’univers" = "World music license";
+
+"Conversion audio Apple Lossless, sans modification musicale." = "Converted to Apple Lossless audio, with no musical changes.";

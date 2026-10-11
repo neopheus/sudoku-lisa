@@ -674,3 +674,37 @@
 /* Lisa friend group actions */
 "Quitter le cercle" = "Gruppe verlassen";
 "Quitter le cercle ? Son propriétaire le supprime pour tous les membres." = "Gruppe verlassen? Der Eigentümer löscht sie für alle Mitglieder.";
+
+/* World stops, introductions and automatic music. */
+"Prairie guimauve" = "Marshmallowwiese";
+"Fleurs géantes" = "Riesenblumen";
+"Rivière rose" = "Rosa Fluss";
+"Jardin suspendu" = "Hängender Garten";
+"Crépuscule fleuri" = "Blüten in der Dämmerung";
+"Clairière sucrée" = "Süße Lichtung";
+"Bosquet de sucettes" = "Lutscherhain";
+"Pont de bonbons" = "Bonbonbrücke";
+"Confiserie cachée" = "Versteckte Konditorei";
+"Forêt nocturne" = "Nachtwald";
+"Plage pétillante" = "Prickelnder Strand";
+"Récif de corail" = "Korallenriff";
+"Grotte turquoise" = "Türkishöhle";
+"Épave aux perles" = "Perlenwrack";
+"Lagon lumineux" = "Leuchtende Lagune";
+"Vallée givrée" = "Frostiges Tal";
+"Forêt enneigée" = "Verschneiter Wald";
+"Lac de cristal" = "Kristallsee";
+"Sommet des neiges" = "Schneegipfel";
+"Aurore polaire" = "Polarlicht";
+"Orbite douce" = "Sanfte Umlaufbahn";
+"Lune poudrée" = "Puderzuckermond";
+"Anneaux célestes" = "Himmelsringe";
+"Nébuleuse mauve" = "Violetter Nebel";
+"Constellation de Poulpi" = "Poulpis Sternbild";
+"Automatique selon l’univers" = "Automatisch nach Welt";
+"Jouer maintenant" = "Jetzt spielen";
+"Prochaine escale" = "Nächste Station";
+
+"Licence des musiques d’univers" = "Lizenz der Weltenmusik";
+
+"Conversion audio Apple Lossless, sans modification musicale." = "In Apple Lossless konvertiert, ohne musikalische Änderungen.";

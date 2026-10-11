@@ -151,6 +151,14 @@ final class LisaStore: ObservableObject {
             world: activeScenery?.world, effectsEnabled: settings.sound)
     }
     private var activeJourneyStage: Int?
+    #if DEBUG
+    private var introductionFixturePending = false
+    func activateIntroductionFixture() {
+        guard introductionFixturePending else { return }
+        introductionFixturePending = false
+        introductionID = currentGameID
+    }
+    #endif
     private var generationID: UUID?
     private var generationTask: Task<Void, Never>?
     // Keep the previous worker until it exits; its successor waits before entering the engine.
@@ -232,6 +240,18 @@ final class LisaStore: ObservableObject {
             activeJourneyStage = 5
             activeScenery = .journey(stage: 5)
             recorded = false
+            let arguments = ProcessInfo.processInfo.arguments
+            if let flag = arguments.firstIndex(of: "--uitest-scenery"), arguments.indices.contains(flag + 1),
+               let stop = SceneryStop(id: arguments[flag + 1]) {
+                activeScenery = stop
+                activeJourneyStage = stop.world.index * 5 + stop.index + 1
+                eventWins = activeJourneyStage! - 1
+                settings.darkMode = arguments.contains("--uitest-dark")
+                settings.paperMode = arguments.contains("--uitest-paper")
+                settings.animatedDecor = !arguments.contains("--uitest-static")
+                if arguments.contains("--uitest-introduction") { introductionFixturePending = true }
+                showGame = true
+            }
             if ProcessInfo.processInfo.arguments.contains("--uitest-zen") {
                 settings.autoCheck = false
                 settings.highlightDuplicates = false

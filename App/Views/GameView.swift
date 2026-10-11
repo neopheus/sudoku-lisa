@@ -42,22 +42,28 @@ struct GameView: View {
     @State private var celebrationMessage = ""
     @State private var victoryPresented = false
     @Environment(\.colorScheme) private var colorScheme
-    private var mascotUncovered: Bool { scenePhase == .active && !settings && !gameDetailsPresented && !victoryPresented && !hintPresented && !errorPresented && !learning && !coach.isWorking && !store.isGenerating }
+    private var mascotUncovered: Bool { scenePhase == .active && !settings && !gameDetailsPresented && !victoryPresented && !hintPresented && !errorPresented && !learning && !coach.isWorking && !store.isGenerating && store.introductionID == nil }
+    private var introductionAllowed: Bool {
+        store.settings.animatedDecor && !store.settings.paperMode && !reduceMotion && scenePhase == .active
+    }
     private var timerRunning: Bool {
         scenePhase == .active && !social.switchingToBattle && !social.inboxPresented && !paused && !hintPresented && !settings && !gameDetailsPresented && !errorPresented && !learning
-            && !coach.isWorking && !store.isGenerating && store.session?.isComplete == false
+            && !coach.isWorking && !store.isGenerating && store.introductionID == nil && store.session?.isComplete == false
     }
 
     var body: some View {
         let _ = LisaRenderBudget.shared.recordGameBody()
         ZStack {
-            LisaBackground(motionEnabled: !social.inboxPresented && !paused && mascotUncovered, quiet: true, chapter: store.mode == "Voyage" ? LisaJourneyAtmosphere.chapter(store.eventWins - (store.showVictory ? 1 : 0)) : nil)
+            LisaBackground(motionEnabled: !social.inboxPresented && !paused && mascotUncovered, quiet: true, stop: store.activeScenery)
             // Keep the entire companion scene behind the opaque board at every flight depth.
-            LisaGameCompanion(mood: mascotMood, reaction: mascotReaction,
-                              active: !social.inboxPresented && !paused && mascotUncovered && !store.showVictory,
-                              requestToken: companionRequest, occlusionRect: boardFrame,
-                              onMessage: { companionMessage = $0 })
-                .opacity(!paused && mascotUncovered ? 1 : 0)
+            // The introduction owns Poulpi while it is visible; do not create a second hidden Metal scene.
+            if store.introductionID == nil {
+                LisaGameCompanion(mood: mascotMood, reaction: mascotReaction,
+                                  active: !social.inboxPresented && !paused && mascotUncovered && !store.showVictory,
+                                  requestToken: companionRequest, occlusionRect: boardFrame,
+                                  onMessage: { companionMessage = $0 })
+                    .opacity(!paused && mascotUncovered ? 1 : 0)
+            }
             if let game = store.session {
                 GeometryReader { geometry in
                     let wide = geometry.size.width >= 600 && !dynamicTypeSize.isAccessibilitySize
@@ -76,6 +82,7 @@ struct GameView: View {
                     ScrollView {
                         VStack(spacing: compact ? 8 : 16) {
                             gameHeader(game, wide: wide)
+                                .background(store.activeScenery == nil ? Color.clear : LisaTheme.paper.opacity(0.94), in: RoundedRectangle(cornerRadius: 22))
                             layout {
                                 VStack(spacing: compact ? 8 : 16) {
                                     if !wide && !hintPresented && !dynamicTypeSize.isAccessibilitySize { gameStatus(game, wide: false) }
@@ -95,7 +102,8 @@ struct GameView: View {
                         .frame(maxWidth: wide ? 1040 : 500)
                         .padding(.horizontal, 16).padding(.top, 8).padding(.bottom, 15)
                         .frame(maxWidth: .infinity, minHeight: geometry.size.height, alignment: .top)
-                        .accessibilityHidden(paused || store.isGenerating)
+                        .allowsHitTesting(store.introductionID == nil)
+                        .accessibilityHidden(paused || store.isGenerating || store.introductionID != nil)
                     }
                     .onChange(of: wide, initial: true) { _, value in usesWideLayout = value }
                 }
@@ -131,8 +139,14 @@ struct GameView: View {
             }
         }
         .onChange(of: scenePhase) { _, phase in if phase != .active { paused = true; if coach.isWorking { coach.cancel() } } }
-        .onDisappear { coach.cancel(); store.synchronizeElapsedTime(); store.save(); LisaAudio.shared.configure(paused: false) }
+        #if DEBUG
+        .task(id: scenePhase) {
+            if scenePhase == .active { store.activateIntroductionFixture() }
+        }
+        #endif
+        .onDisappear { store.finishIntroduction(); coach.cancel(); store.synchronizeElapsedTime(); store.save(); LisaAudio.shared.configure(paused: false) }
         .onChange(of: paused, initial: true) { _, value in LisaAudio.shared.configure(paused: value) }
+        .onChange(of: store.currentGameID) { _, _ in resetForNewPuzzle() }
         .onChange(of: observedBoard) { previous, current in
             guard let current, let previous, previous.puzzle == current.puzzle else {
                 resetForNewPuzzle()
@@ -167,8 +181,7 @@ struct GameView: View {
             guard store.showVictory, scenePhase == .active, !paused, !victoryPresented else { return }
             glowCells = Set(0..<81)
             celebrationToken += 1
-            react(.celebrating)
-            do { try await Task.sleep(for: .milliseconds(reduceMotion ? 100 : 480)) } catch { return }
+            react(store.activeScenery?.world.victoryMood ?? .celebrating)
             victoryPresented = true
         }
         .task(id: "\(mascotReaction)-\(scenePhase == .active && !paused && mascotUncovered)") {
@@ -193,6 +206,25 @@ struct GameView: View {
         .onChange(of: store.settings.numberFirst) { _, _ in lockedDigit = nil }
         .sheet(isPresented: $learning) {
             LearnView(initialTechnique: lessonTechnique).environment(\.lisaMotionAllowed, store.settings.animatedDecor && scenePhase == .active)
+        }
+        .overlay {
+            if let id = store.introductionID, let stop = store.activeScenery, introductionAllowed {
+                LisaSceneryIntroduction(stop: stop) { store.finishIntroduction(id) }
+                    .id(id)
+                    .environment(\.lisaMotionAllowed, true)
+            }
+        }
+        .task(id: "\(store.introductionID?.uuidString ?? "")-\(introductionAllowed)") {
+            guard let id = store.introductionID else { return }
+            guard introductionAllowed else { store.finishIntroduction(id); return }
+            #if DEBUG
+            // Freeze only the auto-dismiss in an isolated UI fixture to inspect/tap the real arrival layout.
+            let args = ProcessInfo.processInfo.arguments
+            if args.contains("--uitest-reset") && args.contains("--uitest-hold-introduction") { return }
+            #endif
+            do { try await Task.sleep(for: .seconds(1.8)) } catch { return }
+            guard !Task.isCancelled else { return }
+            store.finishIntroduction(id)
         }
         .overlay { GenerationOverlay() }
         .alert(L10n.text("Préparation de la grille"), isPresented: Binding(get: { store.generationError != nil }, set: { if !$0 { store.generationError = nil } })) {
@@ -287,6 +319,7 @@ struct GameView: View {
                     Button { companionRequest += 1 } label: {
                         Label("Lisa !", systemImage: "face.smiling")
                             .font(LisaTheme.heading(23)).foregroundStyle(LisaTheme.ink)
+                            .lineLimit(1).minimumScaleFactor(0.7)
                             .frame(minHeight: 44)
                     }
                     .buttonStyle(LisaPressStyle()).accessibilityLabel(L10n.text("Faire rire Lisa"))
@@ -322,6 +355,9 @@ struct GameView: View {
                 if let game = store.session {
                     VStack(alignment: .leading, spacing: 20) {
                         Text(L10n.text(store.mode) + " · " + game.puzzle.difficulty.label).font(LisaTheme.heading(23))
+                        if let stop = store.activeScenery {
+                            Text(stop.title).font(LisaTheme.body()).accessibilityIdentifier("currentSceneryTitle")
+                        }
                         Text(store.settings.autoCheck || store.settings.errorLimit
                              ? L10n.text("Erreurs %@%@", String(game.mistakes), store.settings.errorLimit ? "/3" : "")
                              : L10n.text("Mode zen")).font(LisaTheme.body())
@@ -377,7 +413,7 @@ struct GameView: View {
         }
         .padding(.horizontal, wide ? 8 : 0)
         .background {
-            if wide { RoundedRectangle(cornerRadius: 14).fill(LisaTheme.paper) }
+            if wide || store.activeScenery != nil { RoundedRectangle(cornerRadius: 14).fill(LisaTheme.paper) }
         }
     }
 
@@ -619,6 +655,7 @@ struct VictoryView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var stage = 0
     @State private var progress = 0.0
+    @State private var reactionFinished = false
 
     private var reward: (String, String) {
         if store.mode == "Voyage", store.eventWins >= 25 { return (L10n.text("Âme voyageuse"), "globe.europe.africa.fill") }
@@ -631,7 +668,7 @@ struct VictoryView: View {
 
     var body: some View {
         ZStack {
-            LisaBackground(motionEnabled: scenePhase == .active, chapter: store.mode == "Voyage" ? LisaJourneyAtmosphere.chapter(store.eventWins) : nil)
+            LisaBackground(motionEnabled: scenePhase == .active, stop: store.activeScenery)
             LisaCelebration(isActive: stage > 0 && scenePhase == .active)
             ScrollView {
                 VStack(spacing: 20) {
@@ -642,7 +679,7 @@ struct VictoryView: View {
                         LisaMagicHalo(strong: true).frame(width: 225, height: 225)
                         Circle().fill(LisaTheme.yellow.opacity(0.35)).frame(width: 175, height: 175)
                         Circle().strokeBorder(.white.opacity(0.75), style: StrokeStyle(lineWidth: 3, dash: [4, 8])).frame(width: 190, height: 190)
-                        LisaMascot(size: 140, celebrating: true, mood: .happy, appearance: store.poulpiAppearance)
+                        LisaMascot(size: 140, mood: reactionFinished ? .happy : (store.activeScenery?.world.victoryMood ?? .celebrating), appearance: store.poulpiAppearance)
                     }
                     VStack(spacing: 8) {
                         Text(L10n.text("Bien joué, vous !"))
@@ -652,6 +689,7 @@ struct VictoryView: View {
                         Text(L10n.text("81 cases. Et ce petit plaisir\nd’avoir trouvé la dernière."))
                             .font(LisaTheme.body(17)).multilineTextAlignment(.center).foregroundStyle(LisaTheme.ink)
                     }
+                    .padding(16).background(LisaTheme.paper.opacity(0.94), in: RoundedRectangle(cornerRadius: 24))
                     if let game = store.session {
                         (dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(spacing: 9)) : AnyLayout(HStackLayout(spacing: 9))) {
                             metric(LisaStore.time(game.elapsedSeconds), L10n.text("votre temps"), icon: "stopwatch.fill")
@@ -670,14 +708,20 @@ struct VictoryView: View {
                         }
                         .buttonStyle(LisaPressStyle())
                     }
-                    LisaButton(title: store.victoryContinuationTitle, icon: "arrow.right", action: onContinue)
-                        .accessibilityIdentifier("victoryContinue")
+                    if let next = store.nextScenery { LisaSceneryPreview(stop: next) }
                     Button(L10n.text("Retour à l’accueil")) { store.showVictory = false; store.showGame = false }
                         .font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted)
                 }
                 .padding(.horizontal, 24).padding(.bottom, 30)
                 .frame(maxWidth: 480).frame(maxWidth: .infinity)
             }
+        }
+        .safeAreaInset(edge: .bottom) {
+            LisaButton(title: store.victoryContinuationTitle, icon: "arrow.right", action: onContinue)
+                .accessibilityIdentifier("victoryContinue")
+                .padding(.horizontal, 24).padding(.vertical, 12)
+                .frame(maxWidth: 480).frame(maxWidth: .infinity)
+                .background(LisaTheme.paper)
         }
         .task(id: scenePhase == .active) {
             guard scenePhase == .active else { return }
@@ -692,6 +736,8 @@ struct VictoryView: View {
                 progress = Double(min(store.eventWins, 25)) / 25
                 stage = 2
             }
+            do { try await Task.sleep(for: .seconds(motionEnabled ? 1.5 : 0)) } catch { return }
+            reactionFinished = true
         }
     }
 
@@ -753,6 +799,7 @@ struct VictoryView: View {
         VStack(spacing: 5) {
             Image(systemName: icon).font(.system(size: 16, weight: .bold)).foregroundStyle(LisaTheme.coral)
             Text(value).font(LisaTheme.heading(23)).foregroundStyle(LisaTheme.ink)
+                            .lineLimit(1).minimumScaleFactor(0.7)
             Text(label).font(LisaTheme.body(11)).foregroundStyle(LisaTheme.muted)
         }
         .frame(maxWidth: .infinity).padding(.vertical, 13)

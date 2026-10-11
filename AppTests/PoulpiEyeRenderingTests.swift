@@ -319,4 +319,22 @@ final class PoulpiEyeRenderingTests: XCTestCase {
             }
         }
     }
+    func testSeparateScenesOwnTheirMorphGeometrySources() throws {
+        let rigs = [PoulpiRig(), PoulpiRig()]
+        var lids: [SCNNode] = []
+        for rig in rigs {
+            rig.node.enumerateChildNodes { node, _ in if node.morpher != nil { lids.append(node) } }
+        }
+        XCTAssertEqual(lids.count, 4)
+        for i in 1..<lids.count {
+            let previous = try XCTUnwrap(lids[i - 1].morpher?.targets.first)
+            let current = try XCTUnwrap(lids[i].morpher?.targets.first)
+            XCTAssertFalse(previous === current, "SceneKit deformers must not share mutable preparation state across scenes")
+            let a = try XCTUnwrap(previous.sources(for: .normal).first)
+            let b = try XCTUnwrap(current.sources(for: .normal).first)
+            XCTAssertFalse(a === b)
+            XCTAssertEqual(a.data, b.data, "Isolating render state must preserve the sculpt")
+        }
+    }
+
 }

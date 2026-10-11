@@ -674,3 +674,37 @@
 /* Lisa friend group actions */
 "Quitter le cercle" = "Покинуть группу";
 "Quitter le cercle ? Son propriétaire le supprime pour tous les membres." = "Покинуть группу? Её владелец удалит её для всех участников.";
+
+/* World stops, introductions and automatic music. */
+"Prairie guimauve" = "Зефирный луг";
+"Fleurs géantes" = "Гигантские цветы";
+"Rivière rose" = "Розовая река";
+"Jardin suspendu" = "Висячий сад";
+"Crépuscule fleuri" = "Цветочные сумерки";
+"Clairière sucrée" = "Сладкая поляна";
+"Bosquet de sucettes" = "Леденцовая роща";
+"Pont de bonbons" = "Конфетный мост";
+"Confiserie cachée" = "Тайная кондитерская";
+"Forêt nocturne" = "Ночной лес";
+"Plage pétillante" = "Искрящийся пляж";
+"Récif de corail" = "Коралловый риф";
+"Grotte turquoise" = "Бирюзовая пещера";
+"Épave aux perles" = "Жемчужный корабль";
+"Lagon lumineux" = "Сияющая лагуна";
+"Vallée givrée" = "Морозная долина";
+"Forêt enneigée" = "Заснеженный лес";
+"Lac de cristal" = "Хрустальное озеро";
+"Sommet des neiges" = "Снежная вершина";
+"Aurore polaire" = "Полярное сияние";
+"Orbite douce" = "Плавная орбита";
+"Lune poudrée" = "Сахарная луна";
+"Anneaux célestes" = "Небесные кольца";
+"Nébuleuse mauve" = "Лиловая туманность";
+"Constellation de Poulpi" = "Созвездие Пульпи";
+"Automatique selon l’univers" = "Автоматически по миру";
+"Jouer maintenant" = "Играть сейчас";
+"Prochaine escale" = "Следующая остановка";
+
+"Licence des musiques d’univers" = "Лицензия музыки миров";
+
+"Conversion audio Apple Lossless, sans modification musicale." = "Преобразовано в Apple Lossless без изменений музыки.";

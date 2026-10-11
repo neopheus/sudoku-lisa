@@ -370,6 +370,10 @@ struct SettingsView: View {
             Section(L10n.text("Musique")) {
                 Text(L10n.text("Marimba Game Music — Denis-Pavlov-Music, Pixabay")).font(.footnote).foregroundStyle(.secondary)
                 Text(L10n.text("Fishbowl Acrobatics by Eric Matyas — soundimage.org (MP3 converted)")).font(.footnote).foregroundStyle(.secondary)
+                Text(verbatim: "The Meadow We Call Home · Light Puzzles 13 · Hidden Riddles · Icicle Wonderland · Puzzles in Faraway Lands\nEric Matyas — www.soundimage.org")
+                    .font(.footnote).foregroundStyle(.secondary)
+                Link(L10n.text("Licence des musiques d’univers"), destination: URL(string: "https://soundimage.org/sample-page/")!)
+                Text(L10n.text("Conversion audio Apple Lossless, sans modification musicale.")).font(.footnote).foregroundStyle(.secondary)
             }
         }.preferredColorScheme(store.settings.darkMode ? .dark : .light).tint(LisaTheme.actionInk).navigationTitle(L10n.text("À votre goût")).navigationBarTitleDisplayMode(.inline).toolbar { ToolbarItem(placement: .topBarTrailing) { Button(L10n.text("Terminé")) { dismiss() } } } }
     }

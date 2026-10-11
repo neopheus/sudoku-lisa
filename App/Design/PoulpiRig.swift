@@ -229,12 +229,28 @@ final class PoulpiRig: @unchecked Sendable {
         _surface.normal=normalize(abs(determinant)*_surface.normal-0.0006*grainVisibility*grainStrength*gradient);
         """ }
     private let purple = material(UIColor(red: 0.16, green: 0.10, blue: 0.38, alpha: 1), roughness: 0.90)
+    /// SceneKit's Metal deformers prepare source objects lazily. Keep their mutable
+    /// preparation state local to each scene; immutable Data buffers remain shared.
+    private static func independentSource(_ source: SCNGeometrySource) -> SCNGeometrySource {
+        SCNGeometrySource(data: source.data, semantic: source.semantic, vectorCount: source.vectorCount,
+                          usesFloatComponents: source.usesFloatComponents,
+                          componentsPerVector: source.componentsPerVector, bytesPerComponent: source.bytesPerComponent,
+                          dataOffset: source.dataOffset, dataStride: source.dataStride)
+    }
+    private static func independentGeometry(_ geometry: SCNGeometry) -> SCNGeometry {
+        let elements = geometry.elements.map {
+            SCNGeometryElement(data: $0.data, primitiveType: $0.primitiveType,
+                               primitiveCount: $0.primitiveCount, bytesPerIndex: $0.bytesPerIndex)
+        }
+        return SCNGeometry(sources: geometry.sources.map(independentSource), elements: elements)
+    }
+
     private func attach(_ mesh: SkinnedMesh, material: SCNMaterial, to target: SCNNode) {
-        let g = mesh.geometry.copy() as! SCNGeometry
+        let g = Self.independentGeometry(mesh.geometry)
         g.firstMaterial = material
         let skinner = SCNSkinner(baseGeometry: g, bones: bones,
                                 boneInverseBindTransforms: Self.resources.inverseBindTransforms,
-                                boneWeights: mesh.weights, boneIndices: mesh.boneIndices)
+                                boneWeights: Self.independentSource(mesh.weights), boneIndices: Self.independentSource(mesh.boneIndices))
         skinner.skeleton = bones[0]
         target.geometry = g; target.skinner = skinner; node.addChildNode(target)
     }
@@ -600,7 +616,7 @@ final class PoulpiRig: @unchecked Sendable {
             let gaze = SCNNode(); gaze.name = side < 0 ? "poulpi-pupil-left" : "poulpi-pupil-right"
             eyeRoot.addChildNode(gaze); pupils.append(gaze)
             eyeDisc(radius:0.125,side:side,material:iris,parent:gaze)
-            let lid = SCNNode(geometry: Self.openLid.copy() as? SCNGeometry)
+            let lid = SCNNode(geometry: Self.independentGeometry(Self.openLid))
             lid.name = side < 0 ? "poulpi-lids-left" : "poulpi-lids-right"
             let eyeLidMaterial = lidMaterial.copy() as! SCNMaterial
             eyeLidMaterial.setValue(NSNumber(value: Float(0)), forKey: "lidClosure")
@@ -608,7 +624,7 @@ final class PoulpiRig: @unchecked Sendable {
             lidMaterials.append(eyeLidMaterial)
             coloredFaceMaterials.append(eyeLidMaterial)
             let morph = SCNMorpher()
-            morph.targets = Self.lidTargets
+            morph.targets = Self.lidTargets.map(Self.independentGeometry)
             morph.calculationMode = .normalized
             lid.morpher = morph
             eyeRoot.addChildNode(lid)

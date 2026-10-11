@@ -1,7 +1,8 @@
 import SwiftUI
 import UIKit
+import SudokuCore
 
-/// A native candy world: vectors, system rounded type and no downloaded textures.
+/// Shared candy surfaces, adaptive colours and rounded typography.
 enum LisaTheme {
     static let background = adaptive(light: (0.79, 0.94, 0.98), dark: (0.105, 0.07, 0.19))
     static let ink = adaptive(light: (0.27, 0.12, 0.37), dark: (0.98, 0.94, 1))
@@ -41,27 +42,36 @@ struct LisaBackground: View {
     var motionEnabled = true
     var quiet = false
     var chapter: Int? = nil
+    var stop: SceneryStop? = nil
     @EnvironmentObject private var store: LisaStore
     @Environment(\.colorScheme) private var scheme
     var body: some View {
-        GeometryReader { geometry in
-            ZStack {
-                LinearGradient(colors: [LisaTheme.sky, LisaTheme.background, scheme == .dark ? Color(red: 0.23, green: 0.12, blue: 0.33) : Color(red: 0.94, green: 0.80, blue: 0.96)], startPoint: .top, endPoint: .bottom)
-                if let chapter {
-                    LisaJourneyAtmosphere.colors[min(max(chapter, 0), 4)].opacity(scheme == .dark ? 0.16 : 0.14)
-                }
-                Ellipse().fill(LisaTheme.lavender.opacity(scheme == .dark ? 0.12 : 0.5))
-                    .frame(width: geometry.size.width * 1.2, height: geometry.size.height * 0.4)
-                    .rotationEffect(.degrees(-20))
-                    .position(x: geometry.size.width * 0.2, y: geometry.size.height * 0.98)
-                Ellipse().fill(LisaTheme.mint.opacity(scheme == .dark ? 0.10 : 0.55))
-                    .frame(width: geometry.size.width * 1.3, height: geometry.size.height * 0.35)
-                    .rotationEffect(.degrees(15))
-                    .position(x: geometry.size.width * 0.92, y: geometry.size.height * 1.03)
+        Group {
+            if let stop, !store.settings.paperMode {
+                LisaScenery(stop: stop, animated: motionEnabled && store.settings.animatedDecor)
+            } else if stop != nil && store.settings.paperMode {
+                LisaTheme.paper
+            } else {
+                GeometryReader { geometry in
+                    ZStack {
+                        LinearGradient(colors: [LisaTheme.sky, LisaTheme.background, scheme == .dark ? Color(red: 0.23, green: 0.12, blue: 0.33) : Color(red: 0.94, green: 0.80, blue: 0.96)], startPoint: .top, endPoint: .bottom)
+                        if let chapter {
+                            LisaJourneyAtmosphere.colors[min(max(chapter, 0), 4)].opacity(scheme == .dark ? 0.16 : 0.14)
+                        }
+                        Ellipse().fill(LisaTheme.lavender.opacity(scheme == .dark ? 0.12 : 0.5))
+                            .frame(width: geometry.size.width * 1.2, height: geometry.size.height * 0.4)
+                            .rotationEffect(.degrees(-20))
+                            .position(x: geometry.size.width * 0.2, y: geometry.size.height * 0.98)
+                        Ellipse().fill(LisaTheme.mint.opacity(scheme == .dark ? 0.10 : 0.55))
+                            .frame(width: geometry.size.width * 1.3, height: geometry.size.height * 0.35)
+                            .rotationEffect(.degrees(15))
+                            .position(x: geometry.size.width * 0.92, y: geometry.size.height * 1.03)
 
+                    }
+                    .overlay { LisaAtmosphere(enabled: motionEnabled && store.settings.animatedDecor, quiet: quiet, chapter: chapter) }
+                    .clipped()
+                }
             }
-            .overlay { LisaAtmosphere(enabled: motionEnabled && store.settings.animatedDecor, quiet: quiet, chapter: chapter) }
-            .clipped()
         }
         .ignoresSafeArea()
         .allowsHitTesting(false)

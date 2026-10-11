@@ -1,4 +1,5 @@
 import Foundation
+import AVFoundation
 import XCTest
 @testable import SudokuLisa
 
@@ -66,4 +67,48 @@ final class LisaAudioTests: XCTestCase {
         await fulfillment(of: [drained], timeout: 2)
         XCTAssertEqual(session.events, ["category", "activate", "activate", "deactivate"])
     }
+    @MainActor func testAutomaticMusicRetainsPlayerAndBoundsRapidCrossfades() async throws {
+        let audio = LisaAudio(session: RecordingAudioSession(), queue: DispatchQueue(label: "LisaAudioTests.worlds"), observesNotifications: false)
+        audio.configure(active: true, music: true, musicTrack: .automatic, world: .garden)
+        let garden = await audio.playbackSnapshot()
+        XCTAssertNotNil(garden.player)
+        XCTAssertEqual(garden.resource, "lisa-world-garden.m4a")
+        audio.configure(musicTrack: .automatic, world: .garden)
+        let sameWorld = await audio.playbackSnapshot()
+        XCTAssertEqual(sameWorld.player, garden.player)
+        XCTAssertEqual(sameWorld.outgoingPlayers, 0)
+        audio.configure(musicTrack: .automatic, world: .lagoon)
+        let lagoon = await audio.playbackSnapshot()
+        XCTAssertNotEqual(lagoon.player, garden.player)
+        XCTAssertEqual(lagoon.outgoingPlayers, 1)
+        audio.configure(musicTrack: .automatic, world: .stars)
+        let stars = await audio.playbackSnapshot()
+        XCTAssertEqual(stars.resource, "lisa-world-stars.m4a")
+        XCTAssertEqual(stars.outgoingPlayers, 1)
+        audio.configure(active: false)
+        let background = await audio.playbackSnapshot()
+        XCTAssertFalse(background.playing)
+        XCTAssertEqual(background.outgoingPlayers, 0)
+        audio.configure(active: true)
+        let resumed = await audio.playbackSnapshot()
+        XCTAssertEqual(resumed.player, stars.player)
+        audio.configure(music: false)
+        let muted = await audio.playbackSnapshot()
+        XCTAssertFalse(muted.playing)
+    }
+
+    @MainActor func testInterruptionDuringCrossfadeSilencesBothPlayers() async {
+        let audio = LisaAudio(session: RecordingAudioSession(), queue: DispatchQueue(label: "LisaAudioTests.interruption"))
+        audio.configure(active: true, music: true, musicTrack: .automatic, world: .garden)
+        _ = await audio.playbackSnapshot()
+        audio.configure(musicTrack: .automatic, world: .frost)
+        _ = await audio.playbackSnapshot()
+        NotificationCenter.default.post(name: AVAudioSession.interruptionNotification, object: nil,
+            userInfo: [AVAudioSessionInterruptionTypeKey: AVAudioSession.InterruptionType.began.rawValue])
+        let interrupted = await audio.playbackSnapshot()
+        XCTAssertFalse(interrupted.playing)
+        XCTAssertEqual(interrupted.outgoingPlayers, 0)
+        audio.configure(active: false)
+    }
+
 }
