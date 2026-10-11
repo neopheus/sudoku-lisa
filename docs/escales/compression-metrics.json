@@ -1,0 +1,177 @@
+[
+  {
+    "name": "SceneryStopCandyForest0",
+    "before": 3194648,
+    "after": 1459944,
+    "psnr": 45.1581,
+    "ssim_rgb": 0.994031
+  },
+  {
+    "name": "SceneryStopCandyForest1",
+    "before": 2372570,
+    "after": 1024234,
+    "psnr": 46.9622,
+    "ssim_rgb": 0.993039
+  },
+  {
+    "name": "SceneryStopCandyForest2",
+    "before": 2589170,
+    "after": 1126456,
+    "psnr": 46.2934,
+    "ssim_rgb": 0.990826
+  },
+  {
+    "name": "SceneryStopCandyForest3",
+    "before": 2790572,
+    "after": 1248260,
+    "psnr": 46.1064,
+    "ssim_rgb": 0.994265
+  },
+  {
+    "name": "SceneryStopCandyForest4",
+    "before": 2754368,
+    "after": 1295606,
+    "psnr": 45.7277,
+    "ssim_rgb": 0.992134
+  },
+  {
+    "name": "SceneryStopFrost0",
+    "before": 2535072,
+    "after": 1070074,
+    "psnr": 46.0952,
+    "ssim_rgb": 0.987221
+  },
+  {
+    "name": "SceneryStopFrost1",
+    "before": 2724054,
+    "after": 1169172,
+    "psnr": 46.1092,
+    "ssim_rgb": 0.991003
+  },
+  {
+    "name": "SceneryStopFrost2",
+    "before": 2702540,
+    "after": 1233284,
+    "psnr": 45.7948,
+    "ssim_rgb": 0.99015
+  },
+  {
+    "name": "SceneryStopFrost3",
+    "before": 2194797,
+    "after": 940387,
+    "psnr": 46.8758,
+    "ssim_rgb": 0.988216
+  },
+  {
+    "name": "SceneryStopFrost4",
+    "before": 2623401,
+    "after": 1175432,
+    "psnr": 46.0607,
+    "ssim_rgb": 0.98979
+  },
+  {
+    "name": "SceneryStopGarden0",
+    "before": 2552577,
+    "after": 1064655,
+    "psnr": 46.4665,
+    "ssim_rgb": 0.991564
+  },
+  {
+    "name": "SceneryStopGarden1",
+    "before": 2975599,
+    "after": 1372196,
+    "psnr": 45.5293,
+    "ssim_rgb": 0.993217
+  },
+  {
+    "name": "SceneryStopGarden2",
+    "before": 2823113,
+    "after": 1301039,
+    "psnr": 45.6397,
+    "ssim_rgb": 0.992638
+  },
+  {
+    "name": "SceneryStopGarden3",
+    "before": 3018678,
+    "after": 1357729,
+    "psnr": 45.3774,
+    "ssim_rgb": 0.992331
+  },
+  {
+    "name": "SceneryStopGarden4",
+    "before": 2619468,
+    "after": 1225762,
+    "psnr": 45.8873,
+    "ssim_rgb": 0.990721
+  },
+  {
+    "name": "SceneryStopLagoon0",
+    "before": 2731069,
+    "after": 1291559,
+    "psnr": 45.6648,
+    "ssim_rgb": 0.990978
+  },
+  {
+    "name": "SceneryStopLagoon1",
+    "before": 2380480,
+    "after": 1034535,
+    "psnr": 46.8225,
+    "ssim_rgb": 0.991733
+  },
+  {
+    "name": "SceneryStopLagoon2",
+    "before": 2404262,
+    "after": 1041986,
+    "psnr": 46.6088,
+    "ssim_rgb": 0.991488
+  },
+  {
+    "name": "SceneryStopLagoon3",
+    "before": 2730300,
+    "after": 1267024,
+    "psnr": 45.7696,
+    "ssim_rgb": 0.991882
+  },
+  {
+    "name": "SceneryStopLagoon4",
+    "before": 2746633,
+    "after": 1319524,
+    "psnr": 45.7142,
+    "ssim_rgb": 0.992687
+  },
+  {
+    "name": "SceneryStopStars0",
+    "before": 2500170,
+    "after": 1109940,
+    "psnr": 46.0378,
+    "ssim_rgb": 0.987962
+  },
+  {
+    "name": "SceneryStopStars1",
+    "before": 2805332,
+    "after": 1200731,
+    "psnr": 45.6863,
+    "ssim_rgb": 0.989567
+  },
+  {
+    "name": "SceneryStopStars2",
+    "before": 2619624,
+    "after": 1176001,
+    "psnr": 45.9391,
+    "ssim_rgb": 0.989692
+  },
+  {
+    "name": "SceneryStopStars3",
+    "before": 2647130,
+    "after": 1183925,
+    "psnr": 45.8355,
+    "ssim_rgb": 0.988838
+  },
+  {
+    "name": "SceneryStopStars4",
+    "before": 2749898,
+    "after": 1177492,
+    "psnr": 45.8547,
+    "ssim_rgb": 0.989082
+  }
+]

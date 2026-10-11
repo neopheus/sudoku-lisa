@@ -25,7 +25,9 @@ including its disclaimer of warranties. [Attribution requirements](https://sound
 The author, individual titles, website, license link and conversion notice appear
 inside Settings in the app. Sources and exact durations are in `escales/music-manifest.json`.
 These are tracks explicitly described as looping on the composer's pages.
-Downloads were decoded and encoded as Apple Lossless `.m4a` for native offline
+Downloads were initially encoded as Apple Lossless; the bundled files now use
+high-quality AAC (48 kHz stereo, constrained VBR at 256 kb/s, Apple encoder quality 127)
+in `.m4a` for native offline
 AVAudioPlayer playback. No musical arrangement or duration changes were made.
 The two fixed choices above are unchanged. The old synthesis script is historical;
 it must not be used to regenerate the replacement soundtrack.
@@ -33,4 +35,4 @@ it must not be used to regenerate the replacement soundtrack.
 Technical playback validation is separate from subjective listening and physical
 iPhone speaker/headphone loop-seam assessment, which remain to be done.
 
-Playback gains compensate measured RMS differences (garden −19.0, forest −19.5, lagoon −20.2, frost −15.4, stars −22.0 dBFS). Attenuation only, before the 0.38 master level; files are unchanged. This is a level check, not a listening assessment.
+Playback gains compensate measured RMS differences (garden −19.0, forest −19.5, lagoon −20.2, frost −15.4, stars −22.0 dBFS). Attenuation only, before the 0.38 master level; playback gains are unchanged by the bundle optimization. This is a level check, not a listening assessment.

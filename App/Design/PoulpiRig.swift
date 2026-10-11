@@ -133,8 +133,9 @@ final class PoulpiRig: @unchecked Sendable {
         let mouth: SCNGeometry
     }
     nonisolated(unsafe) private static let resources: Resources = autoreleasepool {
-        guard let url = Bundle.main.url(forResource: "poulpi-rig", withExtension: "json"),
-              let data = try? Data(contentsOf: url),
+        guard let url = Bundle.main.url(forResource: "poulpi-rig", withExtension: "lzfse"),
+              let packed = try? Data(contentsOf: url),
+              let data = try? (packed as NSData).decompressed(using: .lzfse) as Data,
               let asset = try? JSONDecoder().decode(Asset.self, from: data), asset.version == 1 else {
             preconditionFailure("Missing validated Poulpi sculpt")
         }

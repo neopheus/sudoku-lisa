@@ -48,3 +48,5 @@ Physical iPhone thermal/fluidity and musical listening approval are not claimed.
   simulator recording. `in-game-light.png` and `in-game-dark.png` are captures of
   actual game screens. These demonstrate rendering, not physical-device performance.
 - Additional final UI run with system Reduce Motion enabled passed; the simulator setting was restored to its initial enabled state.
+
+Shipping illustrations are JPEG quality 98, 4:4:4, at the original 1024×1536 resolution. Untouched PNG masters are in `png-masters/`; regenerate with `python3 scripts/encode_scenery.py`.

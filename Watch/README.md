@@ -14,7 +14,7 @@ swiftc -module-cache-path /tmp/lisa-mini-cache Watch/MiniSudoku.swift Watch/Vali
 Add the target using `python3 scripts/add_watch_target.py`. It preserves existing project settings and is idempotent. Watch bundle ID: `com.xavier.sudokulisa.watchkitapp`, companion: `com.xavier.sudokulisa`, CloudKit container: `iCloud.com.xavier.sudokulisa`. The Apple provisioning profiles must enable CloudKit and APNs for both app IDs. A simulator build cannot validate push delivery or shared iCloud data on paired devices.
 
 
-The Watch target compiles the actual iPhone sources `App/Design/LisaMascotMood.swift`, `OctopusModel.swift`, and `PoulpiRig.swift` and bundles the same rig JSON and eye texture. The shared color pigments and snapshot decoder live in SudokuCore. There is no separate Watch drawing or copied 3D model. `SceneView` renders the common scene; motion pauses when offscreen, inactive, dimmed, or Reduce Motion is enabled. Device power use has not been measured.
+The Watch target compiles the actual iPhone sources `App/Design/LisaMascotMood.swift`, `OctopusModel.swift`, and `PoulpiRig.swift` and bundles the same losslessly compressed rig (LZFSE) and eye texture. The shared color pigments and snapshot decoder live in SudokuCore. There is no separate Watch drawing or copied 3D model. `SceneView` renders the common scene; motion pauses when offscreen, inactive, dimmed, or Reduce Motion is enabled. Device power use has not been measured.
 
 Debug preview: launch the Watch simulator app with `--watch-poulpi-preview` to open its companion screen. Simulator builds that execute CloudKit require local ad hoc signing (`CODE_SIGNING_ALLOWED=YES CODE_SIGN_IDENTITY=-`); unsigned builds cannot launch CloudKit.
 

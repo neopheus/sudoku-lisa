@@ -2,7 +2,7 @@
 Run: blender -b --python-exit-code 1 --python scripts/mascot/build_poulpi.py
 Coordinates intentionally use SceneKit's Y-up / +Z-front convention.
 """
-import bpy, bmesh, math, json, sys
+import bpy, bmesh, math, json, sys, subprocess
 sys.dont_write_bytecode=True
 sys.path.insert(0,str(__import__("pathlib").Path(__file__).resolve().parent))
 from sculpt_surface import sculpt
@@ -287,6 +287,8 @@ asset['mouth']={'textureCoordinates':mouth_uv,'positions':[float(c) for v in lip
 # Leave the body active so offline rebinding tools still select the skin.
 bpy.context.view_layer.objects.active=skin
 out=ROOT/'App/Resources/Mascot/poulpi-rig.json';out.write_text(json.dumps(asset,separators=(',',':')))
+subprocess.run(['swift', str(ROOT/'scripts/mascot/compress_rig.swift'), str(out),
+                str(out.with_suffix('.lzfse'))], check=True)
 bpy.context.preferences.filepaths.save_version=0
 bpy.ops.wm.save_as_mainfile(filepath=str(ROOT/'docs/mascot-hd/poulpi-sculpt.blend'))
 print('POULPI_MESH',len(asset['skin']['positions'])//3,'vertices',len(asset['skin']['indices'])//3,'triangles',len(joints),'joints',out.stat().st_size,'bytes')

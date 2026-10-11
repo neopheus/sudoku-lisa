@@ -86,7 +86,7 @@ def add_watch_target(path=ROOT / 'SudokuLisa.xcodeproj/project.pbxproj'):
             (32, 'App/Design/LisaMascotMood.swift', 'sourcecode.swift', 7),
             (34, 'App/Design/PoulpiRig.swift', 'sourcecode.swift', 7),
             (36, 'App/Design/OctopusModel.swift', 'sourcecode.swift', 7),
-            (38, 'App/Resources/Mascot/poulpi-rig.json', 'text.json', 9),
+            (38, 'App/Resources/Mascot/poulpi-rig.lzfse', 'file', 9),
             (40, 'App/Resources/Mascot/poulpi-eye-reference.png', 'image.png', 9),
         ]
         additions = ''
