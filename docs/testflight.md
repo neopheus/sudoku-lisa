@@ -253,8 +253,16 @@ Correction de l’accès aux autocollants Poulpi dans le tiroir système. Dans M
 - Musiques des cinq univers en AAC haute qualité ; sculpture Poulpi compressée sans perte ; 25 décors en JPEG qualité 98, couleurs 4:4:4, sans changement de résolution. Originaux PNG conservés hors du bundle.
 - Mesure locale Release non signée : 87,89 Mo contre 188,43 Mo avant optimisation, Watch et Messages compris. Ce chiffre ne constitue pas une taille de téléchargement App Store.
 - Validations : 116 tests moteur/invitations, 103 tests applicatifs et le scénario UI Poulpi réussis pendant la première passe ; les deux tests de rendu des 25 décors clair/sombre repassent après compression des images. Comparaison visuelle des 25 décors et contrôles de ressources documentés dans `bundle-optimization.md`.
-- Demande explicite : commit local, publication TestFlight et notification des testeurs des groupes existants. L’envoi et la disponibilité seront documentés après vérification.
+- Demande explicite : commit local, publication TestFlight et notification des testeurs des groupes existants. La distribution et la notification sont confirmées ci-dessous.
 
 ### Notes de test du build 20
 
 Cette version allège fortement l’application tout en conservant la résolution des 25 décors et les animations de Poulpi. Vérifiez les décors dans les cinq univers, en mode clair et sombre, les changements de musique et les boucles audio, ainsi que Poulpi sur iPhone et Apple Watch. Vérifiez aussi les autocollants dans Messages et la reprise d’une partie après mise à jour. Signalez toute différence visuelle, coupure audio ou problème de reprise avec le modèle de l’appareil et la version du système.
+
+### Preuves de distribution du build 20
+
+- Sources applicatives : commit `152f508`, aucun push Git.
+- Archive signée : `/tmp/lisa-testflight-20261011-optimized-b20.xcarchive`, signature profonde vérifiée ; iPhone, Watch et Messages en 1.0 (20). Ressources musicales identiques aux sources, 25 rendus JPEG en 1024×1536, modèle compressé présent sur iPhone et Watch sans doublon JSON.
+- Envoi accepté le 11 octobre à **11 h 45 min 19 s (Paris)** : `Upload succeeded`, `EXPORT SUCCEEDED` dans `/tmp/lisa-testflight-b20-upload.log`. Traitement terminé ; notes enregistrées, build associé à **Lisa — Interne**, **Lisa — Externe** et **Liens à partager** puis soumis avec **« Notifier automatiquement les testeurs » activé**. État final confirmé : **En cours de test**, trois groupes associés et trois invitations affichées. La notification a été déclenchée par TestFlight ; la réception individuelle et l’installation sur appareil physique ne sont pas vérifiées.
+
+- [Build 20](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/70808a14-8bce-47d9-951c-4f7be6603643) · [Preuve de publication](screenshots/testflight-build-20.png) · [Lien public TestFlight](https://testflight.apple.com/join/tWFCgtQF).
