@@ -266,3 +266,16 @@ Cette version allège fortement l’application tout en conservant la résolutio
 - Envoi accepté le 11 octobre à **11 h 45 min 19 s (Paris)** : `Upload succeeded`, `EXPORT SUCCEEDED` dans `/tmp/lisa-testflight-b20-upload.log`. Traitement terminé ; notes enregistrées, build associé à **Lisa — Interne**, **Lisa — Externe** et **Liens à partager** puis soumis avec **« Notifier automatiquement les testeurs » activé**. État final confirmé : **En cours de test**, trois groupes associés et trois invitations affichées. La notification a été déclenchée par TestFlight ; la réception individuelle et l’installation sur appareil physique ne sont pas vérifiées.
 
 - [Build 20](https://appstoreconnect.apple.com/teams/70a667fb-878b-43af-a968-b2aabf6f1436/apps/6819455460/testflight/ios/70808a14-8bce-47d9-951c-4f7be6603643) · [Preuve de publication](screenshots/testflight-build-20.png) · [Lien public TestFlight](https://testflight.apple.com/join/tWFCgtQF).
+
+## Aides, notes et Voyage — build 21, 12 octobre 2026
+
+- Version 1.0 (21) pour iPhone, Watch et Messages. Aides dans un panneau indépendant qui conserve la position de la grille ; notes automatiques, nettoyage et effacement annulables ; candidats en direct, focus et piste logique. Sauvegardes et annotations personnelles conservées.
+- Première étape Voyage Express, carnet des escales et bilan local des essais avec partage volontaire. Corrections des décors animés dans Apprendre et Battle, avec suspension hors écran et en arrière-plan.
+- Validation préalable : 132 tests partagés, quatre tests Python et localisation des cinq langues réussis. Les résultats iOS et de distribution sont consignés ci-dessous après vérification.
+- Archive prévue : `/tmp/lisa-testflight-20261012-b21.xcarchive`. Journaux : `/tmp/lisa-b21-swift.log`, `/tmp/lisa-b21-ios.log`, `/tmp/lisa-b21-archive.log`, `/tmp/lisa-b21-upload.log`.
+
+### Notes de test du build 21
+
+En Libre, Voyage et Quotidien, ouvrez Aides : remplissez automatiquement les notes, nettoyez les notes impossibles et annulez ces opérations. Essayez les candidats en direct, le focus sur un chiffre et les pistes expliquées. Vérifiez que vos notes personnelles sont conservées et que le panneau ne déplace pas la grille. Testez le nouveau départ du Voyage, la reprise et le carnet des escales. Vérifiez les animations dans Apprendre et Battle, puis après une pause ou un retour dans l’app. Essayez les grands caractères, le paysage et Réduire les animations. Le bilan des essais reste local et son partage est volontaire.
+
+- Validation iOS finale : **113 tests applicatifs et neuf scénarios UI réussis**, dont les cinq scénarios Aides et quatre scénarios Voyage. Signature profonde de l’archive vérifiée ; iPhone, Watch et Messages en 1.0 (21). Bundle local signé : 79 179 824 octets, sous le budget de 100 Mo ; ce chiffre ne représente pas la taille TestFlight. Aucun essai sur appareil physique.

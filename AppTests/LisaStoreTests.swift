@@ -450,6 +450,8 @@ final class LisaStoreTests: XCTestCase {
         XCTAssertEqual(store.mode, "Événement")
         XCTAssertEqual(store.activeEvent, "2026-10-1")
         XCTAssertFalse(store.hasSavedGame(mode: "Voyage"))
+        // Finish the asynchronous save before the teardown removes its directory.
+        await store.flushPendingSaves()
     }
 
     @MainActor func testVictoryRewardRecordedOnceAndEquipmentPersists() async throws {

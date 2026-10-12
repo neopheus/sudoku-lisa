@@ -5,11 +5,11 @@ final class LocalizationUITests: XCTestCase {
     func testAllFiveLanguages() {
         continueAfterFailure = false
         let cases = [
-            ("fr", "fr_FR", "Jouer", "Chaque jour", "Voyage", "Mes progrès", "Réglages", "À votre goût", "Langue", "Terminé", "C’est parti !", "Facile", "Gommer"),
-            ("en", "en_US", "Play", "Every day", "Journey", "My progress", "Settings", "Make it yours", "Language", "Done", "Let's play!", "Easy", "Erase"),
-            ("ru", "ru_RU", "Играть", "Каждый день", "Путешествие", "Мои успехи", "Настройки", "На ваш вкус", "Язык", "Готово", "Начнём!", "Лёгкий", "Стереть"),
-            ("de", "de_DE", "Spielen", "Jeden Tag", "Reise", "Mein Fortschritt", "Einstellungen", "Dein Stil", "Sprache", "Fertig", "Los geht’s!", "Leicht", "Radieren"),
-            ("es", "es_ES", "Jugar", "Cada día", "Viaje", "Mi progreso", "Ajustes", "A tu gusto", "Idioma", "Listo", "¡Vamos allá!", "Fácil", "Borrar")
+            ("fr", "fr_FR", "Jouer", "Chaque jour", "Voyage", "Mes progrès", "Réglages", "À votre goût", "Langue", "Terminé", "Choisir mon niveau", "Facile", "Gommer"),
+            ("en", "en_US", "Play", "Every day", "Journey", "My progress", "Settings", "Make it yours", "Language", "Done", "Choose my level", "Easy", "Erase"),
+            ("ru", "ru_RU", "Играть", "Каждый день", "Путешествие", "Мои успехи", "Настройки", "На ваш вкус", "Язык", "Готово", "Выбрать уровень", "Лёгкий", "Стереть"),
+            ("de", "de_DE", "Spielen", "Jeden Tag", "Reise", "Mein Fortschritt", "Einstellungen", "Dein Stil", "Sprache", "Fertig", "Schwierigkeit wählen", "Leicht", "Radieren"),
+            ("es", "es_ES", "Jugar", "Cada día", "Viaje", "Mi progreso", "Ajustes", "A tu gusto", "Idioma", "Listo", "Elegir mi nivel", "Fácil", "Borrar")
         ]
         for (language, locale, play, daily, journey, progress, settings, settingsTitle, languageTitle, done, start, easy, erase) in cases {
             let app = XCUIApplication()
@@ -26,7 +26,8 @@ final class LocalizationUITests: XCTestCase {
             XCTAssertTrue(app.staticTexts[languageTitle].firstMatch.exists)
             screenshot(app, "\(language)-settings")
             app.buttons[done].tap()
-            app.buttons.containing(.staticText, identifier: start).firstMatch.tap()
+            XCTAssertEqual(app.buttons["homeFreePlay"].label, start)
+            app.buttons["homeFreePlay"].tap()
             app.buttons[easy].tap()
             XCTAssertTrue(app.buttons[erase].waitForExistence(timeout: 20))
             screenshot(app, "\(language)-game")
@@ -64,7 +65,9 @@ final class LocalizationUITests: XCTestCase {
         screenshot(app, "manual-language-picker")
         app.buttons["Done"].tap()
         XCTAssertTrue(app.tabBars.buttons["Play"].waitForExistence(timeout: 5))
-        app.buttons.containing(.staticText, identifier: "Let's play!").firstMatch.tap()
+        XCTAssertEqual(app.buttons["homeJourneyPlay"].label, "My first journey")
+        XCTAssertEqual(app.buttons["homeFreePlay"].label, "Choose my level")
+        app.buttons["homeFreePlay"].tap()
         app.buttons["Easy"].tap()
         XCTAssertTrue(app.buttons["gameSettingsButton"].waitForExistence(timeout: 20))
         app.buttons["gameSettingsButton"].tap()

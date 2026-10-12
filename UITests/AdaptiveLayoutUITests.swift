@@ -14,12 +14,12 @@ final class AdaptiveLayoutUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments = ["--uitest-reset", "-AppleLanguages", "(fr)", "-AppleLocale", "fr_FR", "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
-        XCTAssertTrue(button("C’est parti !", in: app).waitForExistence(timeout: 10))
+        XCTAssertTrue(button("Choisir mon niveau", in: app).waitForExistence(timeout: 10))
         return app
     }
 
     private func button(_ title: String, in app: XCUIApplication) -> XCUIElement {
-        app.buttons.containing(.staticText, identifier: title).firstMatch
+        app.buttons[title].firstMatch
     }
 
     private func rotate(_ orientation: UIDeviceOrientation, app: XCUIApplication) {
@@ -42,7 +42,7 @@ final class AdaptiveLayoutUITests: XCTestCase {
 
     func testGameResizesWithoutLosingSelectionNotesOrUndo() {
         let app = launchFresh()
-        button("C’est parti !", in: app).tap()
+        button("Choisir mon niveau", in: app).tap()
         app.buttons["Facile"].tap()
         let empty = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Ligne ", ", vide")).firstMatch
         XCTAssertTrue(empty.waitForExistence(timeout: 15))
@@ -89,8 +89,14 @@ final class AdaptiveLayoutUITests: XCTestCase {
         let app = launchFresh()
         rotate(.landscapeLeft, app: app)
         capture(app, "Accueil-large")
-        let start = button("C’est parti !", in: app)
-        if !start.isHittable { app.swipeUp() }
+        let start = button("Choisir mon niveau", in: app)
+        for _ in 0..<6 {
+            if start.isHittable { break }
+            let above = start.exists && start.frame.midY < app.frame.midY
+            let scroll = app.scrollViews.firstMatch
+            scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: above ? 0.35 : 0.65))
+                .press(forDuration: 0.05, thenDragTo: scroll.coordinate(withNormalizedOffset: CGVector(dx: 0.85, dy: above ? 0.65 : 0.35)))
+        }
         XCTAssertTrue(start.isHittable)
         app.tabBars.buttons["Poulpi"].tap()
         let stage = app.descendants(matching: .any)["poulpiStage"].firstMatch
@@ -126,7 +132,7 @@ final class AdaptiveLayoutUITests: XCTestCase {
         let app = launchFresh()
         try XCTSkipIf(app.frame.width < 600, "Requires an expanded viewport")
         capture(app, "Accueil-format-etendu")
-        button("C’est parti !", in: app).tap()
+        button("Choisir mon niveau", in: app).tap()
         app.buttons["Facile"].tap()
         let topLeft = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Ligne 1, colonne 1,")).firstMatch
         XCTAssertTrue(topLeft.waitForExistence(timeout: 15))

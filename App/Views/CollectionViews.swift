@@ -56,6 +56,7 @@ struct DailyView: View {
 }
 
 struct JourneyView: View {
+    @State private var albumPresented = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     var motionEnabled = true
@@ -67,7 +68,7 @@ struct JourneyView: View {
 
     var body: some View {
         ZStack {
-            LisaBackground(motionEnabled: motionEnabled, chapter: chapter)
+            LisaBackground(motionEnabled: motionEnabled && !albumPresented, chapter: chapter)
             ScrollView {
                 VStack(spacing: 0) {
                     HStack(alignment: .center, spacing: 12) {
@@ -77,17 +78,10 @@ struct JourneyView: View {
                             Text(L10n.text("25 défis. Une étoile à la fois.")).font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted)
                         }
                         Spacer(minLength: 0)
-                        LisaCompanion(size: 84, animationEnabled: motionEnabled)
+                        LisaCompanion(size: 84, animationEnabled: motionEnabled && !albumPresented)
                     }.padding(.horizontal, 24).padding(.top, 8).padding(.bottom, 22)
 
-                    if let saved = store.savedGame(mode: "Voyage") {
-                        LisaButton(title: L10n.text("Reprendre l’étape %@", String(saved.journeyStage ?? store.eventWins + 1)), icon: "play.fill") {
-                            _ = store.resume(mode: "Voyage")
-                        }
-                        .accessibilityIdentifier("journey-resume")
-                        .padding(.horizontal, 20).padding(.bottom, 20)
-                    }
-                    seasonPass.padding(.horizontal, 20).padding(.bottom, 24)
+                    JourneyCompanionCard(albumPresented: $albumPresented).padding(.horizontal, 20).padding(.bottom, 24)
 
                     HStack(spacing: 10) {
                         Image(systemName: "star.fill").foregroundStyle(Color.orange)
@@ -99,6 +93,7 @@ struct JourneyView: View {
                     LazyVStack(spacing: 0) { ForEach(0..<5) { region in
                         JourneyRegionView(title: places[region], icon: icons[region], color: colors[region], region: region, completed: store.eventWins, onPlay: requestStart)
                     } }
+                    seasonPass.padding(.horizontal, 20).padding(.vertical, 24)
                     if store.eventWins >= 25 {
                         VStack(spacing: 12) {
                             Image(systemName: "crown.fill").font(.system(size: 48)).foregroundStyle(LisaTheme.yellow).lisaFloat(amplitude: 6, tilt: 7)
@@ -109,7 +104,8 @@ struct JourneyView: View {
                 }.padding(.bottom, 25)
             }
         }
-        .environment(\.lisaMotionAllowed, motionEnabled)
+        .environment(\.lisaMotionAllowed, motionEnabled && !albumPresented)
+        .sheet(isPresented: $albumPresented) { JourneyAlbumView() }
         .navigationTitle(L10n.text("Voyage")).navigationBarTitleDisplayMode(.inline)
 
     }
@@ -360,6 +356,7 @@ struct SettingsView: View {
                 Toggle(L10n.text("Afficher le chronomètre"), isOn: $store.settings.showTimer)
             }
             Section { Text(L10n.text("Les notes se mettent à jour lorsque vous placez un chiffre correct. Les indices expliquent les déductions simples et proposent une valeur vérifiée pour les étapes avancées.")) }
+            Section { NavigationLink(L10n.text("Bilan des essais")) { PlayStudyView(study: store.playStudy) }.accessibilityIdentifier("openPlayStudy") }
             Section(L10n.text("Une petite app, rien de superflu")) {
                 Label(L10n.text("Toutes vos grilles hors ligne"), systemImage: "wifi.slash")
                 Label(L10n.text("Aucune publicité, aucun compte"), systemImage: "heart")

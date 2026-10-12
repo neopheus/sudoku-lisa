@@ -125,8 +125,8 @@ public struct LogicalState: Sendable, Equatable {
         }
         return true
     }
-    public func nextDeduction(technique requested: SudokuTechnique? = nil) -> SudokuDeduction? {
-        findDeduction(technique: requested, accepting: { _ in true })
+    public func nextDeduction(technique requested: SudokuTechnique? = nil, cancellation: () -> Bool = { false }) -> SudokuDeduction? {
+        findDeduction(technique: requested, cancellation: cancellation, accepting: { _ in true })
     }
     public func deductions(technique: SudokuTechnique) -> [SudokuDeduction] {
         var result = [SudokuDeduction]()
@@ -136,8 +136,8 @@ public struct LogicalState: Sendable, Equatable {
         })
         return result
     }
-    private func findDeduction(technique requested: SudokuTechnique?, accepting accept: (SudokuDeduction) -> Bool) -> SudokuDeduction? {
-        guard isConsistent, board.contains(0) else { return nil }
+    private func findDeduction(technique requested: SudokuTechnique?, cancellation: () -> Bool = { false }, accepting accept: (SudokuDeduction) -> Bool) -> SudokuDeduction? {
+        guard !cancellation(), isConsistent, board.contains(0) else { return nil }
         func allowed(_ technique: SudokuTechnique) -> Bool { requested == nil || requested == technique }
         func removal(_ technique: SudokuTechnique, _ focus: [Int], _ marks: [CandidateElimination]) -> SudokuDeduction? {
             guard !marks.isEmpty else { return nil }
@@ -153,7 +153,9 @@ public struct LogicalState: Sendable, Equatable {
         }
         if allowed(.hiddenSingle) {
             for unit in Self.units {
+                if cancellation() { return nil }
                 for digit in 1...9 {
+                    if cancellation() { return nil }
                     let cells = unit.filter { masks[$0] & (1 << digit) != 0 }
                     if cells.count == 1 {
                         let deduction = SudokuDeduction(techniqueID: .hiddenSingle, action: .placement(index: cells[0], value: digit), focusCells: unit)
@@ -165,6 +167,7 @@ public struct LogicalState: Sendable, Equatable {
         if allowed(.lockedCandidates) {
             for (sourceID, source) in Self.units.enumerated() {
                 for digit in 1...9 {
+                    if cancellation() { return nil }
                     let cells = source.filter { masks[$0] & (1 << digit) != 0 }
                     guard cells.count > 1 else { continue }
                     for (targetID, target) in Self.units.enumerated() where (sourceID >= 18) != (targetID >= 18) {
@@ -178,9 +181,10 @@ public struct LogicalState: Sendable, Equatable {
         for size in 2...3 {
             let technique: SudokuTechnique = size == 2 ? .nakedPair : .nakedTriple
             // Hidden pairs precede naked triples in the supported ordering.
-            if size == 3, allowed(.hiddenPair), let result = hiddenSubset(size: 2, accepting: accept) { return result }
+            if size == 3, allowed(.hiddenPair), let result = hiddenSubset(size: 2, cancellation: cancellation, accepting: accept) { return result }
             if allowed(technique) {
                 for unit in Self.units {
+                    if cancellation() { return nil }
                     let cells = unit.filter { (2...size).contains(masks[$0].nonzeroBitCount) }
                     for combination in Self.combinations(cells, size: size) {
                         let union = combination.reduce(0) { $0 | masks[$1] }
@@ -193,11 +197,12 @@ public struct LogicalState: Sendable, Equatable {
                 }
             }
         }
-        if allowed(.hiddenTriple), let result = hiddenSubset(size: 3, accepting: accept) { return result }
+        if allowed(.hiddenTriple), let result = hiddenSubset(size: 3, cancellation: cancellation, accepting: accept) { return result }
         if allowed(.xWing) {
             for transpose in [false, true] {
                 func index(_ line: Int, _ crossing: Int) -> Int { transpose ? crossing * 9 + line : line * 9 + crossing }
                 for digit in 1...9 {
+                    if cancellation() { return nil }
                     let positions = (0..<9).map { line in (0..<9).filter { masks[index(line, $0)] & (1 << digit) != 0 } }
                     for first in 0..<8 where positions[first].count == 2 {
                         for second in (first + 1)..<9 where positions[second] == positions[first] {
@@ -214,8 +219,9 @@ public struct LogicalState: Sendable, Equatable {
         }
         return nil
     }
-    private func hiddenSubset(size: Int, accepting accept: (SudokuDeduction) -> Bool) -> SudokuDeduction? {
+    private func hiddenSubset(size: Int, cancellation: () -> Bool = { false }, accepting accept: (SudokuDeduction) -> Bool) -> SudokuDeduction? {
         for unit in Self.units {
+            if cancellation() { return nil }
             let digits = (1...9).filter { digit in let count = unit.filter { masks[$0] & (1 << digit) != 0 }.count; return (2...size).contains(count) }
             for combination in Self.combinations(digits, size: size) {
                 let digitMask = combination.reduce(0) { $0 | (1 << $1) }

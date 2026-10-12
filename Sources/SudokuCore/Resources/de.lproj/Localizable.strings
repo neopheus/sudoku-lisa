@@ -708,3 +708,74 @@
 "Licence des musiques d’univers" = "Lizenz der Weltenmusik";
 
 "Conversion audio AAC haute qualité, sans modification musicale." = "In hochwertiges AAC konvertiert, ohne musikalische Änderungen.";
+
+"Votre aventure continue" = "Dein Abenteuer geht weiter";
+"Votre premier voyage" = "Deine erste Reise";
+"Poulpi vous attend" = "Poulpi wartet auf dich";
+"Une grille Express, un premier souvenir. Les indices sont là pour vous aider." = "Ein Express-Rätsel, dein erstes Andenken. Tipps helfen dir weiter.";
+"Prochaine escale : %@" = "Nächster Halt: %@";
+"Mon premier voyage" = "Meine erste Reise";
+"Continuer le voyage" = "Reise fortsetzen";
+"Choisir mon niveau" = "Schwierigkeit wählen";
+"Votre pause avec Poulpi" = "Deine Pause mit Poulpi";
+"Un petit rendez-vous, de grands déclics." = "Eine kleine Auszeit voller Aha-Momente.";
+"Votre voyage avec Poulpi" = "Deine Reise mit Poulpi";
+"À la cinquième étape, une étoile à offrir à Poulpi." = "Am fünften Halt wartet ein Stern für Poulpi.";
+"Étapes restantes dans ce monde : %@" = "Verbleibende Etappen in dieser Welt: %@";
+"Reprendre mon voyage" = "Meine Reise fortsetzen";
+"Jouer la prochaine étape" = "Nächste Etappe spielen";
+"Vos 25 souvenirs racontent votre aventure." = "Deine 25 Andenken erzählen dein Abenteuer.";
+"Mon carnet · %@ / 25" = "Mein Album · %@ / 25";
+"Chaque étape terminée garde un souvenir ici. Votre carnet vous attend, même après une pause." = "Jede abgeschlossene Etappe hinterlässt hier ein Andenken. Dein Album wartet auch nach einer Pause auf dich.";
+"Souvenir collectionné" = "Andenken gesammelt";
+"À découvrir" = "Noch zu entdecken";
+"%@, %@" = "%@, %@";
+"Mon carnet de voyage" = "Mein Reisealbum";
+"Un souvenir de votre voyage avec Poulpi." = "Ein Andenken an deine Reise mit Poulpi.";
+"Un souvenir pour votre carnet" = "Ein Andenken für dein Album";
+"Ouvrir mon carnet" = "Mein Album öffnen";
+"Bilan des essais" = "Spieltest-Bericht";
+"Ce bilan reste sur votre iPhone. Il compte vos actions pendant 90 jours pour aider à améliorer le jeu. Aucune grille, aucun compte et aucun envoi automatique." = "Dieser Bericht bleibt auf deinem iPhone. Er zählt deine Aktionen 90 Tage lang, um das Spiel zu verbessern. Keine Rätsel, Kontodaten oder automatischen Übertragungen.";
+"Conserver mon bilan local" = "Lokalen Bericht speichern";
+"Le bilan est indisponible. Votre progression de jeu est préservée. Vous pouvez effacer le bilan pour recommencer." = "Der Bericht ist nicht verfügbar. Dein Spielfortschritt bleibt erhalten. Du kannst den Bericht löschen und neu beginnen.";
+"Depuis le début du bilan" = "Seit Beginn der Aufzeichnung";
+"Parties commencées" = "Begonnene Spiele";
+"Parties terminées" = "Abgeschlossene Spiele";
+"Parties reprises" = "Fortgesetzte Spiele";
+"Indices consultés" = "Angesehene Tipps";
+"Souvenirs regardés" = "Angesehene Andenken";
+"Préparer le partage du bilan" = "Bericht zum Teilen vorbereiten";
+"Partager le bilan" = "Bericht teilen";
+"Vous choisissez si vous partagez ce fichier et avec qui. Effacer le bilan ne change ni vos parties ni vos souvenirs." = "Du entscheidest, ob und mit wem du die Datei teilst. Das Löschen des Berichts verändert weder Spiele noch Andenken.";
+"Effacer le bilan" = "Bericht löschen";
+"Effacer le bilan ?" = "Bericht löschen?";
+"Partage indisponible" = "Teilen nicht verfügbar";
+"Le bilan n’a pas pu être préparé. Réessayez." = "Der Bericht konnte nicht vorbereitet werden. Versuche es erneut.";
+
+/* Live logical assistance */
+"Aides" = "Hilfen";
+"Aides actives" = "Hilfen aktiv";
+"Candidats" = "Kandidaten";
+"Focus chiffre" = "Zahl hervorheben";
+"Piste" = "Denkhilfe";
+"Expliquer" = "Erklären";
+"Remplir les notes" = "Leere Notizen füllen";
+"Masquer les aides" = "Hilfen ausblenden";
+"Une contradiction empêche la piste." = "Ein Widerspruch verhindert die Denkhilfe.";
+"Aucune déduction disponible." = "Keine Schlussfolgerung verfügbar.";
+"Observez les cases entourées." = "Betrachte die umrandeten Felder.";
+"Analyse interrompue. Réactivez une aide pour réessayer." = "Analyse unterbrochen. Aktiviere eine Hilfe erneut.";
+", case de la piste" = ", Feld der Denkhilfe";
+", compatible avec le focus" = ", passend zur hervorgehobenen Zahl";
+"Ouvert" = "Geöffnet";
+"Fermé" = "Geschlossen";
+
+// Note tools
+"Notes automatiques" = "Automatische Notizen";
+"Complète les cases sans notes. Vos annotations sont conservées." = "Füllt Felder ohne Notizen. Deine Einträge bleiben erhalten.";
+"Gérer les notes" = "Notizen verwalten";
+"Nettoyer les notes" = "Notizen bereinigen";
+"Effacer toutes les notes" = "Alle Notizen löschen";
+"Retire seulement les possibilités devenues impossibles." = "Entfernt nur Kandidaten, die nicht mehr möglich sind.";
+"Chaque action peut être annulée en un geste." = "Jede Aktion lässt sich mit einem Tippen rückgängig machen.";
+"Candidats en direct" = "Live-Kandidaten";

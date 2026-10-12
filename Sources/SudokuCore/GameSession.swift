@@ -32,6 +32,7 @@ public struct GameSession: Codable, Sendable, Equatable {
     public private(set) var mistakes: Int = 0
     public var elapsedSeconds: Int = 0
     public private(set) var hintsUsed: Int = 0
+    public private(set) var usedLogicalAssistance = false
     public private(set) var candidateEliminations: Set<CandidateElimination> = []
     private var eliminationHistory: [Set<CandidateElimination>?] = []
     private var undoHistory: [[CellChange]] = []
@@ -48,7 +49,7 @@ public struct GameSession: Codable, Sendable, Equatable {
         self.puzzle = puzzle; self.values = puzzle.givens
         self.notes = Array(repeating: [], count: 81)
     }
-    private enum CodingKeys: String, CodingKey { case puzzle, values, notes, mistakes, elapsedSeconds, hintsUsed, undoHistory, history, candidateEliminations, eliminationHistory }
+    private enum CodingKeys: String, CodingKey { case puzzle, values, notes, mistakes, elapsedSeconds, hintsUsed, usedLogicalAssistance, undoHistory, history, candidateEliminations, eliminationHistory }
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         puzzle = try c.decode(Puzzle.self, forKey: .puzzle)
@@ -57,6 +58,7 @@ public struct GameSession: Codable, Sendable, Equatable {
         mistakes = try c.decode(Int.self, forKey: .mistakes)
         elapsedSeconds = try c.decode(Int.self, forKey: .elapsedSeconds)
         hintsUsed = try c.decode(Int.self, forKey: .hintsUsed)
+        usedLogicalAssistance = try c.decodeIfPresent(Bool.self, forKey: .usedLogicalAssistance) ?? false
         let givens = puzzle.givens
         func valid(_ values: [Int], _ notes: [Set<Int>]) -> Bool {
             values.count == 81 && notes.count == 81 && values.allSatisfy { (0...9).contains($0) }
@@ -104,6 +106,7 @@ public struct GameSession: Codable, Sendable, Equatable {
         try c.encode(mistakes, forKey: .mistakes)
         try c.encode(elapsedSeconds, forKey: .elapsedSeconds)
         try c.encode(hintsUsed, forKey: .hintsUsed)
+        try c.encode(usedLogicalAssistance, forKey: .usedLogicalAssistance)
         try c.encode(undoHistory, forKey: .undoHistory)
         try c.encode(candidateEliminations, forKey: .candidateEliminations)
         try c.encode(eliminationHistory, forKey: .eliminationHistory)
@@ -156,6 +159,47 @@ public struct GameSession: Codable, Sendable, Equatable {
         if let saved = eliminationHistory.popLast(), let marks = saved { candidateEliminations = marks }
         for change in changes { values[change.index] = change.value; notes[change.index] = change.notes }
     }
+    public mutating func recordLogicalAssistance() {
+        usedLogicalAssistance = true
+    }
+
+    /// Uses visible constraints only. A supplied snapshot must still match the board.
+    @discardableResult public mutating func fillEmptyNotes(using snapshot: AssistanceSnapshot? = nil) -> Bool {
+        let analysis = snapshot ?? AssistanceSnapshot(values: values, eliminations: candidateEliminations)
+        guard analysis.values == values, analysis.eliminations == candidateEliminations,
+              analysis.isConsistent else { return false }
+        let changed = (0..<81).filter {
+            puzzle.givens[$0] == 0 && values[$0] == 0 && notes[$0].isEmpty && !analysis.candidates[$0].isEmpty
+        }
+        guard !changed.isEmpty else { return false }
+        save(indices: changed)
+        for index in changed { notes[index] = analysis.candidates[index] }
+        return true
+    }
+
+    /// Removes only annotations excluded by the visible board or validated eliminations.
+    @discardableResult public mutating func pruneImpossibleNotes(using snapshot: AssistanceSnapshot? = nil) -> Bool {
+        let analysis = snapshot ?? AssistanceSnapshot(values: values, eliminations: candidateEliminations)
+        guard analysis.values == values, analysis.eliminations == candidateEliminations,
+              analysis.isConsistent else { return false }
+        let changed = (0..<81).filter {
+            isEditable($0) && values[$0] == 0 && !notes[$0].isSubset(of: analysis.candidates[$0])
+        }
+        guard !changed.isEmpty else { return false }
+        save(indices: changed)
+        for index in changed { notes[index].formIntersection(analysis.candidates[index]) }
+        return true
+    }
+
+    /// Explicit, reversible reset of annotations, without changing values or eliminations.
+    @discardableResult public mutating func clearNotes() -> Bool {
+        let changed = (0..<81).filter { isEditable($0) && values[$0] == 0 && !notes[$0].isEmpty }
+        guard !changed.isEmpty else { return false }
+        save(indices: changed)
+        for index in changed { notes[index] = [] }
+        return true
+    }
+
     public mutating func tick() { if !isComplete { elapsedSeconds += 1 } }
     public func candidates(at index: Int) -> Set<Int> {
         LogicalState(board: values, eliminations: candidateEliminations).candidates(at: index)
@@ -167,7 +211,7 @@ public struct GameSession: Codable, Sendable, Equatable {
         let deduction: SudokuDeduction
         if let wrong = (0..<81).first(where: { isIncorrect(at: $0) }) {
             deduction = SudokuDeduction(techniqueID: .correction, action: .placement(index: wrong, value: puzzle.solution[wrong]), focusCells: [wrong])
-        } else if let next = LogicalState(board: values, eliminations: candidateEliminations).nextDeduction() {
+        } else if let next = LogicalState(board: values, eliminations: candidateEliminations).nextDeduction(cancellation: cancellation) {
             deduction = next
         } else {
             // Compatibility for older games which exceed our logical engine.
@@ -176,15 +220,7 @@ public struct GameSession: Codable, Sendable, Equatable {
             deduction = SudokuDeduction(techniqueID: .solutionReveal, action: .placement(index: cell, value: puzzle.solution[cell]), focusCells: [cell])
         }
         if cancellation() { throw CancellationError() }
-        let index: Int, value: Int, marks: [CandidateElimination]
-        switch deduction.action {
-        case let .placement(cell, digit): index = cell; value = digit; marks = []
-        case let .eliminations(eliminations): index = eliminations.first?.index ?? 0; value = 0; marks = eliminations
-        }
-        return SudokuHint(index: index, value: value, title: deduction.techniqueID == .correction ? L10n.text("Une case à revoir") : L10n.text("Regarde cette zone"),
-                          detail: deduction.observation, focusCells: deduction.focusCells,
-                          eliminatedCandidates: Array(Set(marks.map(\.value))).sorted(), eliminationMarks: marks,
-                          technique: deduction.techniqueID.label, explanation: deduction.explanation, deduction: deduction)
+        return SudokuHint(deduction: deduction)
     }
     /// Applies the already displayed atomic action. Candidate notes are only
     /// pruned where they exist; automatic candidates remain a separate state.
@@ -217,5 +253,19 @@ public struct GameSession: Codable, Sendable, Equatable {
         guard let suggestion = hint(), let deduction = suggestion.deduction,
               applyDeduction(deduction, countAsUsed: countAsUsed) else { return nil }
         return suggestion
+    }
+}
+
+public extension SudokuHint {
+    init(deduction: SudokuDeduction) {
+        let index: Int, value: Int, marks: [CandidateElimination]
+        switch deduction.action {
+        case let .placement(cell, digit): index = cell; value = digit; marks = []
+        case let .eliminations(eliminations): index = eliminations.first?.index ?? 0; value = 0; marks = eliminations
+        }
+        self.init(index: index, value: value, title: deduction.techniqueID == .correction ? L10n.text("Une case à revoir") : L10n.text("Regarde cette zone"),
+                          detail: deduction.observation, focusCells: deduction.focusCells,
+                          eliminatedCandidates: Array(Set(marks.map(\.value))).sorted(), eliminationMarks: marks,
+                          technique: deduction.techniqueID.label, explanation: deduction.explanation, deduction: deduction)
     }
 }

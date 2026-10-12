@@ -74,7 +74,7 @@ struct LearnView: View {
           if selectedLesson != nil { reader.scrollTo("lesson-content", anchor: .top) }
         }
       }
-      .background(LisaBackground(motionEnabled: false, quiet: true))
+      .background(LisaBackground(motionEnabled: motionAllowed, quiet: true))
       .navigationTitle(L10n.text("Apprendre"))
       .navigationBarTitleDisplayMode(.inline)
       .toolbar {

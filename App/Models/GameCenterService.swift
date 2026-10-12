@@ -27,7 +27,7 @@ final class GameCenterService: NSObject, ObservableObject, GKGameCenterControlle
     var isConfigured: Bool { leaderboardID != nil }
     var playerName: String? { isAuthenticated ? GKLocalPlayer.local.displayName : nil }
 
-    func authenticate() {
+    func authenticate(presentIfNeeded: Bool = true) {
         guard !isAuthenticating else { return }
         isAuthenticating = true
         statusMessage = nil
@@ -35,6 +35,13 @@ final class GameCenterService: NSObject, ObservableObject, GKGameCenterControlle
             Task { @MainActor in
                 guard let self else { return }
                 if let controller {
+                    // Launch can restore a signed-in player and receive invitations,
+                    // but solo players only see a sign-in sheet after a social action.
+                    guard presentIfNeeded else {
+                        self.isAuthenticating = false
+                        self.isAuthenticated = GKLocalPlayer.local.isAuthenticated
+                        return
+                    }
                     guard let presenter = self.presenter else {
                         self.isAuthenticating = false
                         self.statusMessage = "La connexion n’a pas pu s’ouvrir. Réessayez dans un instant."
@@ -67,9 +74,9 @@ final class GameCenterService: NSObject, ObservableObject, GKGameCenterControlle
 
     /// The caller must verify the completed puzzle belongs to the current weekly
     /// tournament. Hints exclude a run; every mistake adds 60 seconds.
-    func submit(seconds: Int, mistakes: Int, hints: Int) {
+    func submit(seconds: Int, mistakes: Int, hints: Int, usedLogicalAssistance: Bool = false) {
         guard let leaderboardID, isAuthenticated, !isSubmitting else { return }
-        guard hints == 0 else {
+        guard hints == 0 && !usedLogicalAssistance else {
             statusMessage = "Belle partie ! Les parties avec aide restent hors classement."
             return
         }

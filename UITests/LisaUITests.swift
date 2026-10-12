@@ -40,7 +40,7 @@ final class LisaUITests: XCTestCase {
         attach(app, name: "Invitations-accueil")
         app.buttons["Fermer"].tap()
 
-        button("C’est parti !", in: app).tap()
+        button("Choisir mon niveau", in: app).tap()
         app.buttons["Facile"].tap()
         let cells = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "Ligne "))
         XCTAssertTrue(cells.firstMatch.waitForExistence(timeout: 15))
@@ -138,7 +138,7 @@ final class LisaUITests: XCTestCase {
     func testPlayNotesUndoPauseAndResume() {
         let app = launchFresh()
         attach(app, name: "01-Accueil")
-        let start = button("C’est parti !", in: app)
+        let start = button("Choisir mon niveau", in: app)
         XCTAssertTrue(start.waitForExistence(timeout: 5))
         start.tap()
         let easy = app.buttons["Facile"]
@@ -192,7 +192,7 @@ final class LisaUITests: XCTestCase {
 
     func testTimerPauseAndPersistence() {
         let app = launchFresh()
-        button("C’est parti !", in: app).tap()
+        button("Choisir mon niveau", in: app).tap()
         app.buttons["Facile"].tap()
         let timer = app.staticTexts["gameTimer"]
         XCTAssertTrue(timer.waitForExistence(timeout: 15))
@@ -240,7 +240,7 @@ final class LisaUITests: XCTestCase {
 
     func testSpatialCompanionDoesNotBlockBoard() {
         let app = launchFresh()
-        button("C’est parti !", in: app).tap()
+        button("Choisir mon niveau", in: app).tap()
         app.buttons["Facile"].tap()
         let empty = app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@ AND label CONTAINS %@", "Ligne ", ", vide")).firstMatch
         XCTAssertTrue(empty.waitForExistence(timeout: 15))
@@ -261,7 +261,7 @@ final class LisaUITests: XCTestCase {
 
     func testAdaptiveEffectsAndPause() {
         let app = launchFresh(metrics: true)
-        button("C’est parti !", in: app).tap()
+        button("Choisir mon niveau", in: app).tap()
         app.buttons["Facile"].tap()
         let companion = app.buttons["Faire rire Lisa"]
         XCTAssertTrue(companion.waitForExistence(timeout: 15))
@@ -292,7 +292,7 @@ final class LisaUITests: XCTestCase {
 
     func testPlayfulCompanion() {
         let app = launchFresh()
-        button("C’est parti !", in: app).tap()
+        button("Choisir mon niveau", in: app).tap()
         app.buttons["Facile"].tap()
         let companion = app.buttons["Faire rire Lisa"]
         XCTAssertTrue(companion.waitForExistence(timeout: 15))

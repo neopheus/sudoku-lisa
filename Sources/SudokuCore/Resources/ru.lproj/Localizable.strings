@@ -708,3 +708,74 @@
 "Licence des musiques d’univers" = "Лицензия музыки миров";
 
 "Conversion audio AAC haute qualité, sans modification musicale." = "Преобразовано в высококачественный AAC без изменений музыки.";
+
+"Votre aventure continue" = "Ваше приключение продолжается";
+"Votre premier voyage" = "Ваше первое путешествие";
+"Poulpi vous attend" = "Пульпи ждёт вас";
+"Une grille Express, un premier souvenir. Les indices sont là pour vous aider." = "Экспресс-судоку и первый сувенир. Подсказки помогут вам.";
+"Prochaine escale : %@" = "Следующая остановка: %@";
+"Mon premier voyage" = "Моё первое путешествие";
+"Continuer le voyage" = "Продолжить путешествие";
+"Choisir mon niveau" = "Выбрать уровень";
+"Votre pause avec Poulpi" = "Ваш отдых с Пульпи";
+"Un petit rendez-vous, de grands déclics." = "Маленькая передышка, большие открытия.";
+"Votre voyage avec Poulpi" = "Ваше путешествие с Пульпи";
+"À la cinquième étape, une étoile à offrir à Poulpi." = "На пятом этапе — звезда для Пульпи.";
+"Étapes restantes dans ce monde : %@" = "Осталось этапов в этом мире: %@";
+"Reprendre mon voyage" = "Вернуться к путешествию";
+"Jouer la prochaine étape" = "Начать следующий этап";
+"Vos 25 souvenirs racontent votre aventure." = "Ваши 25 сувениров хранят историю приключения.";
+"Mon carnet · %@ / 25" = "Мой альбом · %@ / 25";
+"Chaque étape terminée garde un souvenir ici. Votre carnet vous attend, même après une pause." = "Каждый пройденный этап оставляет здесь сувенир. Альбом будет ждать вас даже после перерыва.";
+"Souvenir collectionné" = "Сувенир получен";
+"À découvrir" = "Предстоит открыть";
+"%@, %@" = "%@, %@";
+"Mon carnet de voyage" = "Мой альбом путешествий";
+"Un souvenir de votre voyage avec Poulpi." = "Сувенир из вашего путешествия с Пульпи.";
+"Un souvenir pour votre carnet" = "Сувенир для вашего альбома";
+"Ouvrir mon carnet" = "Открыть мой альбом";
+"Bilan des essais" = "Отчёт о тестировании";
+"Ce bilan reste sur votre iPhone. Il compte vos actions pendant 90 jours pour aider à améliorer le jeu. Aucune grille, aucun compte et aucun envoi automatique." = "Отчёт остаётся на вашем iPhone. Он подсчитывает действия в течение 90 дней, чтобы помочь улучшить игру. Без сеток, данных аккаунта и автоматической отправки.";
+"Conserver mon bilan local" = "Хранить отчёт на устройстве";
+"Le bilan est indisponible. Votre progression de jeu est préservée. Vous pouvez effacer le bilan pour recommencer." = "Отчёт недоступен. Прогресс в игре сохранён. Вы можете очистить отчёт и начать заново.";
+"Depuis le début du bilan" = "С начала наблюдения";
+"Parties commencées" = "Начатые игры";
+"Parties terminées" = "Завершённые игры";
+"Parties reprises" = "Возобновлённые игры";
+"Indices consultés" = "Просмотренные подсказки";
+"Souvenirs regardés" = "Просмотренные сувениры";
+"Préparer le partage du bilan" = "Подготовить отчёт к отправке";
+"Partager le bilan" = "Поделиться отчётом";
+"Vous choisissez si vous partagez ce fichier et avec qui. Effacer le bilan ne change ni vos parties ni vos souvenirs." = "Вы сами решаете, делиться ли файлом и с кем. Очистка отчёта не влияет на игры и сувениры.";
+"Effacer le bilan" = "Очистить отчёт";
+"Effacer le bilan ?" = "Очистить отчёт?";
+"Partage indisponible" = "Отправка недоступна";
+"Le bilan n’a pas pu être préparé. Réessayez." = "Не удалось подготовить отчёт. Попробуйте ещё раз.";
+
+/* Live logical assistance */
+"Aides" = "Помощь";
+"Aides actives" = "Помощь включена";
+"Candidats" = "Кандидаты";
+"Focus chiffre" = "Выделить цифру";
+"Piste" = "Направление";
+"Expliquer" = "Объяснить";
+"Remplir les notes" = "Заполнить пустые заметки";
+"Masquer les aides" = "Скрыть помощь";
+"Une contradiction empêche la piste." = "Противоречие мешает показать направление.";
+"Aucune déduction disponible." = "Нет доступного логического вывода.";
+"Observez les cases entourées." = "Посмотрите на обведённые клетки.";
+"Analyse interrompue. Réactivez une aide pour réessayer." = "Анализ прерван. Включите помощь заново.";
+", case de la piste" = ", клетка направления";
+", compatible avec le focus" = ", подходит для выделенной цифры";
+"Ouvert" = "Открыто";
+"Fermé" = "Закрыто";
+
+// Note tools
+"Notes automatiques" = "Автоматические заметки";
+"Complète les cases sans notes. Vos annotations sont conservées." = "Заполняет клетки без заметок. Ваши пометки сохраняются.";
+"Gérer les notes" = "Управление заметками";
+"Nettoyer les notes" = "Очистить неверные заметки";
+"Effacer toutes les notes" = "Удалить все заметки";
+"Retire seulement les possibilités devenues impossibles." = "Удаляет только варианты, которые больше невозможны.";
+"Chaque action peut être annulée en un geste." = "Каждое действие можно отменить одним нажатием.";
+"Candidats en direct" = "Кандидаты в реальном времени";

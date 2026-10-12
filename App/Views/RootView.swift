@@ -44,6 +44,7 @@ struct RootView: View {
         .fullScreenCover(isPresented: $battlePresented) { BattleView() }
         .onAppear {
             saveRecoveryPresented = store.needsSaveRecovery
+            store.recordStudyLaunch()
             battle.configureAppearance(store.poulpiAppearance)
             battle.onRoundFinished = { [weak store = store] roundID, result in
                 store?.recordBattleResult(roundID: roundID, won: result.rank == 1)
@@ -70,7 +71,7 @@ struct RootView: View {
             guard !ProcessInfo.processInfo.arguments.contains("--uitest-reset"),
                   ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil,
                   ProcessInfo.processInfo.environment["LISA_UI_TESTING"] != "1" else { return }
-            GameCenterService.shared.authenticate()
+            GameCenterService.shared.authenticate(presentIfNeeded: false)
         }
         .onChange(of: store.poulpiAppearance) { _, appearance in battle.configureAppearance(appearance) }
         .task(id: "\(battle.state != .idle)-\(social.openBattle)") {
@@ -122,6 +123,7 @@ struct LisaWordmark: View {
 
 struct HomeView: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @Environment(\.verticalSizeClass) private var verticalSizeClass
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
     var onRoute: (Int) -> Void = { _ in }
     var onBattle: () -> Void = {}
@@ -138,46 +140,29 @@ struct HomeView: View {
             LisaBackground(motionEnabled: store.settings.animatedDecor && mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
             ScrollView {
                 VStack(spacing: 18) {
-                    HStack {
-                        LisaPill(title: L10n.count("days", store.streak), icon: "flame.fill", tint: LisaTheme.yellow)
-                        Spacer()
-                        LisaPill(title: L10n.count("wins", store.history.count), icon: "crown.fill", tint: LisaTheme.mint)
-                    }
-                    HStack(spacing: 24) {
-                        LisaWordmark(size: 83).rotationEffect(.degrees(-5)).lisaFloat(amplitude: 5, tilt: 2, period: 4.5)
-                        LisaCompanion(size: 124, animationEnabled: store.settings.animatedDecor && mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
-                            .rotationEffect(.degrees(6))
-                            .background { LisaMagicHalo().frame(width: 185, height: 185) }
-                            .lisaFloat(amplitude: 7, tilt: 2, period: 4, phase: 1.5)
-                    }
-                    .frame(maxWidth: .infinity).padding(.top, 4).padding(.bottom, 5)
-                    .scaleEffect(appeared ? 1 : 0.85)
-                    VStack(spacing: 5) {
-                        Text(L10n.text("À vous de briller !")).font(LisaTheme.heading(26)).foregroundStyle(LisaTheme.ink)
-                        Text(L10n.text("Des chiffres, des défis et plein de déclics.")).font(LisaTheme.body(13)).foregroundStyle(LisaTheme.muted)
-                    }
-                    LisaCard {
-                        VStack(spacing: 15) {
-                            (dynamicTypeSize.isAccessibilitySize ? AnyLayout(VStackLayout(alignment: .leading, spacing: 18)) : AnyLayout(HStackLayout(spacing: 18))) {
-                                MiniGrid().dynamicTypeSize(.large).frame(width: 106, height: 106).rotationEffect(.degrees(-5)).lisaFloat(amplitude: 5, tilt: 4, period: 4.5).accessibilityHidden(true)
-                                VStack(alignment: .leading, spacing: 6) {
-                                    if let session = store.session, !session.isComplete {
-                                        Text(L10n.text("Votre aventure\ncontinue")).font(LisaTheme.heading(22))
-                                        Text("\(L10n.text(store.mode)) · \(session.puzzle.difficulty.label) · \(LisaStore.time(session.elapsedSeconds))").font(LisaTheme.body(13)).foregroundStyle(LisaTheme.muted)
-                                    } else {
-                                        Text(L10n.text("Un nouveau\ndéfi vous attend")).font(LisaTheme.heading(22))
-                                        Text(L10n.text("6 niveaux · À votre rythme")).font(LisaTheme.body(12)).foregroundStyle(LisaTheme.muted)
-                                    }
-                                }.frame(maxWidth: .infinity, alignment: .leading)
-                            }
-                            if let session = store.session, !session.isComplete {
-                                LisaButton(title: L10n.text("Reprendre ma partie"), icon: "play.fill") { _ = store.resumeLastGame() }
-                                Button(L10n.text("Nouvelle partie"), action: requestNewFreeGame).font(LisaTheme.heading(14)).foregroundStyle(LisaTheme.actionInk).padding(.top, 2)
-                            } else {
-                                LisaButton(title: L10n.text("C’est parti !"), icon: "play.fill", action: requestNewFreeGame)
-                            }
+                    if !dynamicTypeSize.isAccessibilitySize && verticalSizeClass != .compact {
+                        HStack {
+                            LisaPill(title: L10n.count("days", store.streak), icon: "flame.fill", tint: LisaTheme.yellow)
+                            Spacer()
+                            LisaPill(title: L10n.count("wins", store.history.count), icon: "crown.fill", tint: LisaTheme.mint)
                         }
+                        HStack(spacing: 24) {
+                            LisaWordmark(size: 83).rotationEffect(.degrees(-5)).lisaFloat(amplitude: 5, tilt: 2, period: 4.5)
+                            LisaCompanion(size: 124, animationEnabled: store.settings.animatedDecor && mascotAnimationEnabled && !learn && !difficultySheet && !replaceAlert)
+                                .rotationEffect(.degrees(6))
+                                .background { LisaMagicHalo().frame(width: 185, height: 185) }
+                                .lisaFloat(amplitude: 7, tilt: 2, period: 4, phase: 1.5)
+                        }
+                        .frame(maxWidth: .infinity).padding(.top, 4).padding(.bottom, 5)
+                        .scaleEffect(appeared ? 1 : 0.85)
+                        VStack(spacing: 5) {
+                            Text(L10n.text("Votre pause avec Poulpi")).font(LisaTheme.heading(26)).foregroundStyle(LisaTheme.ink)
+                            Text(L10n.text("Un petit rendez-vous, de grands déclics.")).font(LisaTheme.body(13)).foregroundStyle(LisaTheme.muted)
+                        }
+                    } else {
+                        Text("Sudoku Lisa").font(.headline).foregroundStyle(LisaTheme.ink)
                     }
+                    HomePlayCard(onFreePlay: requestNewFreeGame)
                     .offset(y: appeared ? 0 : 20)
                     Button(action: onBattle) {
                         HStack(spacing: 14) {

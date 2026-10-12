@@ -708,3 +708,74 @@
 "Licence des musiques d’univers" = "World music license";
 
 "Conversion audio AAC haute qualité, sans modification musicale." = "Converted to high-quality AAC audio, with no musical changes.";
+
+"Votre aventure continue" = "Your adventure continues";
+"Votre premier voyage" = "Your first journey";
+"Poulpi vous attend" = "Poulpi is waiting for you";
+"Une grille Express, un premier souvenir. Les indices sont là pour vous aider." = "An Express puzzle, your first keepsake. Hints are here to help.";
+"Prochaine escale : %@" = "Next stop: %@";
+"Mon premier voyage" = "My first journey";
+"Continuer le voyage" = "Continue the journey";
+"Choisir mon niveau" = "Choose my level";
+"Votre pause avec Poulpi" = "Your break with Poulpi";
+"Un petit rendez-vous, de grands déclics." = "A little daily escape. A world of discoveries.";
+"Votre voyage avec Poulpi" = "Your journey with Poulpi";
+"À la cinquième étape, une étoile à offrir à Poulpi." = "At the fifth stop, a star to give Poulpi.";
+"Étapes restantes dans ce monde : %@" = "Stops left in this world: %@";
+"Reprendre mon voyage" = "Resume my journey";
+"Jouer la prochaine étape" = "Play the next stop";
+"Vos 25 souvenirs racontent votre aventure." = "Your 25 keepsakes tell your story.";
+"Mon carnet · %@ / 25" = "My album · %@ / 25";
+"Chaque étape terminée garde un souvenir ici. Votre carnet vous attend, même après une pause." = "Every completed stop leaves a keepsake here. Your album will be waiting whenever you return.";
+"Souvenir collectionné" = "Keepsake collected";
+"À découvrir" = "To discover";
+"%@, %@" = "%@, %@";
+"Mon carnet de voyage" = "My journey album";
+"Un souvenir de votre voyage avec Poulpi." = "A keepsake from your journey with Poulpi.";
+"Un souvenir pour votre carnet" = "A keepsake for your album";
+"Ouvrir mon carnet" = "Open my album";
+"Bilan des essais" = "Playtest report";
+"Ce bilan reste sur votre iPhone. Il compte vos actions pendant 90 jours pour aider à améliorer le jeu. Aucune grille, aucun compte et aucun envoi automatique." = "This report stays on your iPhone. It counts your actions for 90 days to help improve the game. No puzzles, accounts or automatic uploads.";
+"Conserver mon bilan local" = "Keep my local report";
+"Le bilan est indisponible. Votre progression de jeu est préservée. Vous pouvez effacer le bilan pour recommencer." = "The report is unavailable. Your game progress is safe. You can clear the report to start again.";
+"Depuis le début du bilan" = "Since recording began";
+"Parties commencées" = "Games started";
+"Parties terminées" = "Games completed";
+"Parties reprises" = "Games resumed";
+"Indices consultés" = "Hints viewed";
+"Souvenirs regardés" = "Keepsakes viewed";
+"Préparer le partage du bilan" = "Prepare report for sharing";
+"Partager le bilan" = "Share report";
+"Vous choisissez si vous partagez ce fichier et avec qui. Effacer le bilan ne change ni vos parties ni vos souvenirs." = "You choose whether to share this file and with whom. Clearing the report does not affect your games or keepsakes.";
+"Effacer le bilan" = "Clear report";
+"Effacer le bilan ?" = "Clear report?";
+"Partage indisponible" = "Sharing unavailable";
+"Le bilan n’a pas pu être préparé. Réessayez." = "The report could not be prepared. Try again.";
+
+/* Live logical assistance */
+"Aides" = "Assistance";
+"Aides actives" = "Assistance active";
+"Candidats" = "Candidates";
+"Focus chiffre" = "Focus digit";
+"Piste" = "Trail";
+"Expliquer" = "Explain";
+"Remplir les notes" = "Fill empty notes";
+"Masquer les aides" = "Hide assistance";
+"Une contradiction empêche la piste." = "A contradiction prevents a trail.";
+"Aucune déduction disponible." = "No deduction available.";
+"Observez les cases entourées." = "Look at the outlined cells.";
+"Analyse interrompue. Réactivez une aide pour réessayer." = "Analysis interrupted. Toggle assistance to retry.";
+", case de la piste" = ", trail cell";
+", compatible avec le focus" = ", compatible with focus";
+"Ouvert" = "Expanded";
+"Fermé" = "Collapsed";
+
+// Note tools
+"Notes automatiques" = "Automatic notes";
+"Complète les cases sans notes. Vos annotations sont conservées." = "Fills cells without notes. Your annotations are kept.";
+"Gérer les notes" = "Manage notes";
+"Nettoyer les notes" = "Clean up notes";
+"Effacer toutes les notes" = "Clear all notes";
+"Retire seulement les possibilités devenues impossibles." = "Removes only candidates that are no longer possible.";
+"Chaque action peut être annulée en un geste." = "Each action can be undone with one tap.";
+"Candidats en direct" = "Live candidates";

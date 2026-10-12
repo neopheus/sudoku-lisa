@@ -52,6 +52,25 @@ struct FinishedGame: Codable, Identifiable, Sendable {
     let mistakes: Int
     let hints: Int
     let mode: String
+    var usedLogicalAssistance: Bool = false
+
+    private enum CodingKeys: String, CodingKey { case id, date, difficulty, seconds, mistakes, hints, mode, usedLogicalAssistance }
+    init(date: Date, difficulty: Difficulty, seconds: Int, mistakes: Int, hints: Int, mode: String, usedLogicalAssistance: Bool = false) {
+        self.date = date; self.difficulty = difficulty; self.seconds = seconds
+        self.mistakes = mistakes; self.hints = hints; self.mode = mode
+        self.usedLogicalAssistance = usedLogicalAssistance
+    }
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decode(UUID.self, forKey: .id)
+        date = try c.decode(Date.self, forKey: .date)
+        difficulty = try c.decode(Difficulty.self, forKey: .difficulty)
+        seconds = try c.decode(Int.self, forKey: .seconds)
+        mistakes = try c.decode(Int.self, forKey: .mistakes)
+        hints = try c.decode(Int.self, forKey: .hints)
+        mode = try c.decode(String.self, forKey: .mode)
+        usedLogicalAssistance = try c.decodeIfPresent(Bool.self, forKey: .usedLogicalAssistance) ?? false
+    }
 }
 
 /// The puzzle and its reward context travel together, including across app launches.
@@ -133,6 +152,31 @@ final class LisaStore: ObservableObject {
     @Published private(set) var activeScenery: SceneryStop?
     @Published private(set) var introductionID: UUID?
     private var freeSceneryRoute = FreeSceneryRoute()
+    private var firstMoveRecorded = false
+    private var studyLaunchRecorded = false
+    lazy var playStudy = LisaPlayStudy(url: saveURL.appendingPathExtension("study.json"),
+                                      existingPlayer: needsSaveRecovery || session != nil || !history.isEmpty || eventWins > 0)
+
+    var journeyProgress: JourneyProgress { JourneyProgress(completed: eventWins) }
+    var isFirstAdventure: Bool { history.isEmpty && eventWins == 0 && session == nil && savedGames.isEmpty }
+
+    func recordStudyLaunch() {
+        guard !studyLaunchRecorded else { return }
+        studyLaunchRecorded = true
+        playStudy.record(.appActive)
+    }
+
+    func startRecommendedJourney() {
+        guard canPersist, !isGenerating else { return }
+        if isFirstAdventure { playStudy.record(.firstJourneySelected) }
+        if !resume(mode: "Voyage") { startJourney() }
+    }
+
+    func recordFirstMove() {
+        guard !firstMoveRecorded, let session, session.values != session.puzzle.givens else { return }
+        firstMoveRecorded = true
+        playStudy.record(.firstMove)
+    }
 
     var nextScenery: SceneryStop? {
         if mode == "Libre" { return freeSceneryRoute.next }
@@ -205,6 +249,7 @@ final class LisaStore: ObservableObject {
         if ProcessInfo.processInfo.arguments.contains("--uitest-reset") {
             try? FileManager.default.removeItem(at: saveURL)
             try? FileManager.default.removeItem(at: self.backupURL)
+            try? FileManager.default.removeItem(at: saveURL.appendingPathExtension("study.json"))
             UserDefaults.standard.removeObject(forKey: L10n.languagePreferenceKey)
             if ProcessInfo.processInfo.arguments.contains("--uitest-unreadable-save") {
                 try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
@@ -315,6 +360,7 @@ final class LisaStore: ObservableObject {
             savedGames[mode] = currentSavedGame(session)
         }
         activeScenery = savedGames[mode]?.scenery
+        firstMoveRecorded = session.map { $0.values != $0.puzzle.givens } ?? false
         freeSceneryRoute = data.freeSceneryRoute ?? FreeSceneryRoute(after: savedGames["Libre"]?.scenery)
         introductionID = nil
         configureAudio()
@@ -430,6 +476,7 @@ final class LisaStore: ObservableObject {
     func sceneActivityChanged(isActive: Bool) {
         guard sceneIsActive != isActive else { return }
         sceneIsActive = isActive
+        if isActive { playStudy.record(.appActive) }
         if !isActive { finishIntroduction(); saveForBackground() }
     }
 
@@ -448,7 +495,7 @@ final class LisaStore: ObservableObject {
         }
     }
 
-    func flushPendingSaves() async { await writer.flush() }
+    func flushPendingSaves() async { await writer.flush(); await playStudy.flush() }
 
     /// A Battle handoff cannot silently abandon a solo save that failed to persist.
     func prepareForBattleInvitation() async -> Bool {
@@ -510,6 +557,7 @@ final class LisaStore: ObservableObject {
         cancelGeneration()
         save()
         restore(saved)
+        playStudy.record(.gameResumed)
         showGame = true
         save()
         return true
@@ -528,6 +576,7 @@ final class LisaStore: ObservableObject {
         introductionID = nil
         configureAudio()
         session = saved.session
+        firstMoveRecorded = saved.session.values != saved.session.puzzle.givens
         clock.seconds = saved.session.elapsedSeconds
         recorded = saved.recorded
         showVictory = false
@@ -546,6 +595,7 @@ final class LisaStore: ObservableObject {
 
     func start(_ difficulty: Difficulty, mode: String = "Libre", date: Date? = nil, seedOverride: UInt64? = nil, eventID: String? = nil, tournamentID: String? = nil) {
         guard canPersist else { saveError = Self.loadFailureMessage; return }
+        _ = playStudy // Classify the cohort before its first puzzle is created.
         cancelGeneration()
         save() // Preserve the old board before requesting a replacement.
         let id = UUID()
@@ -579,6 +629,7 @@ final class LisaStore: ObservableObject {
                                           day: day, eventID: eventID, tournamentID: tournamentID,
                                           journeyStage: stage, recorded: false, sceneryID: scenery?.id)
                 self.restore(saved)
+                self.playStudy.record(.gameStarted)
                 if scenery != nil && self.settings.animatedDecor && !self.settings.paperMode && !UIAccessibility.isReduceMotionEnabled {
                     self.introductionID = saved.id
                 }
@@ -594,12 +645,13 @@ final class LisaStore: ObservableObject {
         if session?.isComplete == true { synchronizeElapsedTime() }
         if session?.isComplete == true && !recorded, let game = session {
             recorded = true
-            history.append(FinishedGame(date: Date(), difficulty: game.puzzle.difficulty, seconds: game.elapsedSeconds, mistakes: game.mistakes, hints: game.hintsUsed, mode: mode))
+            playStudy.record(.gameCompleted)
+            history.append(FinishedGame(date: Date(), difficulty: game.puzzle.difficulty, seconds: game.elapsedSeconds, mistakes: game.mistakes, hints: game.hintsUsed, mode: mode, usedLogicalAssistance: game.usedLogicalAssistance))
             if mode == "Quotidien", let activeDay { completedDays.insert(activeDay) }
             if mode == "Voyage", (activeJourneyStage ?? eventWins + 1) == eventWins + 1, eventWins < 25 { eventWins += 1 }
             if mode == "Événement", let activeEvent { eventMedals.insert(activeEvent) }
             if mode == "Tournoi", activeTournament == Self.tournamentKey() {
-                GameCenterService.shared.submit(seconds: game.elapsedSeconds, mistakes: game.mistakes, hints: game.hintsUsed)
+                GameCenterService.shared.submit(seconds: game.elapsedSeconds, mistakes: game.mistakes, hints: game.hintsUsed, usedLogicalAssistance: game.usedLogicalAssistance)
             }
             showVictory = true
             feedback(success: true)
@@ -704,8 +756,8 @@ final class LisaStore: ObservableObject {
 
     func startJourney() {
         guard eventWins < 25 else { return }
-        let difficulty: Difficulty = [.easy, .easy, .medium, .hard, .expert][min(eventWins / 5, 4)]
-        start(difficulty, mode: "Voyage")
+        if resume(mode: "Voyage") { return }
+        start(journeyProgress.nextDifficulty, mode: "Voyage")
     }
 
     var victoryContinuationTitle: String {

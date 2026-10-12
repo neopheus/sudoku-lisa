@@ -4,7 +4,7 @@ import XCTest
 @MainActor
 final class AppStoreScreenshotTests: XCTestCase {
     private func button(_ title: String, in app: XCUIApplication) -> XCUIElement {
-        app.buttons.containing(.staticText, identifier: title).firstMatch
+        app.buttons[title].firstMatch
     }
 
     private func settle() {
@@ -39,7 +39,7 @@ final class AppStoreScreenshotTests: XCTestCase {
         let labels: [String: [String: String]] = [
             "en": [
                 "Jouer": "Play",
-                "C’est parti !": "Let's play!",
+                "Choisir mon niveau": "Choose my level",
                 "Chaque jour": "Every day",
                 "Jouer le défi": "Play the challenge",
                 "Indice": "Hint",
@@ -51,7 +51,7 @@ final class AppStoreScreenshotTests: XCTestCase {
             ],
             "de": [
                 "Jouer": "Spielen",
-                "C’est parti !": "Los geht’s!",
+                "Choisir mon niveau": "Schwierigkeit wählen",
                 "Chaque jour": "Jeden Tag",
                 "Jouer le défi": "Aufgabe spielen",
                 "Indice": "Hinweis",
@@ -63,7 +63,7 @@ final class AppStoreScreenshotTests: XCTestCase {
             ],
             "es": [
                 "Jouer": "Jugar",
-                "C’est parti !": "¡Vamos allá!",
+                "Choisir mon niveau": "Elegir mi nivel",
                 "Chaque jour": "Cada día",
                 "Jouer le défi": "Jugar el reto",
                 "Indice": "Pista",
@@ -75,7 +75,7 @@ final class AppStoreScreenshotTests: XCTestCase {
             ],
             "ru": [
                 "Jouer": "Играть",
-                "C’est parti !": "Начнём!",
+                "Choisir mon niveau": "Выбрать уровень",
                 "Chaque jour": "Каждый день",
                 "Jouer le défi": "Начать задание",
                 "Indice": "Подсказка",
@@ -96,7 +96,7 @@ final class AppStoreScreenshotTests: XCTestCase {
         app.launchArguments += ["-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"]
         app.launch()
         XCTAssertTrue(app.buttons[localized("Jouer", language: language)].waitForExistence(timeout: 15), app.debugDescription)
-        XCTAssertTrue(button(localized("C’est parti !", language: language), in: app).exists)
+        XCTAssertTrue(button(localized("Choisir mon niveau", language: language), in: app).exists)
         capture("\(language)-01-Accueil")
 
         // The daily puzzle uses the existing deterministic date seed.

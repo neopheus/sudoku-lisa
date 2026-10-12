@@ -14,14 +14,14 @@ struct BattleView: View {
     @State private var visible = false
 
     private var motionEnabled: Bool {
-        visible && !social.inboxPresented && scenePhase == .active && !reduceMotion && store.settings.animatedDecor
+        visible && !confirmLeave && !social.inboxPresented && scenePhase == .active && !reduceMotion && store.settings.animatedDecor
     }
 
     var body: some View {
         NavigationStack {
             GeometryReader { screen in
             ZStack {
-                LisaBackground(motionEnabled: false, quiet: true)
+                LisaBackground(motionEnabled: motionEnabled, quiet: true)
                 ScrollView {
                     VStack(spacing: 20) {
                         if let error = battle.errorMessage {

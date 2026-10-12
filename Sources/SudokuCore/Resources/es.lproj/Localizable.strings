@@ -708,3 +708,74 @@
 "Licence des musiques d’univers" = "Licencia de la música de los mundos";
 
 "Conversion audio AAC haute qualité, sans modification musicale." = "Conversión a audio AAC de alta calidad, sin cambios musicales.";
+
+"Votre aventure continue" = "Tu aventura continúa";
+"Votre premier voyage" = "Tu primer viaje";
+"Poulpi vous attend" = "Poulpi te espera";
+"Une grille Express, un premier souvenir. Les indices sont là pour vous aider." = "Un sudoku Exprés, tu primer recuerdo. Las pistas están para ayudarte.";
+"Prochaine escale : %@" = "Próxima parada: %@";
+"Mon premier voyage" = "Mi primer viaje";
+"Continuer le voyage" = "Continuar el viaje";
+"Choisir mon niveau" = "Elegir mi nivel";
+"Votre pause avec Poulpi" = "Tu pausa con Poulpi";
+"Un petit rendez-vous, de grands déclics." = "Una pequeña pausa, grandes descubrimientos.";
+"Votre voyage avec Poulpi" = "Tu viaje con Poulpi";
+"À la cinquième étape, une étoile à offrir à Poulpi." = "En la quinta etapa, una estrella para Poulpi.";
+"Étapes restantes dans ce monde : %@" = "Etapas restantes en este mundo: %@";
+"Reprendre mon voyage" = "Retomar mi viaje";
+"Jouer la prochaine étape" = "Jugar la próxima etapa";
+"Vos 25 souvenirs racontent votre aventure." = "Tus 25 recuerdos cuentan tu aventura.";
+"Mon carnet · %@ / 25" = "Mi álbum · %@ / 25";
+"Chaque étape terminée garde un souvenir ici. Votre carnet vous attend, même après une pause." = "Cada etapa completada deja un recuerdo aquí. Tu álbum te espera, incluso después de una pausa.";
+"Souvenir collectionné" = "Recuerdo conseguido";
+"À découvrir" = "Por descubrir";
+"%@, %@" = "%@, %@";
+"Mon carnet de voyage" = "Mi álbum de viaje";
+"Un souvenir de votre voyage avec Poulpi." = "Un recuerdo de tu viaje con Poulpi.";
+"Un souvenir pour votre carnet" = "Un recuerdo para tu álbum";
+"Ouvrir mon carnet" = "Abrir mi álbum";
+"Bilan des essais" = "Informe de pruebas";
+"Ce bilan reste sur votre iPhone. Il compte vos actions pendant 90 jours pour aider à améliorer le jeu. Aucune grille, aucun compte et aucun envoi automatique." = "Este informe se queda en tu iPhone. Cuenta tus acciones durante 90 días para ayudar a mejorar el juego. Sin sudokus, cuentas ni envíos automáticos.";
+"Conserver mon bilan local" = "Guardar mi informe local";
+"Le bilan est indisponible. Votre progression de jeu est préservée. Vous pouvez effacer le bilan pour recommencer." = "El informe no está disponible. Tu progreso está a salvo. Puedes borrar el informe para empezar de nuevo.";
+"Depuis le début du bilan" = "Desde el inicio del informe";
+"Parties commencées" = "Partidas iniciadas";
+"Parties terminées" = "Partidas completadas";
+"Parties reprises" = "Partidas retomadas";
+"Indices consultés" = "Pistas consultadas";
+"Souvenirs regardés" = "Recuerdos vistos";
+"Préparer le partage du bilan" = "Preparar el informe para compartir";
+"Partager le bilan" = "Compartir informe";
+"Vous choisissez si vous partagez ce fichier et avec qui. Effacer le bilan ne change ni vos parties ni vos souvenirs." = "Tú decides si compartes este archivo y con quién. Borrar el informe no afecta a tus partidas ni a tus recuerdos.";
+"Effacer le bilan" = "Borrar informe";
+"Effacer le bilan ?" = "¿Borrar el informe?";
+"Partage indisponible" = "No se puede compartir";
+"Le bilan n’a pas pu être préparé. Réessayez." = "No se pudo preparar el informe. Inténtalo de nuevo.";
+
+/* Live logical assistance */
+"Aides" = "Ayudas";
+"Aides actives" = "Ayudas activas";
+"Candidats" = "Candidatos";
+"Focus chiffre" = "Enfocar número";
+"Piste" = "Pista lógica";
+"Expliquer" = "Explicar";
+"Remplir les notes" = "Rellenar notas vacías";
+"Masquer les aides" = "Ocultar ayudas";
+"Une contradiction empêche la piste." = "Una contradicción impide mostrar una pista.";
+"Aucune déduction disponible." = "No hay deducciones disponibles.";
+"Observez les cases entourées." = "Observa las casillas marcadas.";
+"Analyse interrompue. Réactivez une aide pour réessayer." = "Análisis interrumpido. Reactiva una ayuda para reintentar.";
+", case de la piste" = ", casilla de la pista";
+", compatible avec le focus" = ", compatible con el número enfocado";
+"Ouvert" = "Abierto";
+"Fermé" = "Cerrado";
+
+// Note tools
+"Notes automatiques" = "Notas automáticas";
+"Complète les cases sans notes. Vos annotations sont conservées." = "Completa las casillas sin notas. Conserva tus anotaciones.";
+"Gérer les notes" = "Gestionar notas";
+"Nettoyer les notes" = "Limpiar notas";
+"Effacer toutes les notes" = "Borrar todas las notas";
+"Retire seulement les possibilités devenues impossibles." = "Elimina solo los candidatos que ya no son posibles.";
+"Chaque action peut être annulée en un geste." = "Cada acción se puede deshacer con un toque.";
+"Candidats en direct" = "Candidatos en tiempo real";

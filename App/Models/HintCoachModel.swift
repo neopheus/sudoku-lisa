@@ -3,8 +3,18 @@ import Combine
 import SudokuCore
 
 /// One serial executor for short logical analyses. No polling or global cache.
-private actor HintAnalysisWorker {
+actor HintAnalysisWorker {
     static let shared = HintAnalysisWorker()
+
+    func assistance(values: [Int], eliminations: Set<CandidateElimination>, includeDeduction: Bool) throws -> AssistanceSnapshot {
+        try Task.checkCancellation()
+        let deadline = ContinuousClock.now.advanced(by: .seconds(2))
+        let result = AssistanceSnapshot(values: values, eliminations: eliminations, includeDeduction: includeDeduction,
+                                        cancellation: { Task.isCancelled || ContinuousClock.now >= deadline })
+        try Task.checkCancellation()
+        guard ContinuousClock.now < deadline else { throw CancellationError() }
+        return result
+    }
 
     func analyse(_ game: GameSession) throws -> (SudokuHint?, [Set<Int>]) {
         try Task.checkCancellation()
@@ -19,6 +29,7 @@ private actor HintAnalysisWorker {
 
 @MainActor
 final class HintCoachModel: ObservableObject {
+    @Published private(set) var presentationID = UUID()
     @Published private(set) var hint: SudokuHint?
     @Published private(set) var isWorking = false
     @Published private(set) var candidates: [Set<Int>] = []
@@ -43,6 +54,7 @@ final class HintCoachModel: ObservableObject {
                 self.candidates = result.1
                 self.isWorking = false
                 self.hint = result.0
+                self.presentationID = UUID()
                 self.task = nil
             } catch {
                 guard let self, self.requestID == id else { return }
@@ -50,6 +62,17 @@ final class HintCoachModel: ObservableObject {
                 self.task = nil
             }
         }
+    }
+
+    func present(_ deduction: SudokuDeduction, game: GameSession, candidates: [Set<Int>]) {
+        cancel()
+        snapshot = game
+        let suggestion = SudokuHint(deduction: deduction)
+        focusedCells = Set(suggestion.focusCells).union(suggestion.eliminationMarks.map(\.index))
+        marksByCell = Dictionary(grouping: suggestion.eliminationMarks, by: \.index)
+        self.candidates = candidates
+        hint = suggestion
+        presentationID = UUID()
     }
 
     func matches(_ game: GameSession?) -> Bool {

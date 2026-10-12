@@ -15,6 +15,18 @@ struct GameView: View {
     @State private var selected: Int?
     @State private var notesMode = false
     @State private var paused = false
+    @StateObject private var assistance = LogicalAssistanceModel()
+    @State private var assistancePresented = false
+    private var assistanceAllowed: Bool { ["Libre", "Voyage", "Quotidien"].contains(store.mode) }
+    private var assistanceRequest: AssistanceRequest {
+        AssistanceRequest(id: store.currentGameID, values: store.session?.values ?? [],
+            eliminations: store.session?.candidateEliminations ?? [], trail: assistance.trailEnabled,
+            active: assistanceAllowed && timerRunning && store.showGame && (assistancePresented || assistance.isActive))
+    }
+    private var assistanceReady: Bool {
+        guard let game = store.session else { return false }
+        return assistance.matches(game, id: store.currentGameID)
+    }
     @StateObject private var coach = HintCoachModel()
     private var hint: SudokuHint? { coach.hint }
     private var observedBoard: GameBoardSnapshot? {
@@ -42,7 +54,7 @@ struct GameView: View {
     @State private var celebrationMessage = ""
     @State private var victoryPresented = false
     @Environment(\.colorScheme) private var colorScheme
-    private var mascotUncovered: Bool { scenePhase == .active && !settings && !gameDetailsPresented && !victoryPresented && !hintPresented && !errorPresented && !learning && !coach.isWorking && !store.isGenerating && store.introductionID == nil }
+    private var mascotUncovered: Bool { scenePhase == .active && !settings && !assistancePresented && !gameDetailsPresented && !victoryPresented && !hintPresented && !errorPresented && !learning && !coach.isWorking && !store.isGenerating && store.introductionID == nil }
     private var introductionAllowed: Bool {
         store.settings.animatedDecor && !store.settings.paperMode && !reduceMotion && scenePhase == .active
     }
@@ -75,7 +87,7 @@ struct GameView: View {
                         ? min(680, max(252, geometry.size.height - 94), max(9, contentWidth - controlsWidth - 24))
                         : dynamicTypeSize.isAccessibilitySize
                             ? min(contentWidth, max(225, geometry.size.height - accessibilityControlsHeight))
-                            : min(contentWidth, compact ? max(270, geometry.size.height - 330) : 480)
+                            : min(contentWidth, compact ? max(252, geometry.size.height - 380) : 480)
                     let layout = wide
                         ? AnyLayout(HStackLayout(alignment: .center, spacing: 24))
                         : AnyLayout(VStackLayout(spacing: compact ? 8 : 16))
@@ -93,8 +105,14 @@ struct GameView: View {
                                     ScrollView { coaching(hint) }
                                         .frame(width: controlsWidth, height: max(180, geometry.size.height - 94))
                                 } else if !hintPresented {
-                                    gameControls(game, compact: compact, wide: wide)
-                                        .frame(width: controlsWidth)
+                                    if wide {
+                                        ScrollView { gameControls(game, compact: compact, wide: true) }
+                                            .accessibilityIdentifier("gameControlsScroll")
+                                            .frame(width: controlsWidth, height: max(180, geometry.size.height - 94))
+                                    } else {
+                                        gameControls(game, compact: compact, wide: false)
+                                            .frame(width: controlsWidth)
+                                    }
                                 }
                             }
                             .frame(minHeight: wide ? max(0, geometry.size.height - (compact ? 94 : 102)) : nil)
@@ -126,6 +144,18 @@ struct GameView: View {
                     .background(LisaTheme.paper)
             }
         }
+        .onChange(of: assistanceRequest, initial: true) { _, request in
+            guard request.active, let game = store.session else { assistance.cancel(); return }
+            assistance.request(game, id: request.id)
+        }
+        .onChange(of: assistance.snapshot) { _, snapshot in
+            guard assistanceRequest.active, assistanceReady, assistance.trailEnabled,
+                  snapshot?.deduction != nil else { return }
+            store.session?.recordLogicalAssistance()
+            store.save()
+            UIAccessibility.post(notification: .announcement, argument: L10n.text("Observez les cases entourées."))
+        }
+        .onChange(of: assistance.candidatesEnabled) { _, enabled in if enabled { notesMode = false } }
         .onPreferenceChange(LisaBoardFrameKey.self) { boardFrame = $0 }
         .preferredColorScheme(store.settings.darkMode ? .dark : .light)
         .saturation(store.settings.paperMode ? 0 : 1)
@@ -144,7 +174,7 @@ struct GameView: View {
             if scenePhase == .active { store.activateIntroductionFixture() }
         }
         #endif
-        .onDisappear { store.finishIntroduction(); coach.cancel(); store.synchronizeElapsedTime(); store.save(); LisaAudio.shared.configure(paused: false) }
+        .onDisappear { assistance.hide(); assistancePresented = false; store.finishIntroduction(); coach.cancel(); store.synchronizeElapsedTime(); store.save(); LisaAudio.shared.configure(paused: false) }
         .onChange(of: paused, initial: true) { _, value in LisaAudio.shared.configure(paused: value) }
         .onChange(of: store.currentGameID) { _, _ in resetForNewPuzzle() }
         .onChange(of: observedBoard) { previous, current in
@@ -192,18 +222,27 @@ struct GameView: View {
         .onChange(of: languagePreference) { _, _ in
             celebrationMessage = ""
             companionMessage = L10n.text("Au repos")
-            if hintPresented, let game = store.session { hintPresented = false; coach.request(game) }
+            if hintPresented, let game = store.session {
+                hintPresented = false
+                if let deduction = coach.hint?.deduction, coach.matches(game) {
+                    coach.present(deduction, game: game, candidates: coach.candidates)
+                } else { coach.request(game) }
+            }
         }
-        .onChange(of: coach.hint) { _, suggestion in
-            guard suggestion != nil, coach.matches(store.session) else { return }
+        .onChange(of: coach.presentationID) { _, _ in
+            guard coach.hint != nil, coach.matches(store.session) else { return }
             hintStage = 0
             store.session?.recordHintConsultation()
+            store.playStudy.record(.hintViewed)
             store.save()
             store.feedback(.hint)
             react(.thinking)
             hintPresented = true
         }
         .onChange(of: store.settings.numberFirst) { _, _ in lockedDigit = nil }
+        .onChange(of: hintStage) { old, new in
+            if hintPresented, old == 0, new > 0 { store.playStudy.record(.hintExplained) }
+        }
         .sheet(isPresented: $learning) {
             LearnView(initialTechnique: lessonTechnique).environment(\.lisaMotionAllowed, store.settings.animatedDecor && scenePhase == .active)
         }
@@ -230,6 +269,33 @@ struct GameView: View {
         .alert(L10n.text("Préparation de la grille"), isPresented: Binding(get: { store.generationError != nil }, set: { if !$0 { store.generationError = nil } })) {
             Button(L10n.text("D’accord")) { store.generationError = nil }
         } message: { Text(L10n.text(store.generationError ?? "")) }
+        .sheet(isPresented: $assistancePresented) {
+            AssistancePalette(model: assistance, ready: assistanceReady,
+                explain: {
+                    guard assistanceReady, let snapshot = assistance.snapshot,
+                          let deduction = snapshot.deduction, let current = store.session else { return }
+                    assistancePresented = false
+                    coach.present(deduction, game: current, candidates: snapshot.candidates)
+                }, fill: {
+                    guard assistanceReady, let snapshot = assistance.snapshot else { return }
+                    if store.session?.fillEmptyNotes(using: snapshot) == true { store.changed() }
+                    assistance.candidatesEnabled = false
+                    assistancePresented = false
+                }, clean: {
+                    guard assistanceReady, let snapshot = assistance.snapshot else { return }
+                    if store.session?.pruneImpossibleNotes(using: snapshot) == true { store.changed() }
+                    assistance.candidatesEnabled = false
+                    assistancePresented = false
+                }, clear: {
+                    if store.session?.clearNotes() == true { store.changed() }
+                    assistance.candidatesEnabled = false
+                    assistancePresented = false
+                }, hasNotes: store.session?.notes.contains(where: { !$0.isEmpty }) == true)
+                .presentationDetents(dynamicTypeSize.isAccessibilitySize ? [.large] : [.height(430), .large])
+                .presentationDragIndicator(.visible)
+                .presentationCornerRadius(28)
+                .presentationBackground(LisaTheme.paper)
+        }
         .sheet(isPresented: $settings) { SettingsView() }
         .sheet(isPresented: $gameDetailsPresented) { gameDetails }
         .sheet(isPresented: $victoryPresented, onDismiss: {
@@ -250,6 +316,8 @@ struct GameView: View {
     /// Reset the puzzle interaction without rebuilding the companion scene.
     /// Monotonic companion requests and geometry belong to the retained scene.
     private func resetForNewPuzzle() {
+        assistance.hide()
+        assistancePresented = false
         coach.cancel()
         selected = nil
         lockedDigit = nil
@@ -287,6 +355,7 @@ struct GameView: View {
     private func applyHint(_ hint: SudokuHint) {
         guard coach.matches(store.session), let deduction = hint.deduction else { hintPresented = false; return }
         if store.session?.applyDeduction(deduction) == true {
+            store.playStudy.record(.hintApplied)
             selected = hint.index
             store.feedback(.place); store.changed(); react(.happy)
         }
@@ -426,11 +495,19 @@ struct GameView: View {
                 }
                 .accessibilityIdentifier("completedContinue")
             }
-            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 4), spacing: 8) {
-                tool(L10n.text("Annuler"), icon: "arrow.uturn.backward", enabled: game.canUndo) { store.session?.undo(); store.feedback(.erase); store.changed() }
-                tool(L10n.text("Gommer"), icon: "eraser", enabled: selected.map { game.isEditable($0) } ?? false) { if let selected { store.session?.erase(at: selected); store.feedback(.erase); store.changed() } }
-                tool(notesMode ? L10n.text("Notes oui") : L10n.text("Notes"), icon: "pencil.tip", active: notesMode) { notesMode.toggle(); store.feedback(.note) }
-                tool(coach.isWorking ? L10n.text("Recherche…") : L10n.text("Indice"), icon: "lightbulb", enabled: !coach.isWorking) { if let game = store.session { coach.request(game) } }
+            LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: assistanceAllowed ? (wide ? 3 : 5) : 4), spacing: 8) {
+                tool(L10n.text("Annuler"), icon: "arrow.uturn.backward", compact: compact, enabled: game.canUndo) { store.session?.undo(); store.feedback(.erase); store.changed() }
+                tool(L10n.text("Gommer"), icon: "eraser", compact: compact, enabled: selected.map { game.isEditable($0) } ?? false) { if let selected { store.session?.erase(at: selected); store.feedback(.erase); store.changed() } }
+                tool(notesMode ? L10n.text("Notes oui") : L10n.text("Notes"), icon: "pencil.tip", compact: compact, active: notesMode) { notesMode.toggle(); if notesMode { assistance.candidatesEnabled = false }; store.feedback(.note) }
+                tool(coach.isWorking ? L10n.text("Recherche…") : L10n.text("Indice"), icon: "lightbulb", compact: compact, enabled: !coach.isWorking) { if let game = store.session { coach.request(game) } }
+                if assistanceAllowed {
+                    tool(L10n.text("Aides"), icon: "slider.horizontal.3", compact: compact, active: assistance.isActive) {
+                        assistancePresented = true
+                    }
+                    .accessibilityIdentifier("assistanceToggle")
+                    .accessibilityLabel(L10n.text(assistance.isActive ? "Aides actives" : "Aides"))
+                    .accessibilityValue(L10n.text(assistancePresented ? "Ouvert" : "Fermé"))
+                }
             }
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 9), count: 3), spacing: 9) {
                 ForEach(1...9, id: \.self) { value in
@@ -446,7 +523,7 @@ struct GameView: View {
                         .foregroundStyle(LisaTheme.ink)
                         .frame(maxWidth: .infinity)
                         .frame(height: dynamicTypeSize.isAccessibilitySize ? min(keypadDigitSize, 56) * 1.25 : nil)
-                        .frame(minHeight: 47).padding(.vertical, 5)
+                        .frame(minHeight: 47).padding(.vertical, compact && !dynamicTypeSize.isAccessibilitySize ? 2 : 5)
                         .background(CandySurface(tint: candyColor(value), cornerRadius: notesMode ? 10 : 16))
                         .contentShape(RoundedRectangle(cornerRadius: 16))
                         .overlay(RoundedRectangle(cornerRadius: notesMode ? 10 : 16).strokeBorder(lockedDigit == value ? LisaTheme.ink : .clear, lineWidth: 3))
@@ -498,6 +575,7 @@ struct GameView: View {
             withAnimation(reduceMotion ? nil : .snappy(duration: 0.2)) {
                 correct = store.session?.enter(value, at: selected) ?? false
             }
+            store.recordFirstMove()
             // A neutral companion in zen mode must not reveal the solution.
             if previousValue != value, store.settings.autoCheck || store.settings.errorLimit {
                 react(correct ? .happy : .encouraging)
@@ -586,12 +664,18 @@ struct GameView: View {
             peer: store.settings.highlightPeers && (selected.map { peers(index, $0) } ?? false),
             inHintFocus: hintPresented && coach.focusedCells.contains(index),
             marks: hintPresented && hintStage >= 1 ? coach.marksByCell[index] ?? [] : [],
-            side: side, colorScheme: colorScheme, differentiateWithoutColor: differentiateWithoutColor
+            side: side, colorScheme: colorScheme, differentiateWithoutColor: differentiateWithoutColor,
+            assistanceTrail: !hintPresented && assistanceReady && assistance.trailEnabled && assistance.focusCells.contains(index),
+            focusDigit: !hintPresented && assistanceReady ? assistance.focusDigit : nil,
+            focusCompatible: !hintPresented && assistanceReady && assistance.focusDigit.map { assistance.snapshot?.candidates[index].contains($0) == true } == true
         ).equatable()
     }
     private func peers(_ a: Int, _ b: Int) -> Bool { a / 9 == b / 9 || a % 9 == b % 9 || (a / 27 == b / 27 && a % 9 / 3 == b % 9 / 3) }
     private func displayedNotes(_ game: GameSession, index: Int) -> Set<Int> {
-        hintPresented && hintStage >= 1 && coach.candidates.count == 81 && coach.focusedCells.contains(index)
+        if !hintPresented, assistance.candidatesEnabled, assistanceReady, let snapshot = assistance.snapshot {
+            return snapshot.candidates[index]
+        }
+        return hintPresented && hintStage >= 1 && coach.candidates.count == 81 && coach.focusedCells.contains(index)
             ? coach.candidates[index] : game.notes[index]
     }
     private func cellLabel(_ game: GameSession, index: Int) -> String {
@@ -607,7 +691,10 @@ struct GameView: View {
             + (peer ? L10n.text(", même ligne, colonne ou carré que la sélection") : "")
             + (duplicate ? L10n.text(", doublon") : "")
             + (hintPresented && coach.focusedCells.contains(index) ? L10n.text(", case de l’indice") : "")
-        guard hintPresented, hintStage >= 1 else { return description }
+        let assistedDescription = description
+            + (!hintPresented && assistanceReady && assistance.trailEnabled && assistance.focusCells.contains(index) ? L10n.text(", case de la piste") : "")
+            + (!hintPresented && assistanceReady && assistance.focusDigit.map { value == $0 || assistance.snapshot?.candidates[index].contains($0) == true } == true ? L10n.text(", compatible avec le focus") : "")
+        guard hintPresented, hintStage >= 1 else { return assistedDescription }
         let removals = (coach.marksByCell[index] ?? []).map {
             L10n.text("Ligne %@, colonne %@ : retirer le candidat %@.", String(index / 9 + 1), String(index % 9 + 1), String($0.value))
         }
@@ -619,7 +706,7 @@ struct GameView: View {
                                LisaTheme.lavender, LisaTheme.yellow, LisaTheme.mint]
         return colors[value - 1]
     }
-    private func tool(_ title: String, icon: String, active: Bool = false, enabled: Bool = true, action: @escaping () -> Void) -> some View {
+    private func tool(_ title: String, icon: String, compact: Bool = false, active: Bool = false, enabled: Bool = true, action: @escaping () -> Void) -> some View {
         let tint = active ? LisaTheme.yellow
             : icon == "lightbulb" ? LisaTheme.paper
             : icon == "eraser" ? LisaTheme.sky : LisaTheme.lavender
@@ -629,11 +716,11 @@ struct GameView: View {
                     .lisaFloat(amplitude: 1, tilt: 3, period: 3.8)
                     .shadow(color: .black.opacity(0.13), radius: 0, y: 2)
                 if !dynamicTypeSize.isAccessibilitySize {
-                    Text(title).font(.caption.weight(.heavy)).multilineTextAlignment(.center).fixedSize(horizontal: false, vertical: true)
+                    Text(title).font(.caption.weight(.heavy)).lineLimit(1).minimumScaleFactor(0.7)
                 }
             }
-            .frame(maxWidth: .infinity).frame(minHeight: dynamicTypeSize.isAccessibilitySize ? 44 : 60)
-            .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 0 : 6)
+            .frame(maxWidth: .infinity).frame(minHeight: dynamicTypeSize.isAccessibilitySize ? 44 : (compact ? 44 : 60))
+            .padding(.vertical, dynamicTypeSize.isAccessibilitySize ? 0 : (compact ? 2 : 6))
             .foregroundStyle(LisaTheme.ink)
             .background(CandySurface(tint: tint, cornerRadius: 17))
             .overlay(RoundedRectangle(cornerRadius: 17).strokeBorder(active ? LisaTheme.ink : .clear, lineWidth: 2))
@@ -647,6 +734,7 @@ struct GameView: View {
 }
 
 struct VictoryView: View {
+    @State private var albumPresented = false
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     var onContinue: () -> Void = {}
     @AppStorage(L10n.languagePreferenceKey) private var languagePreference = L10n.systemLanguage
@@ -668,8 +756,8 @@ struct VictoryView: View {
 
     var body: some View {
         ZStack {
-            LisaBackground(motionEnabled: scenePhase == .active, stop: store.activeScenery)
-            LisaCelebration(isActive: stage > 0 && scenePhase == .active)
+            LisaBackground(motionEnabled: scenePhase == .active && !albumPresented, stop: store.activeScenery)
+            LisaCelebration(isActive: stage > 0 && scenePhase == .active && !albumPresented)
             ScrollView {
                 VStack(spacing: 20) {
                     victoryStars
@@ -708,6 +796,9 @@ struct VictoryView: View {
                         }
                         .buttonStyle(LisaPressStyle())
                     }
+                    if store.mode == "Voyage", let souvenir = store.journeyProgress.latest {
+                        JourneySouvenirReward(stop: souvenir, albumPresented: $albumPresented)
+                    }
                     if let next = store.nextScenery { LisaSceneryPreview(stop: next) }
                     Button(L10n.text("Retour à l’accueil")) { store.showVictory = false; store.showGame = false }
                         .font(LisaTheme.body(14)).foregroundStyle(LisaTheme.muted)
@@ -716,6 +807,8 @@ struct VictoryView: View {
                 .frame(maxWidth: 480).frame(maxWidth: .infinity)
             }
         }
+        .environment(\.lisaMotionAllowed, motionEnabled && scenePhase == .active && !albumPresented)
+        .sheet(isPresented: $albumPresented) { JourneyAlbumView() }
         .safeAreaInset(edge: .bottom) {
             LisaButton(title: store.victoryContinuationTitle, icon: "arrow.right", action: onContinue)
                 .accessibilityIdentifier("victoryContinue")
@@ -723,8 +816,8 @@ struct VictoryView: View {
                 .frame(maxWidth: 480).frame(maxWidth: .infinity)
                 .background(LisaTheme.paper)
         }
-        .task(id: scenePhase == .active) {
-            guard scenePhase == .active else { return }
+        .task(id: scenePhase == .active && !albumPresented) {
+            guard scenePhase == .active && !albumPresented else { return }
             if stage == 0 {
                 progress = Double(max(0, min(store.eventWins - 1, 25))) / 25
                 // Let the initial star pose render, then launch the whole celebration together.
@@ -846,6 +939,9 @@ struct SudokuCellContent: View, Equatable {
     let side: CGFloat
     let colorScheme: ColorScheme
     let differentiateWithoutColor: Bool
+    var assistanceTrail = false
+    var focusDigit: Int? = nil
+    var focusCompatible = false
     var body: some View {
         let blue = Color(red: 0.18, green: 0.59, blue: 0.94)
         let background = inHintFocus ? LisaTheme.yellow.opacity(colorScheme == .dark ? 0.45 : 0.72)
@@ -855,6 +951,16 @@ struct SudokuCellContent: View, Equatable {
             : (peer) ? LisaTheme.lavender.opacity(colorScheme == .dark ? 0.12 : 0.22) : LisaTheme.paper
         return ZStack {
             RoundedRectangle(cornerRadius: 4).fill(background).padding(0.7)
+            if assistanceTrail {
+                RoundedRectangle(cornerRadius: 4).strokeBorder(LisaTheme.ink, style: StrokeStyle(lineWidth: 1.5, dash: [3, 2])).padding(3)
+            }
+            if focusCompatible {
+                RoundedRectangle(cornerRadius: 4).strokeBorder(LisaTheme.ink, lineWidth: 1).padding(1)
+            }
+            if focusDigit == value {
+                Capsule().fill(LisaTheme.ink).frame(width: side * 0.38, height: 2)
+                    .frame(maxHeight: .infinity, alignment: .bottom).padding(.bottom, 3)
+            }
             if isSelected {
                 RoundedRectangle(cornerRadius: 4).strokeBorder(blue, lineWidth: 2).padding(1)
             }
@@ -872,7 +978,7 @@ struct SudokuCellContent: View, Equatable {
             if value != 0 {
                 Text("\(value)").contentTransition(.numericText()).font(.system(size: side * 0.54, weight: !given ? .medium : .semibold, design: .rounded)).foregroundStyle(wrong || duplicate ? (colorScheme == .dark ? Color(red: 1, green: 0.55, blue: 0.6) : Color(red: 0.76, green: 0.12, blue: 0.22)) : !given ? (colorScheme == .dark ? Color(red: 0.62, green: 0.84, blue: 1) : Color(red: 0.13, green: 0.39, blue: 0.72)) : LisaTheme.ink)
             } else {
-                VStack(spacing: 0) { ForEach(0..<3) { row in HStack(spacing: 0) { ForEach(1...3, id: \.self) { col in let note = row * 3 + col; Text(notes.contains(note) ? "\(note)" : " ").font(.system(size: side * 0.23, weight: .medium, design: .rounded)).foregroundStyle(LisaTheme.muted).frame(width: side / 3, height: side / 3) } } } }
+                VStack(spacing: 0) { ForEach(0..<3) { row in HStack(spacing: 0) { ForEach(1...3, id: \.self) { col in let note = row * 3 + col; Text(notes.contains(note) ? "\(note)" : " ").font(.system(size: side * 0.23, weight: .medium, design: .rounded)).foregroundStyle(LisaTheme.muted).underline(focusDigit == note && notes.contains(note)).fontWeight(focusDigit == note ? .heavy : .medium).frame(width: side / 3, height: side / 3) } } } }
             }
         }
         .overlay(alignment: .bottomTrailing) {

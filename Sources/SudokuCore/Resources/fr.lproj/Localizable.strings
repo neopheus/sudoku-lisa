@@ -708,3 +708,74 @@
 "Licence des musiques d’univers" = "Licence des musiques d’univers";
 
 "Conversion audio AAC haute qualité, sans modification musicale." = "Conversion audio AAC haute qualité, sans modification musicale.";
+
+"Votre aventure continue" = "Votre aventure continue";
+"Votre premier voyage" = "Votre premier voyage";
+"Poulpi vous attend" = "Poulpi vous attend";
+"Une grille Express, un premier souvenir. Les indices sont là pour vous aider." = "Une grille Express, un premier souvenir. Les indices sont là pour vous aider.";
+"Prochaine escale : %@" = "Prochaine escale : %@";
+"Mon premier voyage" = "Mon premier voyage";
+"Continuer le voyage" = "Continuer le voyage";
+"Choisir mon niveau" = "Choisir mon niveau";
+"Votre pause avec Poulpi" = "Votre pause avec Poulpi";
+"Un petit rendez-vous, de grands déclics." = "Un petit rendez-vous, de grands déclics.";
+"Votre voyage avec Poulpi" = "Votre voyage avec Poulpi";
+"À la cinquième étape, une étoile à offrir à Poulpi." = "À la cinquième étape, une étoile à offrir à Poulpi.";
+"Étapes restantes dans ce monde : %@" = "Étapes restantes dans ce monde : %@";
+"Reprendre mon voyage" = "Reprendre mon voyage";
+"Jouer la prochaine étape" = "Jouer la prochaine étape";
+"Vos 25 souvenirs racontent votre aventure." = "Vos 25 souvenirs racontent votre aventure.";
+"Mon carnet · %@ / 25" = "Mon carnet · %@ / 25";
+"Chaque étape terminée garde un souvenir ici. Votre carnet vous attend, même après une pause." = "Chaque étape terminée garde un souvenir ici. Votre carnet vous attend, même après une pause.";
+"Souvenir collectionné" = "Souvenir collectionné";
+"À découvrir" = "À découvrir";
+"%@, %@" = "%@, %@";
+"Mon carnet de voyage" = "Mon carnet de voyage";
+"Un souvenir de votre voyage avec Poulpi." = "Un souvenir de votre voyage avec Poulpi.";
+"Un souvenir pour votre carnet" = "Un souvenir pour votre carnet";
+"Ouvrir mon carnet" = "Ouvrir mon carnet";
+"Bilan des essais" = "Bilan des essais";
+"Ce bilan reste sur votre iPhone. Il compte vos actions pendant 90 jours pour aider à améliorer le jeu. Aucune grille, aucun compte et aucun envoi automatique." = "Ce bilan reste sur votre iPhone. Il compte vos actions pendant 90 jours pour aider à améliorer le jeu. Aucune grille, aucun compte et aucun envoi automatique.";
+"Conserver mon bilan local" = "Conserver mon bilan local";
+"Le bilan est indisponible. Votre progression de jeu est préservée. Vous pouvez effacer le bilan pour recommencer." = "Le bilan est indisponible. Votre progression de jeu est préservée. Vous pouvez effacer le bilan pour recommencer.";
+"Depuis le début du bilan" = "Depuis le début du bilan";
+"Parties commencées" = "Parties commencées";
+"Parties terminées" = "Parties terminées";
+"Parties reprises" = "Parties reprises";
+"Indices consultés" = "Indices consultés";
+"Souvenirs regardés" = "Souvenirs regardés";
+"Préparer le partage du bilan" = "Préparer le partage du bilan";
+"Partager le bilan" = "Partager le bilan";
+"Vous choisissez si vous partagez ce fichier et avec qui. Effacer le bilan ne change ni vos parties ni vos souvenirs." = "Vous choisissez si vous partagez ce fichier et avec qui. Effacer le bilan ne change ni vos parties ni vos souvenirs.";
+"Effacer le bilan" = "Effacer le bilan";
+"Effacer le bilan ?" = "Effacer le bilan ?";
+"Partage indisponible" = "Partage indisponible";
+"Le bilan n’a pas pu être préparé. Réessayez." = "Le bilan n’a pas pu être préparé. Réessayez.";
+
+/* Live logical assistance */
+"Aides" = "Aides";
+"Aides actives" = "Aides actives";
+"Candidats" = "Candidats";
+"Focus chiffre" = "Focus chiffre";
+"Piste" = "Piste";
+"Expliquer" = "Expliquer";
+"Remplir les notes" = "Remplir les notes";
+"Masquer les aides" = "Masquer les aides";
+"Une contradiction empêche la piste." = "Une contradiction empêche la piste.";
+"Aucune déduction disponible." = "Aucune déduction disponible.";
+"Observez les cases entourées." = "Observez les cases entourées.";
+"Analyse interrompue. Réactivez une aide pour réessayer." = "Analyse interrompue. Réactivez une aide pour réessayer.";
+", case de la piste" = ", case de la piste";
+", compatible avec le focus" = ", compatible avec le focus";
+"Ouvert" = "Ouvert";
+"Fermé" = "Fermé";
+
+// Note tools
+"Notes automatiques" = "Notes automatiques";
+"Complète les cases sans notes. Vos annotations sont conservées." = "Complète les cases sans notes. Vos annotations sont conservées.";
+"Gérer les notes" = "Gérer les notes";
+"Nettoyer les notes" = "Nettoyer les notes";
+"Effacer toutes les notes" = "Effacer toutes les notes";
+"Retire seulement les possibilités devenues impossibles." = "Retire seulement les possibilités devenues impossibles.";
+"Chaque action peut être annulée en un geste." = "Chaque action peut être annulée en un geste.";
+"Candidats en direct" = "Candidats en direct";
